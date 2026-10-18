@@ -33,4 +33,4 @@ Composer scripts SHALL NOT create or depend on a SQLite database file, keeping s
 
 #### Scenario: Existing local SQLite database is orphaned gracefully
 - **WHEN** an existing contributor pulls this change while their `.env` still says `sqlite`
-- **THEN** nothing breaks silently in the repository itself; their documented migration step is to update `.env` and re-run `php artisan migrate` against MySQL (called out in the README/upgrade note)
+- **THEN** nothing breaks silently in the repository itself; their documented migration step is to update `.env` and re-run `php artisan migrate` against MySQL (called out in the `docs/FIRST_SETUP.md` upgrade note)
