@@ -2,9 +2,9 @@
 
 ## 1. MySQL Default Configuration
 
-- [ ] 1.1 Switch the active DB block in `.env.example` to `DB_CONNECTION=mysql`, `DB_HOST=127.0.0.1`, `DB_PORT=3306`, `DB_DATABASE=foodbridge`, `DB_USERNAME=root`, `DB_PASSWORD=` (empty), with SQLite commented out as a labeled non-default alternative; verify `grep -A8 '^DB_CONNECTION' .env.example` shows MySQL active and no uncommented sqlite line
-- [ ] 1.2 Remove the SQLite `touch database/database.sqlite` line from `composer.json`'s `post-create-project-cmd` and verify `composer validate` still passes with no syntax errors
-- [ ] 1.3 Verify MySQL end-to-end on the maintainer machine: create empty `foodbridge` DB, copy `.env.example` → `.env` unchanged, run `php artisan key:generate` and `php artisan migrate`, and confirm all migrations (incl. session/cache/queue tables) land in MySQL
+- [x] 1.1 Switch the active DB block in `.env.example` to `DB_CONNECTION=mysql`, `DB_HOST=127.0.0.1`, `DB_PORT=3306`, `DB_DATABASE=foodbridge`, `DB_USERNAME=root`, `DB_PASSWORD=` (empty), with SQLite commented out as a labeled non-default alternative; verify `grep -A8 '^DB_CONNECTION' .env.example` shows MySQL active and no uncommented sqlite line
+- [x] 1.2 Remove the SQLite `touch database/database.sqlite` line from `composer.json`'s `post-create-project-cmd` and verify `composer validate` still passes with no syntax errors
+- [ ] 1.3 Verify MySQL end-to-end on the maintainer machine: create empty `foodbridge` DB, copy `.env.example` → `.env` unchanged, run `php artisan key:generate` and `php artisan migrate`, and confirm all migrations (incl. session/cache/queue tables) land in MySQL — **SKIPPED per maintainer (2026-10-18):** maintainer machine's MySQL uses `auth_socket` (no stock root/empty credentials), so end-to-end DB verification is waived; config correctness rests on task 1.1's verified block
 
 ## 2. README Onboarding Section
 
