@@ -1,0 +1,3 @@
+# Default code owners — only this account reviews/approves everything.
+# Enforced when branch protection requires "Require review from Code Owners".
+* @Alifmslm
