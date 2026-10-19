@@ -1,10 +1,10 @@
 # FoodBridge
 
-FoodBridge is an Laravel Web application that connects food donors with organization or individual that need food to reduce food waste.
+FoodBridge is a Laravel Web application that connects food donors with organization or individual that need food to reduce food waste.
 
 ## First setup
 
-Never set this project up before? Follow **[docs/FIRST_SETUP.md](docs/FIRST_SETUP.md)** — it takes you from a fresh clone to a running app: toolchain versions, Laragon/XAMPP setup, MySQL database creation, first-run commands, and troubleshooting.
+Never set this project up before? Follow **[docs/FIRST_SETUP.md](docs/FIRST_SETUP.md)** it takes you from a fresh clone to a running app: toolchain versions, Laragon/XAMPP setup, MySQL database creation, first-run commands, and troubleshooting.
 
 ## Running the app
 
