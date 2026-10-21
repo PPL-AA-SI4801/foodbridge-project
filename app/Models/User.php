@@ -6,12 +6,16 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
+#[Fillable(['nama', 'email', 'password', 'no_hp', 'role', 'status_akun'])]
+#[Hidden(['password'])]
+#[WithoutTimestamps]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -25,8 +29,39 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * The donor profile of this account, if the account is a donor.
+     */
+    public function donorProfile(): HasOne
+    {
+        return $this->hasOne(DonorProfile::class, 'user_id');
+    }
+
+    /**
+     * The recipient profile of this account, if the account is a recipient.
+     */
+    public function recipientProfile(): HasOne
+    {
+        return $this->hasOne(RecipientProfile::class, 'user_id');
+    }
+
+    /**
+     * The legal documents this account uploaded for verification.
+     */
+    public function verificationDocuments(): HasMany
+    {
+        return $this->hasMany(VerificationDocument::class, 'user_id');
+    }
+
+    /**
+     * The in-app notifications addressed to this account.
+     */
+    public function inAppNotifications(): HasMany
+    {
+        return $this->hasMany(InAppNotification::class, 'user_id');
     }
 }
