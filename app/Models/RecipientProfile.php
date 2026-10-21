@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['nama_lembaga', 'jenis_lembaga', 'alamat', 'lat', 'lng', 'user_id'])]
 #[WithoutTimestamps]
@@ -30,5 +31,13 @@ class RecipientProfile extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * The requests published by this recipient.
+     */
+    public function foodRequests(): HasMany
+    {
+        return $this->hasMany(FoodRequest::class, 'recipient_id');
     }
 }
