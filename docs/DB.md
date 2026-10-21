@@ -1,60 +1,62 @@
-# FoodBridge — Referensi Database
+# FoodBridge — Database Reference
 
-Sumber: ERD final FoodBridge (Visual Paradigm, 11 entitas). Stack: Laravel + MySQL.
-Dokumen ini dipakai sebagai landasan untuk generate migration dan model.
+Source: final FoodBridge ERD (Visual Paradigm, 11 entities). Stack: Laravel + MySQL.
+This document is the basis for generating migrations and models.
 
-Tanda di dokumen ini:
-- **Null = Ya** → kolom bertanda `N` di ERD.
-- **⚠** → ada hal yang perlu dicek, dijelaskan di bagian [Temuan ERD](#7-temuan-erd-yang-perlu-dicek).
-- **(usulan)** → tidak ada di ERD/proposal, hanya saran agar siap dipakai di kode.
+Note: table names, column names, and enum values are kept in Indonesian exactly as they appear in the ERD (English glosses are added where helpful).
+
+Markers used in this document:
+- **Null = Yes** → column marked `N` in the ERD.
+- **⚠** → something needs to be checked, explained in the [ERD Findings](#7-erd-findings-to-check) section.
+- **(proposed)** → not in the ERD/proposal, only a suggestion to make it ready for use in code.
 
 ---
 
-## 1. Ringkasan Tabel
+## 1. Table Summary
 
-| # | Tabel | Model | Fungsi | PBI terkait |
+| # | Table | Model | Purpose | Related PBI |
 |---|---|---|---|---|
-| 1 | `users` | `User` | Akun & autentikasi semua peran (donor, penerima, administrator) | PBI-02 |
-| 2 | `donor_profiles` | `DonorProfile` | Profil usaha Donor + titik lokasi | PBI-04 |
-| 3 | `recipient_profiles` | `RecipientProfile` | Profil lembaga Penerima + titik lokasi | PBI-04 |
-| 4 | `verification_documents` | `VerificationDocument` | Dokumen legalitas untuk diverifikasi Admin | PBI-02, 03 |
-| 5 | `food_categories` | `FoodCategory` | Kategori gizi makanan | PBI-05 |
-| 6 | `food_posts` | `FoodPost` | Postingan makanan berlebih oleh Donor | PBI-05, 06 |
-| 7 | `food_requests` | `FoodRequest` | Request Board: kebutuhan mendesak Penerima | PBI-10 |
-| 8 | `claims` | `Claim` | Klaim Penerima atas postingan; pusat alur serah terima | PBI-07, 09, 12 |
-| 9 | `courier_details` | `CourierDetail` | Data pengemudi (hanya jika kurir online) | PBI-11 |
-| 10 | `food_reviews` | `FoodReview` | Ulasan kualitas **dan** laporan makanan tidak layak (dibedakan `jenis_feedback`) | PBI-13, 14 |
-| 11 | `notifications` | `InAppNotification` ⚠ | Notifikasi in-app | PBI-08 |
+| 1 | `users` | `User` | Accounts & authentication for all roles (donor, recipient, administrator) | PBI-02 |
+| 2 | `donor_profiles` | `DonorProfile` | Donor business profile + location point | PBI-04 |
+| 3 | `recipient_profiles` | `RecipientProfile` | Recipient organization profile + location point | PBI-04 |
+| 4 | `verification_documents` | `VerificationDocument` | Legal documents to be verified by the Admin | PBI-02, 03 |
+| 5 | `food_categories` | `FoodCategory` | Food nutrition categories | PBI-05 |
+| 6 | `food_posts` | `FoodPost` | Surplus food posts created by Donors | PBI-05, 06 |
+| 7 | `food_requests` | `FoodRequest` | Request Board: urgent needs posted by Recipients | PBI-10 |
+| 8 | `claims` | `Claim` | Recipient's claim on a post; the center of the handover flow | PBI-07, 09, 12 |
+| 9 | `courier_details` | `CourierDetail` | Driver data (only if an online courier is used) | PBI-11 |
+| 10 | `food_reviews` | `FoodReview` | Quality reviews **and** reports of unfit food (distinguished by `jenis_feedback`) | PBI-13, 14 |
+| 11 | `notifications` | `InAppNotification` ⚠ | In-app notifications | PBI-08 |
 
-Tidak ada tabel untuk dashboard dampak dan ekspor Excel. Datanya dihitung dari join `claims`, `food_posts`, dan tabel profil (PBI-15–17).
+There are no tables for the impact dashboard and Excel export. Their data is computed from joins across `claims`, `food_posts`, and the profile tables (PBI-15–17).
 
 ---
 
-## 2. Diagram Relasi
+## 2. Relationship Diagram
 
 ```mermaid
 erDiagram
-    users ||--o| donor_profiles : "punya (role donor)"
-    users ||--o| recipient_profiles : "punya (role penerima)"
-    users ||--o{ verification_documents : "mengunggah"
-    users ||--o{ notifications : "menerima"
+    users ||--o| donor_profiles : "has (donor role)"
+    users ||--o| recipient_profiles : "has (recipient role)"
+    users ||--o{ verification_documents : "uploads"
+    users ||--o{ notifications : "receives"
 
-    donor_profiles ||--o{ food_posts : "membuat (donor_id)"
-    food_categories ||--o{ food_posts : "mengelompokkan"
+    donor_profiles ||--o{ food_posts : "creates (donor_id)"
+    food_categories ||--o{ food_posts : "groups"
 
-    recipient_profiles ||--o{ food_requests : "membuat (recipient_id)"
-    recipient_profiles ||--o{ claims : "mengajukan (recipient_id)"
-    food_posts ||--o{ claims : "diklaim (post_id)"
+    recipient_profiles ||--o{ food_requests : "creates (recipient_id)"
+    recipient_profiles ||--o{ claims : "submits (recipient_id)"
+    food_posts ||--o{ claims : "is claimed (post_id)"
 
-    claims ||--o| courier_details : "jika kurir online"
-    claims ||--o| food_reviews : "umpan balik"
+    claims ||--o| courier_details : "if online courier"
+    claims ||--o| food_reviews : "feedback"
 ```
 
-Kardinalitas:
+Cardinality:
 
-| Relasi | Kardinalitas |
+| Relationship | Cardinality |
 |---|---|
-| users ↔ donor_profiles | 1 : 0..1 (admin tidak punya profil) |
+| users ↔ donor_profiles | 1 : 0..1 (admins have no profile) |
 | users ↔ recipient_profiles | 1 : 0..1 |
 | users → verification_documents | 1 : 0..* |
 | users → notifications | 1 : 0..* |
@@ -68,258 +70,258 @@ Kardinalitas:
 
 ---
 
-## 3. Detail Tabel
+## 3. Table Details
 
-Konversi tipe ERD → Laravel: `integer(10)` → integer/`id()`, `varchar(n)` → `string(n)`, `decimal(10,7)` → `decimal(10,7)`, `timestamp` → `timestamp`, `date` → `date`, `binary(1)` → `boolean`.
+ERD → Laravel type conversion: `integer(10)` → integer/`id()`, `varchar(n)` → `string(n)`, `decimal(10,7)` → `decimal(10,7)`, `timestamp` → `timestamp`, `date` → `date`, `binary(1)` → `boolean`.
 
 ### 3.1 `users`
 
-| Kolom | Tipe | Null | Key | Keterangan |
+| Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| id | integer(10) | Tidak | PK | |
-| nama | varchar(255) | Tidak | U ⚠ | Nama pengguna/PIC |
-| email | varchar(255) | Tidak | U | Identitas login |
-| password | varchar(255) | Tidak | | Hash |
-| no_hp | varchar(20) | Tidak | | |
-| role | varchar(255) | Tidak | | `donor` / `penerima` / `administrator` |
-| status_akun | varchar(255) | Tidak | | Status verifikasi akun |
+| id | integer(10) | No | PK | |
+| nama | varchar(255) | No | U ⚠ | User name / PIC (person in charge) |
+| email | varchar(255) | No | U | Login identity |
+| password | varchar(255) | No | | Hash |
+| no_hp | varchar(20) | No | | Phone number |
+| role | varchar(255) | No | | `donor` / `penerima` / `administrator` |
+| status_akun | varchar(255) | No | | Account verification status |
 
 ### 3.2 `donor_profiles`
 
-| Kolom | Tipe | Null | Key | Keterangan |
+| Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| id | integer(10) | Tidak | PK | |
-| nama_usaha | varchar(255) | Tidak | U | |
-| alamat | varchar(255) | Tidak | | |
-| jenis_usaha | varchar(255) | Tidak | | Restoran, hotel, katering, dapur MBG, dst. |
-| lat | decimal(10,7) | Ya | | |
-| lng | decimal(10,7) | Ya | | |
-| user_id | integer(10) | Tidak | FK → users.id | 1:1 ⚠ |
+| id | integer(10) | No | PK | |
+| nama_usaha | varchar(255) | No | U | Business name |
+| alamat | varchar(255) | No | | Address |
+| jenis_usaha | varchar(255) | No | | Business type: restaurant, hotel, caterer, MBG kitchen, etc. |
+| lat | decimal(10,7) | Yes | | |
+| lng | decimal(10,7) | Yes | | |
+| user_id | integer(10) | No | FK → users.id | 1:1 ⚠ |
 
 ### 3.3 `recipient_profiles`
 
-| Kolom | Tipe | Null | Key | Keterangan |
+| Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| id | integer(10) | Tidak | PK | |
-| nama_lembaga | varchar(255) | Tidak | | |
-| jenis_lembaga | varchar(255) | Tidak | | Panti asuhan, dapur umum, dst. |
-| alamat | varchar(255) | Tidak | | |
-| lat | decimal(10,7) | Ya | | |
-| lng | decimal(10,7) | Ya | | |
-| user_id | integer(10) | Tidak | FK → users.id | 1:1 ⚠ |
+| id | integer(10) | No | PK | |
+| nama_lembaga | varchar(255) | No | | Organization name |
+| jenis_lembaga | varchar(255) | No | | Organization type: orphanage, community kitchen, etc. |
+| alamat | varchar(255) | No | | Address |
+| lat | decimal(10,7) | Yes | | |
+| lng | decimal(10,7) | Yes | | |
+| user_id | integer(10) | No | FK → users.id | 1:1 ⚠ |
 
 ### 3.4 `verification_documents`
 
-| Kolom | Tipe | Null | Key | Keterangan |
+| Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| id | integer(10) | Tidak | PK | |
-| jenis_dokumen | varchar(255) | Tidak | | |
-| file_path | varchar(255) | Tidak | | Path file di storage (disarankan disk private) |
-| status | varchar(255) | Tidak | | Status tinjauan Admin |
-| catatan | varchar(255) | Ya | | Alasan penolakan/catatan Admin |
-| verified_at | timestamp | Tidak ⚠ | | Waktu ditinjau; seharusnya nullable |
-| user_id | integer(10) | Tidak | FK → users.id | |
+| id | integer(10) | No | PK | |
+| jenis_dokumen | varchar(255) | No | | Document type |
+| file_path | varchar(255) | No | | File path in storage (private disk recommended) |
+| status | varchar(255) | No | | Admin review status |
+| catatan | varchar(255) | Yes | | Rejection reason / Admin notes |
+| verified_at | timestamp | No ⚠ | | Time of review; should be nullable |
+| user_id | integer(10) | No | FK → users.id | |
 
 ### 3.5 `food_categories`
 
-| Kolom | Tipe | Null | Key | Keterangan |
+| Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| id | integer(10) | Tidak | PK | |
-| nama_kategori | varchar(255) | Tidak | | Kategori gizi |
+| id | integer(10) | No | PK | |
+| nama_kategori | varchar(255) | No | | Nutrition category |
 
 ### 3.6 `food_posts`
 
-| Kolom | Tipe | Null | Key | Keterangan |
+| Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| id | integer(10) | Tidak | PK | |
-| judul | varchar(255) | Tidak | | |
-| deskripsi | varchar(255) | Tidak | | |
-| foto | varchar(255) | Tidak | | Path foto |
-| jumlah_porsi | integer(10) | Tidak | | Total porsi yang diposting |
-| sisa_porsi | integer(10) | Tidak | | Porsi yang masih bisa diklaim |
-| alamat | varchar(255) | Tidak | | Lokasi pengambilan |
-| lat | decimal(10,7) | Tidak | | |
-| lng | decimal(10,7) | Tidak | | |
-| batas_konsumsi | timestamp | Tidak | | Safety hours; lewat batas → kedaluwarsa |
-| status | varchar(255) | Tidak | | |
-| donor_id | integer(10) | Tidak | FK → **donor_profiles.id** | |
-| category_id | integer(10) | Tidak | FK → food_categories.id | |
+| id | integer(10) | No | PK | |
+| judul | varchar(255) | No | | Title |
+| deskripsi | varchar(255) | No | | Description |
+| foto | varchar(255) | No | | Photo path |
+| jumlah_porsi | integer(10) | No | | Total portions posted |
+| sisa_porsi | integer(10) | No | | Portions still available to claim |
+| alamat | varchar(255) | No | | Pickup location |
+| lat | decimal(10,7) | No | | |
+| lng | decimal(10,7) | No | | |
+| batas_konsumsi | timestamp | No | | Safety hours; past this limit → expired |
+| status | varchar(255) | No | | |
+| donor_id | integer(10) | No | FK → **donor_profiles.id** | |
+| category_id | integer(10) | No | FK → food_categories.id | |
 
 ### 3.7 `food_requests` (Request Board)
 
-| Kolom | Tipe | Null | Key | Keterangan |
+| Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| id | integer(10) | Tidak | PK | |
-| recipient_id | integer(10) | Tidak | FK → **recipient_profiles.id** | |
-| judul | varchar(255) | Tidak | | |
-| deskripsi | varchar(255) | Ya | | |
-| jumlah_porsi | integer(10) | Tidak | | Porsi yang dibutuhkan |
-| batas_waktu | timestamp | Tidak | | |
-| status | varchar(255) | Tidak | | |
-| created_at | timestamp | Tidak | | Tidak ada `updated_at` |
+| id | integer(10) | No | PK | |
+| recipient_id | integer(10) | No | FK → **recipient_profiles.id** | |
+| judul | varchar(255) | No | | Title |
+| deskripsi | varchar(255) | Yes | | Description |
+| jumlah_porsi | integer(10) | No | | Portions needed |
+| batas_waktu | timestamp | No | | Deadline |
+| status | varchar(255) | No | | |
+| created_at | timestamp | No | | No `updated_at` |
 
 ### 3.8 `claims`
 
-| Kolom | Tipe | Null | Key | Keterangan |
+| Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| id | integer(10) | Tidak | PK | |
-| jumlah_porsi | integer(10) | Tidak | | Porsi yang diklaim |
-| status | varchar(255) | Tidak | | |
-| metode_pengambilan | varchar(255) | Ya | | Diisi setelah klaim disetujui: self pickup / kurir online |
-| kode_verifikasi | varchar(255) | Ya | | 6 digit, hanya untuk self pickup |
-| tanggal_klaim | date | Tidak | | Dasar hitung kuota harian |
-| approved_at | timestamp | Tidak ⚠ | | Seharusnya nullable (klaim yang belum/tidak disetujui) |
-| completed_at | timestamp | Ya | | Diisi saat Donor menekan "Makanan sudah diserahkan" |
-| post_id | integer(10) | Tidak | FK → food_posts.id | |
-| recipient_id | integer(10) | Tidak | FK → **recipient_profiles.id** | |
+| id | integer(10) | No | PK | |
+| jumlah_porsi | integer(10) | No | | Portions claimed |
+| status | varchar(255) | No | | |
+| metode_pengambilan | varchar(255) | Yes | | Filled in after the claim is approved: self pickup / online courier |
+| kode_verifikasi | varchar(255) | Yes | | 6 digits, only for self pickup |
+| tanggal_klaim | date | No | | Basis for the daily quota calculation |
+| approved_at | timestamp | No ⚠ | | Should be nullable (claims not yet / never approved) |
+| completed_at | timestamp | Yes | | Filled in when the Donor presses "Food has been handed over" |
+| post_id | integer(10) | No | FK → food_posts.id | |
+| recipient_id | integer(10) | No | FK → **recipient_profiles.id** | |
 
 ### 3.9 `courier_details`
 
-Hanya dibuat jika klaim memakai kurir online.
+Only created if the claim uses an online courier.
 
-| Kolom | Tipe | Null | Key | Keterangan |
+| Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| id | integer(10) | Tidak | PK | |
-| claim_id | integer(10) | Tidak | FK → claims.id | 1:1 ⚠ |
-| platform | varchar(255) | Tidak | | Gojek / Grab |
-| nama_pengemudi | varchar(255) | Tidak | | |
-| no_kendaraan | varchar(20) | Tidak | | |
-| kode_verifikasi_kurir | varchar(255) | Tidak | | Kode dari aplikasi pihak ketiga |
-| foto_bukti | varchar(255) | Tidak | | Screenshot pesanan |
-| created_at | timestamp | Tidak | | Tidak ada `updated_at` |
+| id | integer(10) | No | PK | |
+| claim_id | integer(10) | No | FK → claims.id | 1:1 ⚠ |
+| platform | varchar(255) | No | | Gojek / Grab |
+| nama_pengemudi | varchar(255) | No | | Driver name |
+| no_kendaraan | varchar(20) | No | | Vehicle number |
+| kode_verifikasi_kurir | varchar(255) | No | | Code from the third-party app |
+| foto_bukti | varchar(255) | No | | Order screenshot |
+| created_at | timestamp | No | | No `updated_at` |
 
 ### 3.10 `food_reviews`
 
-Satu tabel untuk dua hal: ulasan kualitas dan laporan makanan tidak layak, dibedakan oleh `jenis_feedback`.
+One table for two purposes: quality reviews and reports of unfit food, distinguished by `jenis_feedback`.
 
-| Kolom | Tipe | Null | Key | Keterangan |
+| Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| id | integer(10) | Tidak | PK | |
-| claim_id | integer(10) | Tidak | FK → claims.id | 1:1 ⚠ |
-| rating | integer(10) | Tidak ⚠ | | Untuk laporan mungkin tidak relevan |
-| komentar | varchar(255) | Tidak | | |
-| created_at | timestamp | Ya ⚠ | | Tidak ada `updated_at` |
-| jenis_feedback | varchar(255) | Tidak | | `ulasan` / `laporan` |
-| foto_bukti | varchar(255) | Ya | | Foto kondisi makanan |
-| status_penanganan | varchar(255) | Ya | | Diisi Admin untuk laporan |
-| tindak_lanjut | varchar(255) | Ya | | Catatan tindakan Admin |
+| id | integer(10) | No | PK | |
+| claim_id | integer(10) | No | FK → claims.id | 1:1 ⚠ |
+| rating | integer(10) | No ⚠ | | May not be relevant for reports |
+| komentar | varchar(255) | No | | Comment |
+| created_at | timestamp | Yes ⚠ | | No `updated_at` |
+| jenis_feedback | varchar(255) | No | | `ulasan` (review) / `laporan` (report) |
+| foto_bukti | varchar(255) | Yes | | Photo of the food's condition |
+| status_penanganan | varchar(255) | Yes | | Filled in by Admin for reports |
+| tindak_lanjut | varchar(255) | Yes | | Admin's action notes |
 
 ### 3.11 `notifications`
 
-| Kolom | Tipe | Null | Key | Keterangan |
+| Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| id | integer(10) | Tidak | PK | |
-| judul | varchar(255) | Tidak | | |
-| pesan | varchar(255) | Tidak | | |
-| tipe | varchar(255) | Tidak | | Jenis peristiwa |
-| is_read | binary(1) | Tidak | | Boolean, default `false` (usulan) |
-| created_at | timestamp | Tidak | | Tidak ada `updated_at` |
-| user_id | integer(10) | Tidak | FK → users.id | Penerima notifikasi |
+| id | integer(10) | No | PK | |
+| judul | varchar(255) | No | | Title |
+| pesan | varchar(255) | No | | Message |
+| tipe | varchar(255) | No | | Event type |
+| is_read | binary(1) | No | | Boolean, default `false` (proposed) |
+| created_at | timestamp | No | | No `updated_at` |
+| user_id | integer(10) | No | FK → users.id | Notification recipient |
 
 ---
 
-## 4. Relasi Eloquent
+## 4. Eloquent Relationships
 
-Foreign key tidak mengikuti konvensi Laravel di beberapa tempat (`donor_id`, `recipient_id`, `post_id`, `category_id`), jadi harus ditulis eksplisit.
+Foreign keys do not follow Laravel conventions in several places (`donor_id`, `recipient_id`, `post_id`, `category_id`), so they must be written explicitly.
 
-| Model | Relasi |
+| Model | Relationships |
 |---|---|
 | `User` | `hasOne(DonorProfile)`, `hasOne(RecipientProfile)`, `hasMany(VerificationDocument)`, `hasMany(InAppNotification)` |
 | `DonorProfile` | `belongsTo(User)`, `hasMany(FoodPost, 'donor_id')`, `hasManyThrough(Claim, FoodPost, 'donor_id', 'post_id')` |
 | `RecipientProfile` | `belongsTo(User)`, `hasMany(FoodRequest, 'recipient_id')`, `hasMany(Claim, 'recipient_id')` |
 | `VerificationDocument` | `belongsTo(User)` |
 | `FoodCategory` | `hasMany(FoodPost, 'category_id')` |
-| `FoodPost` | `belongsTo(DonorProfile, 'donor_id')` (nama relasi `donor`), `belongsTo(FoodCategory, 'category_id')` (`category`), `hasMany(Claim, 'post_id')` |
+| `FoodPost` | `belongsTo(DonorProfile, 'donor_id')` (relation name `donor`), `belongsTo(FoodCategory, 'category_id')` (`category`), `hasMany(Claim, 'post_id')` |
 | `FoodRequest` | `belongsTo(RecipientProfile, 'recipient_id')` (`recipient`) |
 | `Claim` | `belongsTo(FoodPost, 'post_id')` (`post`), `belongsTo(RecipientProfile, 'recipient_id')` (`recipient`), `hasOne(CourierDetail)`, `hasOne(FoodReview)` |
 | `CourierDetail` | `belongsTo(Claim)` |
 | `FoodReview` | `belongsTo(Claim)` |
 | `InAppNotification` | `belongsTo(User)` |
 
-Alur akses dari user yang login: `Auth::user()->donorProfile->id` adalah nilai `donor_id`, dan `Auth::user()->recipientProfile->id` adalah nilai `recipient_id`. Keduanya **bukan** `users.id`.
+Access path from the logged-in user: `Auth::user()->donorProfile->id` is the `donor_id` value, and `Auth::user()->recipientProfile->id` is the `recipient_id` value. Neither is `users.id`.
 
 ---
 
-## 5. Nilai Status / Enum (usulan)
+## 5. Status / Enum Values (proposed)
 
-ERD hanya menyebut tipe `varchar(255)`. Nilai berikut diturunkan dari alur di proposal. Sebaiknya dijadikan PHP backed enum atau konstanta di model, lalu disepakati tim sebelum dipakai.
+The ERD only specifies the type `varchar(255)`. The values below are derived from the flows in the proposal. They should be turned into PHP backed enums or model constants, and agreed on by the team before use.
 
-| Kolom | Nilai |
+| Column | Values |
 |---|---|
-| `users.role` | `donor`, `penerima`, `administrator` |
-| `users.status_akun` | `menunggu`, `aktif`, `ditolak` |
-| `verification_documents.status` | `menunggu`, `disetujui`, `ditolak` |
-| `food_posts.status` | `tersedia`, `habis`, `kedaluwarsa` |
-| `food_requests.status` | `terbuka`, `ditutup` |
-| `claims.status` | `menunggu`, `disetujui`, `ditolak`, `selesai` |
-| `claims.metode_pengambilan` | `self_pickup`, `kurir_online` |
+| `users.role` | `donor`, `penerima` (recipient), `administrator` |
+| `users.status_akun` | `menunggu` (pending), `aktif` (active), `ditolak` (rejected) |
+| `verification_documents.status` | `menunggu` (pending), `disetujui` (approved), `ditolak` (rejected) |
+| `food_posts.status` | `tersedia` (available), `habis` (sold out), `kedaluwarsa` (expired) |
+| `food_requests.status` | `terbuka` (open), `ditutup` (closed) |
+| `claims.status` | `menunggu` (pending), `disetujui` (approved), `ditolak` (rejected), `selesai` (completed) |
+| `claims.metode_pengambilan` | `self_pickup`, `kurir_online` (online courier) |
 | `courier_details.platform` | `gojek`, `grab` |
-| `food_reviews.jenis_feedback` | `ulasan`, `laporan` |
-| `food_reviews.status_penanganan` | `menunggu`, `diproses`, `selesai` (null untuk `ulasan`) |
-| `notifications.tipe` | mis. `akun`, `klaim`, `laporan` |
+| `food_reviews.jenis_feedback` | `ulasan` (review), `laporan` (report) |
+| `food_reviews.status_penanganan` | `menunggu` (pending), `diproses` (in progress), `selesai` (completed) (null for `ulasan`) |
+| `notifications.tipe` | e.g. `akun` (account), `klaim` (claim), `laporan` (report) |
 
 ---
 
-## 6. Alur Data Utama
+## 6. Main Data Flow
 
-1. **Registrasi:** `users` (role, `status_akun = menunggu`) → profil (`donor_profiles` / `recipient_profiles`) → `verification_documents`. Admin menyetujui → `status_akun = aktif`.
-2. **Posting:** Donor membuat `food_posts` (`sisa_porsi = jumlah_porsi`). Setelah `batas_konsumsi` lewat, post berstatus `kedaluwarsa` dan tidak tampil di katalog.
-3. **Klaim:** Penerima membuat `claims` (`status = menunggu`). Kuota harian dihitung dari klaim milik `recipient_id` dengan `tanggal_klaim` hari ini. Donor menyetujui atau menolak → `approved_at` terisi, `sisa_porsi` berkurang saat disetujui.
-4. **Metode pengambilan** (setelah disetujui):
-   - `self_pickup` → sistem mengisi `claims.kode_verifikasi` (6 digit), Penerima menunjukkannya ke Donor.
-   - `kurir_online` → Penerima mengisi `courier_details`, `kode_verifikasi` tetap null.
-5. **Serah terima:** Donor menekan "Makanan sudah diserahkan" → `completed_at` terisi, `status = selesai`.
-6. **Umpan balik:** Penerima mengisi `food_reviews`. Jika `jenis_feedback = laporan`, Admin menanganinya lewat `status_penanganan` dan `tindak_lanjut`.
-7. **Notifikasi:** setiap perubahan status klaim (dan peristiwa akun/laporan) membuat baris di `notifications`.
-8. **Dashboard & ekspor:** hasil join `claims` + `food_posts` + profil. Tidak disimpan.
-
----
-
-## 7. Temuan ERD yang Perlu Dicek
-
-Hal-hal berikut sebaiknya diputuskan sebelum generate migration dan model.
-
-**Kolom yang diduga salah nullability**
-- `verification_documents.verified_at` dan `claims.approved_at` bertanda NOT NULL, padahal terisi hanya setelah ada tinjauan atau persetujuan. Jadikan nullable.
-- `food_reviews.rating` NOT NULL, sedangkan untuk `jenis_feedback = laporan` rating belum tentu ada. Pertimbangkan nullable.
-- `food_reviews.created_at` nullable, padahal tabel lain NOT NULL. Kemungkinan tidak disengaja.
-
-**Constraint yang tidak tergambar**
-- `users.nama` bertanda unique. Dua orang bisa bernama sama, jadi kemungkinan hanya `email` yang seharusnya unique.
-- `user_id` di `donor_profiles` dan `recipient_profiles` (relasi 1:1), serta `claim_id` di `courier_details` dan `food_reviews` (maksimal satu per klaim), perlu `unique` agar 1:1 benar-benar ditegakkan di database.
-- `onDelete` tidak ada di ERD. Usulan: `cascade` untuk profil, dokumen, notifikasi, `courier_details`, dan `food_reviews`; `restrict` untuk `food_posts` → `claims` agar riwayat penyaluran tidak hilang.
-- Usulan index: `food_posts(status, batas_konsumsi)` untuk katalog, dan `claims(recipient_id, tanggal_klaim)` untuk hitung kuota harian.
-
-**Logika yang tidak ada di database**
-- Nilai kuota harian tidak disimpan di tabel mana pun. Taruh di `config/` atau konstanta.
-- Kedaluwarsa tidak otomatis. Perlu scheduled command yang mengubah `food_posts.status`, atau scope `available()` yang memfilter `batas_konsumsi > now()`.
-- `claims.jumlah_porsi` tidak boleh melebihi `food_posts.sisa_porsi`. Validasi di service, idealnya dalam transaksi.
+1. **Registration:** `users` (role, `status_akun = menunggu`) → profile (`donor_profiles` / `recipient_profiles`) → `verification_documents`. Admin approves → `status_akun = aktif`.
+2. **Posting:** Donor creates `food_posts` (`sisa_porsi = jumlah_porsi`). Once `batas_konsumsi` has passed, the post's status becomes `kedaluwarsa` and it no longer appears in the catalog.
+3. **Claim:** Recipient creates `claims` (`status = menunggu`). The daily quota is calculated from claims belonging to that `recipient_id` with `tanggal_klaim` equal to today. Donor approves or rejects → `approved_at` is filled in, and `sisa_porsi` decreases upon approval.
+4. **Pickup method** (after approval):
+   - `self_pickup` → the system fills in `claims.kode_verifikasi` (6 digits), and the Recipient shows it to the Donor.
+   - `kurir_online` → the Recipient fills in `courier_details`, `kode_verifikasi` stays null.
+5. **Handover:** Donor presses "Food has been handed over" → `completed_at` is filled in, `status = selesai`.
+6. **Feedback:** Recipient fills in `food_reviews`. If `jenis_feedback = laporan`, the Admin handles it via `status_penanganan` and `tindak_lanjut`.
+7. **Notifications:** every claim status change (and account/report events) creates a row in `notifications`.
+8. **Dashboard & export:** results of joins across `claims` + `food_posts` + profiles. Not stored.
 
 ---
 
-## 8. Catatan Generate Model (Laravel)
+## 7. ERD Findings to Check
 
-**Konvensi umum**
-- Tipe ID: ERD menulis `integer(10)`. Pakai `id()` dan `foreignId()` (bigint unsigned) untuk kemudahan, asal PK dan FK konsisten. Jika ingin persis sesuai ERD, pakai `unsignedInteger` di keduanya.
-- `users`: ERD tidak memuat `remember_token`, `email_verified_at`, maupun `timestamps`. Migration bawaan Laravel menyertakannya, jadi putuskan mau mengikuti ERD atau menambahkannya (jika ditambah, perbarui ERD).
-- Timestamps: tabel yang hanya punya `created_at` (`food_requests`, `courier_details`, `food_reviews`, `notifications`) pakai `const UPDATED_AT = null;`. Tabel tanpa keduanya (`users`, profil, `verification_documents`, `food_posts`, `food_categories`, `claims`) pakai `public $timestamps = false;`.
-- Kolom waktu perlu cast `datetime`, yaitu `batas_konsumsi`, `batas_waktu`, `approved_at`, `completed_at`, `verified_at`. `tanggal_klaim` cast `date`.
-- `lat`/`lng` bertipe decimal dan dikembalikan Eloquent sebagai string. Cast `float` atau `decimal:7`, dan konversi ke float sebelum dikirim ke Leaflet.
-- `users.password` cast `hashed` dan masuk `$hidden`. `notifications.is_read` cast `boolean`.
+The following items should be decided before generating migrations and models.
 
-**Penamaan model notifikasi**
-Laravel punya tabel `notifications` bawaan untuk sistem notifikasi database (kolom `type`, `notifiable`, `data`, `read_at`) dan facade `Notification`. Tabel di ERD ini skemanya berbeda. Agar tidak bentrok:
-- Beri nama model `InAppNotification` dengan `protected $table = 'notifications';`.
-- Jangan jalankan `php artisan notifications:table`.
-- Jangan pakai channel `database` dari trait `Notifiable`.
+**Columns with suspected incorrect nullability**
+- `verification_documents.verified_at` and `claims.approved_at` are marked NOT NULL, even though they are only filled in after a review or approval. Make them nullable.
+- `food_reviews.rating` is NOT NULL, while for `jenis_feedback = laporan` a rating may not exist. Consider making it nullable.
+- `food_reviews.created_at` is nullable, while in other tables it is NOT NULL. Possibly unintentional.
 
-**Privasi (NFR-08)**
-- `verification_documents.file_path` dan `courier_details.foto_bukti` simpan di disk private, bukan `public`.
-- Data `courier_details` hanya boleh dibaca Donor pemilik post terkait dan Admin. Terapkan lewat Policy.
+**Constraints not depicted**
+- `users.nama` is marked unique. Two people can share the same name, so probably only `email` should be unique.
+- `user_id` in `donor_profiles` and `recipient_profiles` (1:1 relationship), as well as `claim_id` in `courier_details` and `food_reviews` (at most one per claim), need `unique` so the 1:1 is actually enforced at the database level.
+- `onDelete` is absent from the ERD. Proposal: `cascade` for profiles, documents, notifications, `courier_details`, and `food_reviews`; `restrict` for `food_posts` → `claims` so that distribution history is not lost.
+- Proposed indexes: `food_posts(status, batas_konsumsi)` for the catalog, and `claims(recipient_id, tanggal_klaim)` for the daily quota calculation.
 
-**Urutan migration (berdasarkan dependensi FK)**
+**Logic not present in the database**
+- The daily quota value is not stored in any table. Put it in `config/` or a constant.
+- Expiry is not automatic. It needs a scheduled command that updates `food_posts.status`, or an `available()` scope that filters `batas_konsumsi > now()`.
+- `claims.jumlah_porsi` must not exceed `food_posts.sisa_porsi`. Validate in a service, ideally within a transaction.
 
-| Urutan | Tabel |
+---
+
+## 8. Model Generation Notes (Laravel)
+
+**General conventions**
+- ID type: the ERD writes `integer(10)`. Use `id()` and `foreignId()` (bigint unsigned) for convenience, as long as PKs and FKs are consistent. To match the ERD exactly, use `unsignedInteger` for both.
+- `users`: the ERD does not include `remember_token`, `email_verified_at`, or `timestamps`. Laravel's default migration includes them, so decide whether to follow the ERD or add them (if added, update the ERD).
+- Timestamps: tables that only have `created_at` (`food_requests`, `courier_details`, `food_reviews`, `notifications`) use `const UPDATED_AT = null;`. Tables with neither (`users`, profiles, `verification_documents`, `food_posts`, `food_categories`, `claims`) use `public $timestamps = false;`.
+- Time columns need a `datetime` cast, namely `batas_konsumsi`, `batas_waktu`, `approved_at`, `completed_at`, `verified_at`. `tanggal_klaim` is cast as `date`.
+- `lat`/`lng` are decimal types and are returned by Eloquent as strings. Cast them as `float` or `decimal:7`, and convert to float before sending to Leaflet.
+- `users.password` is cast as `hashed` and goes in `$hidden`. `notifications.is_read` is cast as `boolean`.
+
+**Naming the notification model**
+Laravel has a built-in `notifications` table for its database notification system (columns `type`, `notifiable`, `data`, `read_at`) and a `Notification` facade. The table in this ERD has a different schema. To avoid a clash:
+- Name the model `InAppNotification` with `protected $table = 'notifications';`.
+- Do not run `php artisan notifications:table`.
+- Do not use the `database` channel from the `Notifiable` trait.
+
+**Privacy (NFR-08)**
+- Store `verification_documents.file_path` and `courier_details.foto_bukti` on a private disk, not `public`.
+- `courier_details` data may only be read by the Donor who owns the related post, and by Admins. Enforce this through a Policy.
+
+**Migration order (based on FK dependencies)**
+
+| Order | Table |
 |---|---|
 | 1 | `users` |
 | 2 | `food_categories` |
@@ -331,4 +333,4 @@ Laravel punya tabel `notifications` bawaan untuk sistem notifikasi database (kol
 | 8 | `courier_details`, `food_reviews` |
 | 9 | `notifications` |
 
-Tabel urutan 1–7 dan 9 dibutuhkan di Sprint 1. `courier_details` dan `food_reviews` baru dipakai di Sprint 2, tetapi migration-nya boleh dibuat sekaligus di awal supaya skema lengkap.
+Tables in order 1–7 and 9 are needed in Sprint 1. `courier_details` and `food_reviews` are only used in Sprint 2, but their migrations may be created up front so the schema is complete.
