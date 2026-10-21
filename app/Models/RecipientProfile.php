@@ -40,4 +40,12 @@ class RecipientProfile extends Model
     {
         return $this->hasMany(FoodRequest::class, 'recipient_id');
     }
+
+    /**
+     * The claims submitted by this recipient.
+     */
+    public function claims(): HasMany
+    {
+        return $this->hasMany(Claim::class, 'recipient_id');
+    }
 }
