@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['jumlah_porsi', 'status', 'metode_pengambilan', 'kode_verifikasi', 'tanggal_klaim', 'approved_at', 'completed_at', 'post_id', 'recipient_id'])]
 #[WithoutTimestamps]
@@ -39,5 +40,13 @@ class Claim extends Model
     public function recipient(): BelongsTo
     {
         return $this->belongsTo(RecipientProfile::class, 'recipient_id');
+    }
+
+    /**
+     * The courier details, only filled in when an online courier is used.
+     */
+    public function courierDetail(): HasOne
+    {
+        return $this->hasOne(CourierDetail::class, 'claim_id');
     }
 }
