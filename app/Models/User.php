@@ -56,4 +56,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(VerificationDocument::class, 'user_id');
     }
+
+    /**
+     * The in-app notifications addressed to this account.
+     */
+    public function inAppNotifications(): HasMany
+    {
+        return $this->hasMany(InAppNotification::class, 'user_id');
+    }
 }
