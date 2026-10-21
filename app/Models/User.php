@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -46,5 +47,13 @@ class User extends Authenticatable
     public function recipientProfile(): HasOne
     {
         return $this->hasOne(RecipientProfile::class, 'user_id');
+    }
+
+    /**
+     * The legal documents this account uploaded for verification.
+     */
+    public function verificationDocuments(): HasMany
+    {
+        return $this->hasMany(VerificationDocument::class, 'user_id');
     }
 }
