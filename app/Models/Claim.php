@@ -49,4 +49,12 @@ class Claim extends Model
     {
         return $this->hasOne(CourierDetail::class, 'claim_id');
     }
+
+    /**
+     * The review or report left on this claim.
+     */
+    public function foodReview(): HasOne
+    {
+        return $this->hasOne(FoodReview::class, 'claim_id');
+    }
 }
