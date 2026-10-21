@@ -145,6 +145,41 @@ The app is now ready — start it with `composer run dev` (see [Running the app]
 | vite | `npm run dev` | Hot reload for CSS/JS; needs `npm install` |
 | logs | `php artisan pail --timeout=0` | **Linux/macOS only** — skipped on Windows, where the `pcntl` extension does not exist. Run `php artisan pail` in a second terminal instead. |
 
+### Database migrations
+
+`php artisan migrate` builds the whole schema from the files in `database/migrations/`. Apart from the empty `foodbridge` database itself (Step 3), nothing has to be created by hand in phpMyAdmin.
+
+**What gets created**
+
+| Table | Comes from |
+|-------|------------|
+| `users`, `donor_profiles`, `recipient_profiles`, `verification_documents`, `food_categories`, `food_posts`, `food_requests`, `claims`, `courier_details`, `food_reviews`, `notifications` | the ERD schema documented in [`docs/DB.md`](DB.md) |
+| `password_reset_tokens`, `sessions` | Laravel infrastructure, created together with `users` |
+| `cache`, `cache_locks` | Laravel cache (`CACHE_STORE=database`) |
+| `jobs`, `job_batches`, `failed_jobs` | Laravel queue (`QUEUE_CONNECTION=database`) |
+| `migrations` | bookkeeping — which migrations already ran |
+
+**If your database was created before this schema** (you ran the migrations earlier, or you are coming from the old SQLite setup), `php artisan migrate` is not enough. Laravel runs a migration only once — it is recorded in the `migrations` table — so the reshaped `users` table is never picked up. Rebuild the schema instead:
+
+```powershell
+php artisan migrate:fresh          # drop every table and re-run all migrations
+php artisan migrate:fresh --seed   # ... and insert the seeded test user
+```
+
+> `migrate:fresh` **deletes all data** in the `foodbridge` database. Only run it on a development database.
+
+**The `users` table** follows the ERD, not Laravel's default: it has `nama`, `email`, `password`, `no_hp`, `role`, and `status_akun` — there is no `name`, `email_verified_at`, or `remember_token` column.
+
+**Check the result**
+
+```powershell
+php artisan migrate:status
+```
+
+Every migration must show `Ran`, and the eleven application tables from the table above must exist in phpMyAdmin afterwards.
+
+**The seeded user** — `php artisan migrate --seed` (or `migrate:fresh --seed`) creates one account: `test@example.com` / `password`.
+
 ### Already set up with SQLite? (upgrade note)
 
 The database default changed from SQLite to MySQL. If your existing `.env` still says `DB_CONNECTION=sqlite`, edit these lines to match — the variable names must be exact:
@@ -158,7 +193,7 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-Then run `php artisan migrate`. Your tables are recreated in MySQL — old SQLite rows are **not** copied (fine during early development; export/import manually if you need to keep data).
+Then run `php artisan migrate`. Your tables are recreated in MySQL — old SQLite rows are **not** copied (fine during early development; export/import manually if you need to keep data). If MySQL already holds an older schema, use `php artisan migrate:fresh` instead — see [Database migrations](#database-migrations).
 
 ### Troubleshooting
 
@@ -179,3 +214,4 @@ Then run `php artisan migrate`. Your tables are recreated in MySQL — old SQLit
 | `No application encryption key has been specified.` | Run `php artisan key:generate`. |
 | `SQLSTATE[HY000] [1045] Access denied for user 'root'` | Wrong MySQL credentials in `.env` — reset them to the stock block shown in the upgrade note above. |
 | `Unknown database 'foodbridge'` when migrating | Create the database in phpMyAdmin first (Step 3) — it must exist before `php artisan migrate`. |
+| `SQLSTATE[42S22]: Column 'nama' doesn't exist` (or any missing `nama`, `no_hp`, `role`, `status_akun` column) | Your database still has the old Laravel `users` table. The migration file was changed and Laravel runs a migration only once — rebuild the schema with `php artisan migrate:fresh` (see [Database migrations](#database-migrations)). It deletes all data. |
