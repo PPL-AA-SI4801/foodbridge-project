@@ -39,4 +39,12 @@ class User extends Authenticatable
     {
         return $this->hasOne(DonorProfile::class, 'user_id');
     }
+
+    /**
+     * The recipient profile of this account, if the account is a recipient.
+     */
+    public function recipientProfile(): HasOne
+    {
+        return $this->hasOne(RecipientProfile::class, 'user_id');
+    }
 }
