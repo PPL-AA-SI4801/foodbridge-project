@@ -43,4 +43,4 @@
 - [x] 6.1 Run `php artisan migrate:fresh --seed`, `npm run build`, and `php artisan optimize:clear`, then sign in as each seed role and confirm the dashboard shows the right name and role.
 - [x] 6.2 Exercise the full story in a browser: register a donor and a penerima, confirm both are refused sign-in as `menunggu`, activate one with `php artisan tinker`, confirm it can sign in, then flip it to `diblokir` mid-session and confirm the next request ends the session.
 - [x] 6.3 Verify `php artisan test` passes, `php artisan route:list` resolves without errors, and `git status` contains no uploaded documents or build output.
-- [ ] 6.4 Commit the change as the planned conventional-commit series and update PR #5's title and description to describe authentication and access control; verify `git log --oneline` and the PR body match the delivered scope.
+- [x] 6.4 Commit the change as the planned conventional-commit series and update PR #5's title and description to describe authentication and access control; verify `git log --oneline` and the PR body match the delivered scope.
