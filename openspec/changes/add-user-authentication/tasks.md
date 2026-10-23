@@ -2,11 +2,11 @@
 
 ## 1. Scaffold the authentication stack and restore the frontend toolchain
 
-- [ ] 1.1 Add `laravel/breeze` as a dev dependency and verify it with `composer show laravel/breeze`.
+- [x] 1.1 Add `laravel/breeze` as a dev dependency and verify it with `composer show laravel/breeze`.
 - [ ] 1.2 Run `php artisan breeze:install blade --no-interaction` and verify the expected files exist (`app/Http/Controllers/Auth/AuthenticatedSessionController.php`, `app/Http/Requests/Auth/LoginRequest.php`, `resources/views/auth/login.blade.php`, `routes/auth.php`).
-- [ ] 1.3 Restore the Tailwind 4 toolchain: `git checkout -- vite.config.js resources/css/app.css resources/js/app.js`, delete `tailwind.config.js` and `postcss.config.js`, remove `tailwindcss@^3`/`postcss`/`autoprefixer` from `package.json`, keep `alpinejs` and `@tailwindcss/forms` (loaded via `@plugin '@tailwindcss/forms';` in `resources/css/app.css`), then verify `npm install && npm run build` succeeds and `resources/css/app.css` still uses the Tailwind 4 import.
-- [ ] 1.4 Configure `->redirectGuestsTo('/login')` in `bootstrap/app.php` and verify a guest request to `/dashboard` redirects to `/login` instead of returning a bare 401.
-- [ ] 1.5 Delete Breeze's database-backed feature tests (`tests/Feature/Auth/*`, `tests/Feature/ProfileTest.php`) and verify `php artisan test` passes with the remaining suite.
+- [x] 1.3 Restore the Tailwind 4 toolchain: `git checkout -- vite.config.js resources/css/app.css resources/js/app.js`, delete `tailwind.config.js` and `postcss.config.js`, remove `tailwindcss@^3`/`postcss`/`autoprefixer` from `package.json`, keep `alpinejs` and `@tailwindcss/forms` (loaded via `@plugin '@tailwindcss/forms';` in `resources/css/app.css`), then verify `npm install && npm run build` succeeds and `resources/css/app.css` still uses the Tailwind 4 import.
+- [x] 1.4 Configure `->redirectGuestsTo('/login')` in `bootstrap/app.php` and verify a guest request to `/dashboard` redirects to `/login` instead of returning a bare 401.
+- [x] 1.5 Delete Breeze's database-backed feature tests (`tests/Feature/Auth/*`, `tests/Feature/ProfileTest.php`) and verify `php artisan test` passes with the remaining suite.
 
 ## 2. Role and account-status vocabulary
 
