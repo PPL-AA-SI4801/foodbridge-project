@@ -21,6 +21,7 @@
 - [x] 3.3 Replace the database seeder with one `aktif` account per role (`donor@foodbridge.test`, `penerima@foodbridge.test`, `admin@foodbridge.test`, password `password`) including the matching profile, and update `UserFactory` to fill `nama`, `role`, and `status_akun`; verify `php artisan migrate:fresh --seed` creates exactly those accounts with profiles and `php artisan test` stays green.
 - [x] 3.4 Document the seed accounts and sign-in behavior in `docs/FIRST_SETUP.md`; verify the documented credentials work as written.
 - [x] 3.5 Manually verify the status gate: with `php artisan tinker`, set an account to `menunggu`, `ditolak`, and `diblokir` in turn and confirm each sign-in attempt is refused with its own message and no session is created.
+- [x] 3.6 Add `EnsureAccountIsActive` to the `web` middleware group so a signed-in account whose status stops being `aktif` is logged out on its next request and sent to `/login` with its refusal message; verify a mid-session `diblokir` change ends the session and guests are unaffected. Delivered in a separate PR stacked on the authentication branch.
 
 ## 4. Donor and recipient registration with legality document
 
