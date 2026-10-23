@@ -163,7 +163,7 @@ The app is now ready — start it with `composer run dev` (see [Running the app]
 
 ```powershell
 php artisan migrate:fresh          # drop every table and re-run all migrations
-php artisan migrate:fresh --seed   # ... and insert the seeded test user
+php artisan migrate:fresh --seed   # ... and insert the three demo accounts
 ```
 
 > `migrate:fresh` **deletes all data** in the `foodbridge` database. Only run it on a development database.
@@ -178,7 +178,19 @@ php artisan migrate:status
 
 Every migration must show `Ran`, and the eleven application tables from the table above must exist in phpMyAdmin afterwards.
 
-**The seeded user** — `php artisan migrate --seed` (or `migrate:fresh --seed`) creates one account: `test@example.com` / `password`.
+**The demo accounts** — `php artisan migrate --seed` (or `migrate:fresh --seed`) creates one `aktif` account per role. All three use the password `password`:
+
+| Role | Email | Profile |
+|------|-------|---------|
+| Donor | `donor@foodbridge.test` | Toko Donor Demo |
+| Penerima | `penerima@foodbridge.test` | Panti Penerima Demo |
+| Administrator | `admin@foodbridge.test` | — |
+
+Sign in at <http://localhost:8000/login>; a successful sign-in lands on `/dashboard`, and signing out from the navigation returns you to the welcome page.
+
+Sign-in is refused while `status_akun` is `menunggu` (waiting for verification), `ditolak` (registration rejected), or `diblokir` (blocked after approval), each with its own message on the sign-in page. Only new registrations start as `menunggu` — the seeded accounts are already `aktif`.
+
+Forgot a password? **Forgot your password?** emails a reset link. In development `MAIL_MAILER=log`, so the link is written to `storage/logs/laravel.log` instead of being sent.
 
 ### Already set up with SQLite? (upgrade note)
 
