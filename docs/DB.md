@@ -249,7 +249,7 @@ The ERD only specifies the type `varchar(255)`. The values below are derived fro
 | Column | Values |
 |---|---|
 | `users.role` | `donor`, `penerima` (recipient), `administrator` |
-| `users.status_akun` | `menunggu` (pending), `aktif` (active), `ditolak` (rejected) |
+| `users.status_akun` | `menunggu` (pending), `aktif` (active), `ditolak` (rejected), `diblokir` (blocked after approval, distinct from a rejected registration) |
 | `verification_documents.status` | `menunggu` (pending), `disetujui` (approved), `ditolak` (rejected) |
 | `food_posts.status` | `tersedia` (available), `habis` (sold out), `kedaluwarsa` (expired) |
 | `food_requests.status` | `terbuka` (open), `ditutup` (closed) |

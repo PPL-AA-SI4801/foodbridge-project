@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\AccountStatus;
+use App\Enums\Role;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -30,7 +32,25 @@ class User extends Authenticatable
     {
         return [
             'password' => 'hashed',
+            'role' => Role::class,
+            'status_akun' => AccountStatus::class,
         ];
+    }
+
+    /**
+     * Determine whether the account may hold an authenticated session.
+     */
+    public function isActive(): bool
+    {
+        return $this->status_akun?->isActive() ?? false;
+    }
+
+    /**
+     * Determine whether the account holds one of the given roles.
+     */
+    public function hasRole(Role ...$roles): bool
+    {
+        return in_array($this->role, $roles, true);
     }
 
     /**
