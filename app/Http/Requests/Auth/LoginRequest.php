@@ -42,7 +42,7 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        if (! Auth::attempt($this->only('email', 'password'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -50,7 +50,32 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $this->ensureAccountIsActive();
+
         RateLimiter::clear($this->throttleKey());
+    }
+
+    /**
+     * Refuse the authenticated account when its status is not aktif.
+     *
+     * @throws ValidationException
+     */
+    protected function ensureAccountIsActive(): void
+    {
+        $user = Auth::user();
+
+        if ($user->isActive()) {
+            return;
+        }
+
+        Auth::logout();
+
+        $this->session()->invalidate();
+        $this->session()->regenerateToken();
+
+        throw ValidationException::withMessages([
+            'email' => $user->status_akun->refusalMessage(),
+        ])->redirectTo(route('login'));
     }
 
     /**

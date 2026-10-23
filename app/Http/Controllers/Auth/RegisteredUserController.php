@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\AccountStatus;
+use App\Enums\Role;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use RuntimeException;
+use Throwable;
 
 class RegisteredUserController extends Controller
 {
@@ -28,24 +30,64 @@ class RegisteredUserController extends Controller
      *
      * @throws ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(RegisterRequest $request): RedirectResponse
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+        $validated = $request->validated();
+        $role = Role::from($validated['role']);
+        $path = null;
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        try {
+            DB::transaction(function () use ($request, $validated, $role, &$path): void {
+                $user = User::create([
+                    'nama' => $validated['nama'],
+                    'email' => $validated['email'],
+                    'password' => $validated['password'],
+                    'no_hp' => $validated['no_hp'],
+                    'role' => $role,
+                    'status_akun' => AccountStatus::Menunggu,
+                ]);
 
-        event(new Registered($user));
+                if ($role === Role::Donor) {
+                    $user->donorProfile()->create([
+                        'nama_usaha' => $validated['nama_usaha'],
+                        'jenis_usaha' => $validated['jenis_usaha'],
+                        'alamat' => $validated['alamat'],
+                    ]);
+                } else {
+                    $user->recipientProfile()->create([
+                        'nama_lembaga' => $validated['nama_lembaga'],
+                        'jenis_lembaga' => $validated['jenis_lembaga'],
+                        'alamat' => $validated['alamat'],
+                    ]);
+                }
 
-        Auth::login($user);
+                $storedPath = $request->file('dokumen')->store(
+                    "verification-documents/{$user->id}",
+                    'local',
+                );
 
-        return redirect(route('dashboard', absolute: false));
+                if ($storedPath === false) {
+                    throw new RuntimeException('The legality document could not be stored.');
+                }
+
+                $path = $storedPath;
+
+                $user->verificationDocuments()->create([
+                    'jenis_dokumen' => $validated['jenis_dokumen'],
+                    'file_path' => $path,
+                    'status' => 'menunggu',
+                ]);
+            });
+        } catch (Throwable $exception) {
+            if ($path !== null) {
+                Storage::disk('local')->delete($path);
+            }
+
+            throw $exception;
+        }
+
+        return redirect()
+            ->route('login')
+            ->with('status', 'Registration successful. Your account is waiting for administrator verification.');
     }
 }

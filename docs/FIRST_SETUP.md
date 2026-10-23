@@ -163,7 +163,7 @@ The app is now ready — start it with `composer run dev` (see [Running the app]
 
 ```powershell
 php artisan migrate:fresh          # drop every table and re-run all migrations
-php artisan migrate:fresh --seed   # ... and insert the seeded test user
+php artisan migrate:fresh --seed   # ... and insert the three demo accounts
 ```
 
 > `migrate:fresh` **deletes all data** in the `foodbridge` database. Only run it on a development database.
@@ -178,7 +178,39 @@ php artisan migrate:status
 
 Every migration must show `Ran`, and the eleven application tables from the table above must exist in phpMyAdmin afterwards.
 
-**The seeded user** — `php artisan migrate --seed` (or `migrate:fresh --seed`) creates one account: `test@example.com` / `password`.
+**The demo accounts** — `php artisan migrate --seed` (or `migrate:fresh --seed`) creates one `aktif` account per role. All three use the password `password`:
+
+| Role | Email | Profile |
+|------|-------|---------|
+| Donor | `donor@foodbridge.test` | Toko Donor Demo |
+| Penerima | `penerima@foodbridge.test` | Panti Penerima Demo |
+| Administrator | `admin@foodbridge.test` | — |
+
+Sign in at <http://localhost:8000/login>; a successful sign-in lands on `/dashboard`, and signing out from the navigation returns you to the welcome page.
+
+Sign-in is refused while `status_akun` is `menunggu` (waiting for verification), `ditolak` (registration rejected), or `diblokir` (blocked after approval), each with its own message on the sign-in page. Only new registrations start as `menunggu` — the seeded accounts are already `aktif`.
+
+Forgot a password? **Forgot your password?** emails a reset link. In development `MAIL_MAILER=log`, so the link is written to `storage/logs/laravel.log` instead of being sent.
+
+### Registration
+
+Open <http://localhost:8000/register> to create a donor or recipient account:
+
+1. Choose **Donor** (business) or **Penerima** (institution); the form shows that role's profile fields.
+2. Fill in the account and profile details, choose a document type, and upload one legality document.
+3. Submit. You return to the sign-in page with a notice that the account is waiting for verification.
+
+New accounts are always created with `status_akun = menunggu` and **cannot sign in until an administrator verifies them**. The sign-in page says the account is waiting for verification. Admin approval screens are a later change, so activate a new account by hand for now:
+
+```powershell
+php artisan tinker --execute="App\Models\User::where('email', 'new-donor@example.com')->update(['status_akun' => 'aktif']);"
+```
+
+Replace the email address with the one you registered, then sign in normally. Running the same command with `'ditolak'` or `'diblokir'` lets you test the other refusal messages.
+
+**Upload rules:** one PDF, JPG, JPEG, or PNG file, at most **2 MB**. Legality documents are stored privately under `storage/app/private/verification-documents/{user_id}/` and are never served from `public/`. Email addresses and business/institution names must be unique, and passwords need at least 8 characters.
+
+**Upload errors:** PHP rejects a file larger than `upload_max_filesize` before Laravel validates it, so such a file fails with "The dokumen failed to upload." instead of the 2 MB message. If you need larger scans, raise both `upload_max_filesize` and `post_max_size` in `php.ini` (keep `post_max_size` above `upload_max_filesize`), restart the web server, and update the `max:2048` rule in `app/Http/Requests/Auth/RegisterRequest.php` to the new ceiling. The stock values used here are `upload_max_filesize=2M` and `post_max_size=8M`.
 
 ### Already set up with SQLite? (upgrade note)
 
