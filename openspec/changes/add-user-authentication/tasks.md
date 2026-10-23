@@ -12,7 +12,7 @@
 
 - [x] 2.1 Add `App\Enums\Role` (`donor`, `penerima`, `administrator`) and `App\Enums\AccountStatus` (`menunggu`, `aktif`, `ditolak`, `diblokir`), cast both in `User::casts()`, and add role/status helpers used by the gate (`isActive()`, `hasRole()`); verify the casts resolve with `php artisan tinker` (`User::first()->role` when a row exists, or new `User(['role' => 'donor'])->role`).
 - [x] 2.2 Add `diblokir` as the fourth `users.status_akun` value in `docs/DB.md` §5 with its meaning ("blocked after approval, distinct from a rejected registration") and verify the documented values match `AccountStatus` exactly.
-- [ ] 2.3 Add a database-free unit test for both enums' values and their `User` casts; verify it passes with `php artisan test --filter=Enum`.
+- [x] 2.3 Add a database-free unit test for both enums' values and their `User` casts; verify it passes with `php artisan test --filter=Enum`.
 
 ## 3. Sign-in, sign-out, password reset, and demo accounts
 
