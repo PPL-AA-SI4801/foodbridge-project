@@ -3,7 +3,7 @@
 
 ## Related Issue
 <!-- Jira PBI key so the PR links to the board, e.g. FB-12 -->
-Closes: FB-
+Closes: PBI-
 
 ## Type of Change
 - [ ] Feature
