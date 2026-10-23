@@ -16,7 +16,7 @@
 
 ## 3. Sign-in, sign-out, password reset, and demo accounts
 
-- [ ] 3.1 Trim Breeze's `routes/auth.php` and views to sign-in, sign-out, forgot-password, and reset-password: remove email verification and password-confirmation routes, controllers, requests, and views; verify `php artisan route:list` lists no `verification.*`, `password.confirm`, or `profile.*` route.
+- [x] 3.1 Trim Breeze's `routes/auth.php` and views to sign-in, sign-out, forgot-password, and reset-password: remove email verification and password-confirmation routes, controllers, requests, and views; verify `php artisan route:list` lists no `verification.*`, `password.confirm`, or `profile.*` route.
 - [ ] 3.2 Adapt `LoginRequest` (drop remember-me, keep the email+IP throttle) and `AuthenticatedSessionController` so sign-in attempts credentials, refuses any status other than `aktif` with a status-specific message, regenerates the session on success, and invalidates it on sign-out; verify by signing in as an `aktif` account and confirming the dashboard loads and the session ID changes.
 - [ ] 3.3 Replace the database seeder with one `aktif` account per role (`donor@foodbridge.test`, `penerima@foodbridge.test`, `admin@foodbridge.test`, password `password`) including the matching profile, and update `UserFactory` to fill `nama`, `role`, and `status_akun`; verify `php artisan migrate:fresh --seed` creates exactly those accounts with profiles and `php artisan test` stays green.
 - [ ] 3.4 Document the seed accounts and sign-in behavior in `docs/FIRST_SETUP.md`; verify the documented credentials work as written.
