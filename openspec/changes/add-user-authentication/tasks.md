@@ -3,7 +3,7 @@
 ## 1. Scaffold the authentication stack and restore the frontend toolchain
 
 - [x] 1.1 Add `laravel/breeze` as a dev dependency and verify it with `composer show laravel/breeze`.
-- [ ] 1.2 Run `php artisan breeze:install blade --no-interaction` and verify the expected files exist (`app/Http/Controllers/Auth/AuthenticatedSessionController.php`, `app/Http/Requests/Auth/LoginRequest.php`, `resources/views/auth/login.blade.php`, `routes/auth.php`).
+- [x] 1.2 Run `php artisan breeze:install blade --no-interaction` and verify the expected files exist (`app/Http/Controllers/Auth/AuthenticatedSessionController.php`, `app/Http/Requests/Auth/LoginRequest.php`, `resources/views/auth/login.blade.php`, `routes/auth.php`).
 - [x] 1.3 Restore the Tailwind 4 toolchain: `git checkout -- vite.config.js resources/css/app.css resources/js/app.js`, delete `tailwind.config.js` and `postcss.config.js`, remove `tailwindcss@^3`/`postcss`/`autoprefixer` from `package.json`, keep `alpinejs` and `@tailwindcss/forms` (loaded via `@plugin '@tailwindcss/forms';` in `resources/css/app.css`), then verify `npm install && npm run build` succeeds and `resources/css/app.css` still uses the Tailwind 4 import.
 - [x] 1.4 Configure `->redirectGuestsTo('/login')` in `bootstrap/app.php` and verify a guest request to `/dashboard` redirects to `/login` instead of returning a bare 401.
 - [x] 1.5 Delete Breeze's database-backed feature tests (`tests/Feature/Auth/*`, `tests/Feature/ProfileTest.php`) and verify `php artisan test` passes with the remaining suite.
@@ -17,7 +17,7 @@
 ## 3. Sign-in, sign-out, password reset, and demo accounts
 
 - [x] 3.1 Trim Breeze's `routes/auth.php` and views to sign-in, sign-out, forgot-password, and reset-password: remove email verification and password-confirmation routes, controllers, requests, and views; verify `php artisan route:list` lists no `verification.*`, `password.confirm`, or `profile.*` route.
-- [ ] 3.2 Adapt `LoginRequest` (drop remember-me, keep the email+IP throttle) and `AuthenticatedSessionController` so sign-in attempts credentials, refuses any status other than `aktif` with a status-specific message, regenerates the session on success, and invalidates it on sign-out; verify by signing in as an `aktif` account and confirming the dashboard loads and the session ID changes.
+- [x] 3.2 Adapt `LoginRequest` (drop remember-me, keep the email+IP throttle) and `AuthenticatedSessionController` so sign-in attempts credentials, refuses any status other than `aktif` with a status-specific message, regenerates the session on success, and invalidates it on sign-out; verify by signing in as an `aktif` account and confirming the dashboard loads and the session ID changes.
 - [ ] 3.3 Replace the database seeder with one `aktif` account per role (`donor@foodbridge.test`, `penerima@foodbridge.test`, `admin@foodbridge.test`, password `password`) including the matching profile, and update `UserFactory` to fill `nama`, `role`, and `status_akun`; verify `php artisan migrate:fresh --seed` creates exactly those accounts with profiles and `php artisan test` stays green.
 - [ ] 3.4 Document the seed accounts and sign-in behavior in `docs/FIRST_SETUP.md`; verify the documented credentials work as written.
 - [ ] 3.5 Manually verify the status gate: with `php artisan tinker`, set an account to `menunggu`, `ditolak`, and `diblokir` in turn and confirm each sign-in attempt is refused with its own message and no session is created.

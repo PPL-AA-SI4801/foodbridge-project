@@ -46,4 +46,17 @@ class EnumsTest extends TestCase
             $this->assertSame($status === AccountStatus::Aktif, $status->isActive());
         }
     }
+
+    public function test_each_inactive_status_has_its_own_refusal_message(): void
+    {
+        $this->assertNull(AccountStatus::Aktif->refusalMessage());
+
+        $messages = array_map(
+            fn (AccountStatus $status) => $status->refusalMessage(),
+            [AccountStatus::Menunggu, AccountStatus::Ditolak, AccountStatus::Diblokir],
+        );
+
+        $this->assertNotContains(null, $messages);
+        $this->assertCount(3, array_unique($messages));
+    }
 }
