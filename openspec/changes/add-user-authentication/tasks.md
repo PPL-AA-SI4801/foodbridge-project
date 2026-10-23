@@ -35,7 +35,7 @@
 
 - [x] 5.1 Add `EnsureUserHasRole` (variadic roles, `abort(403)` on mismatch) and register it as the `role` middleware alias in `bootstrap/app.php`; verify a request with a mismatched role returns 403.
 - [x] 5.2 Rewrite `routes/web.php` (welcome, `require routes/auth.php`, authenticated `/dashboard`, admin area) and replace Breeze's dashboard view with one that shows the signed-in account's `nama`, role, and a sign-out action; verify each seed role lands on it after sign-in.
-- [ ] 5.3 Add the administrator area route, controller, and placeholder view protected by `role:administrator`; verify an administrator gets the page, a donor or penerima gets 403, and a guest is redirected to sign-in.
+- [x] 5.3 Add the administrator area route, controller, and placeholder view protected by `role:administrator`; verify an administrator gets the page, a donor or penerima gets 403, and a guest is redirected to sign-in.
 - [ ] 5.4 Delete Breeze's profile screens (controller, requests, views, password-update routes) and trim the navigation to Dashboard, Admin (administrators only), and Logout using `nama`; verify with `grep -rn "profile.edit\|->name\b" resources/views app/Http` that no dead references remain and every auth page renders.
 
 ## 6. Integration verification and delivery
