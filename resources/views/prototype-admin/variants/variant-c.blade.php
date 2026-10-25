@@ -27,7 +27,7 @@
         {{-- Navigation --}}
         <nav class="flex-1 overflow-y-auto px-3 py-4">
             <div class="flex flex-col gap-1">
-                <a href="#" class="relative flex items-center gap-3 rounded-md bg-primary px-3 py-2.5 text-sm font-medium text-primary-foreground">
+                <a href="#" class="relative flex items-center gap-3 rounded-md bg-accent px-3 py-2.5 text-sm font-medium text-accent-foreground">
                     <span class="absolute bottom-2 left-0 top-2 w-0.5 rounded-full bg-secondary" aria-hidden="true"></span>
                     <x-prototype-admin.icon name="layout-dashboard" class="h-4 w-4" />
                     <span>Dashboard</span>
