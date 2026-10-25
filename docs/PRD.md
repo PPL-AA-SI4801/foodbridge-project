@@ -94,3 +94,53 @@ FoodBridge is a responsive web platform that connects businesses with surplus fo
 | Claim monopolization | Limit of 3 claims per day per Penerima |
 | Courier fraud or mismatch | Driver data matched by Donor before handover |
 | Repeated misuse or unsafe food from an account | Admin can block the account after investigation |
+
+## 12. UI Structure: Sidebar and Header
+
+### Header (All Roles)
+
+| Element | Purpose |
+|---|---|
+| Page title / breadcrumb | Shows the current page location |
+| Role item | Differs per role (see below) |
+| Notifications | In-app notification dropdown (FR-10) |
+| Profile dropdown | My Profile (FR-02), Logout |
+
+**Role-specific header item:**
+| Role | Header Item |
+|---|---|
+| Donor | `+ Posting Makanan` button (quick shortcut to create a post) |
+| Penerima (Recipient) | `Kuota Klaim: X/Y` indicator (remaining daily claim quota) |
+| Administrator | `Verifikasi Pending: N` badge (accounts awaiting review) |
+
+### 1. Donor Sidebar
+| Menu | Content |
+|---|---|
+| Dashboard | Total portions distributed, number of recipients, estimated beneficiaries, and impact charts for the donor's own data (FR-14) |
+| Posting Makanan | List of posts (active, expired, completed); create/edit/delete posts with photo, nutrition category, portions, location, and safety hours (FR-03) |
+| Klaim Masuk | Incoming claims from recipients: approve/reject (FR-08), view courier driver data, validate the 6-digit code, and "Food handed over" button (FR-09) |
+| Request Board | Read-only view of urgent food requests from recipients (FR-06) |
+| Laporan | Download distribution impact data as Excel (FR-15) |
+
+### 2. Penerima (Recipient) Sidebar
+| Menu | Content |
+|---|---|
+| Katalog Makanan | Real-time available food, filters by nearest location and nutrition category, map view (FR-04), and claim button |
+| Klaim Saya | Claim history and status, remaining daily quota (FR-05), pickup method choice (self pickup / online courier), 6-digit verification code, and driver data form (FR-07, FR-09) |
+| Request Board | Create and view urgent food requests (FR-06) |
+| Ulasan & Laporan | Rate the quality of received food (FR-11) and report unfit food (FR-12) |
+
+**Mobile:** On mobile, the sidebar is replaced by a bottom navigation bar with the same four menus. Profile and Logout are accessed via the profile dropdown in the header.
+
+### 3. Administrator Sidebar
+| Menu | Content |
+|---|---|
+| Dashboard | Monitors all Donors and Recipients: total portions, active donors and recipients, estimated beneficiaries (FR-14). Includes "Export to Excel" to download platform-wide impact data (FR-15) |
+| Verifikasi Akun | Pending Donor/Recipient registrations; review legal documents, approve or reject (FR-01) |
+| Laporan Makanan | Unfit-food reports from recipients; review and follow up (FR-13) |
+| Manajemen Data | CRUD for users, food posts, claims, nutrition categories |
+| Request Board | Monitor urgent food requests (FR-06) |
+
+**Notes:**
+- The Profil page is accessed only from the profile dropdown in the header, not from the sidebar.
+- The header has no logo or sidebar toggle. The FOODBRIDGE brand appears at the top of the sidebar.
