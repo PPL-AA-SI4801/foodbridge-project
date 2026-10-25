@@ -1,4 +1,4 @@
-@props(['title' => null, 'subtitle' => null, 'pendingVerifications' => 0])
+@props(['title' => null, 'pendingVerifications' => 0])
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -33,34 +33,47 @@
             <x-admin.sidebar :pending-verifications="$pendingVerifications" />
 
             <div class="flex min-w-0 flex-1 flex-col">
-                <header class="flex flex-wrap items-center justify-between gap-4 border-b border-border px-6 py-5 lg:px-8">
-                    <div class="flex items-center gap-3">
-                        <button
-                            type="button"
-                            @click="sidebarOpen = true"
-                            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground lg:hidden"
-                            aria-label="Buka menu"
-                            aria-controls="admin-sidebar"
-                        >
-                            <x-icon name="menu" class="h-5 w-5" />
-                        </button>
+                <header class="border-b border-border bg-white">
+                    <div class="flex h-16 items-center justify-between gap-6 px-6 lg:px-8">
+                        <div class="flex min-w-0 items-center gap-3">
+                            <button
+                                type="button"
+                                @click="sidebarOpen = true"
+                                class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground lg:hidden"
+                                aria-label="Buka menu"
+                                aria-controls="admin-sidebar"
+                            >
+                                <x-icon name="menu" class="h-5 w-5" />
+                            </button>
 
-                        <div class="flex flex-col gap-1">
-                            @if ($title)
-                                <h1 class="text-2xl font-semibold">{{ $title }}</h1>
-                            @endif
+                            <nav aria-label="Breadcrumb" class="flex min-w-0 items-center gap-2 text-sm">
+                                <a href="{{ route('admin.dashboard') }}" class="shrink-0 text-muted-foreground transition-colors hover:text-foreground">Beranda</a>
 
-                            @if ($subtitle)
-                                <p class="text-sm text-muted-foreground">{{ $subtitle }}</p>
-                            @endif
+                                @if ($title)
+                                    <x-icon name="chevron-right" class="h-4 w-4 shrink-0 text-muted-foreground" />
+                                    <span class="truncate font-medium">{{ $title }}</span>
+                                @endif
+                            </nav>
+                        </div>
+
+                        <div class="flex shrink-0 items-center gap-2">
+                            @isset($actions)
+                                {{ $actions }}
+                            @endisset
+
+                            <span class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm">
+                                <x-icon name="user-check" class="h-4 w-4 text-muted-foreground" />
+                                <span class="hidden text-muted-foreground sm:inline">Verifikasi Pending:</span>
+                                <span class="font-semibold">{{ $pendingVerifications }}</span>
+                            </span>
+
+                            <x-header.notifications />
+
+                            <div class="h-6 w-px bg-border" aria-hidden="true"></div>
+
+                            <x-header.profile-menu />
                         </div>
                     </div>
-
-                    @isset($actions)
-                        <div class="flex items-center gap-2">
-                            {{ $actions }}
-                        </div>
-                    @endisset
                 </header>
 
                 <main class="flex-1 p-6 lg:p-8">

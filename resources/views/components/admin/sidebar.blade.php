@@ -1,4 +1,4 @@
-{{-- Sidebar admin: menu, pencarian, grup manajemen data, profil, dan logout. --}}
+{{-- Sidebar admin: menu, grup manajemen data, profil, dan logout. --}}
 @props(['pendingVerifications' => 0])
 
 @php
@@ -44,8 +44,7 @@ $link = fn (string $route): string => \Illuminate\Support\Facades\Route::has($ro
     id="admin-sidebar"
     aria-label="Navigasi administrator"
     x-bind:class="sidebarOpen ? 'flex' : 'hidden lg:flex'"
-    x-cloak
-    x-data="{ q: '' }">
+    x-cloak>
     {{-- Brand --}}
     <div class="flex items-center gap-3 border-b border-sidebar-border p-5">
         <div class="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
@@ -66,28 +65,12 @@ $link = fn (string $route): string => \Illuminate\Support\Facades\Route::has($ro
         </button>
     </div>
 
-    {{-- Pencarian menu --}}
-    <div class="px-4 pt-4">
-        <div class="relative">
-            <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-                type="search"
-                x-model="q"
-                placeholder="Cari menu…"
-                aria-label="Cari menu"
-                class="h-9 w-full rounded-md border border-input bg-transparent pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-[3px] focus:ring-ring/20"
-            />
-        </div>
-    </div>
-
     {{-- Navigasi --}}
     <nav class="flex-1 overflow-y-auto px-3 py-4">
         <div class="flex flex-col gap-1">
             @foreach ($navItems as $item)
                 <a
                     href="{{ $link($item['route']) }}"
-                    data-label="{{ $item['label'] }}"
-                    x-show="q === '' || $el.dataset.label.toLowerCase().includes(q.toLowerCase())"
                     @class([
                         'relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors',
                         'bg-accent font-medium text-accent-foreground' => $item['active'],
@@ -122,8 +105,6 @@ $link = fn (string $route): string => \Illuminate\Support\Facades\Route::has($ro
                 @foreach ($dataItems as $item)
                     <a
                         href="{{ $link($item['route']) }}"
-                        data-label="{{ $item['label'] }}"
-                        x-show="q === '' || $el.dataset.label.toLowerCase().includes(q.toLowerCase())"
                         @class([
                             'rounded-md px-3 py-2 text-sm transition-colors',
                             'bg-accent font-medium text-accent-foreground' => $item['active'],
