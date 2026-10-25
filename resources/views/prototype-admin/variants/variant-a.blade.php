@@ -1,57 +1,84 @@
-<div class="grid min-h-screen w-full md:grid-cols-[280px_1fr]">
-    <!-- shadcn-style sidebar: collapsible rail feel, grouped nav, subtle -->
-    <aside class="hidden md:flex flex-col border-r bg-sidebar text-sidebar-foreground">
-        <div class="flex h-14 items-center px-4 border-b border-sidebar-border">
-            <div class="flex items-center gap-2">
-                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                    <span class="text-xs font-semibold">FB</span>
+{{-- Varian A - Klasik: sidebar penuh, grup menu berlabel, footer pengguna. --}}
+<div class="flex min-h-screen">
+    <aside class="hidden w-72 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground lg:flex">
+        {{-- Header / brand --}}
+        <div class="flex flex-col gap-5 p-6">
+            <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                    <x-prototype-admin.icon name="leaf" class="h-5 w-5" />
                 </div>
-                <div class="flex flex-col">
-                    <span class="text-sm font-semibold leading-none">FOODBRIDGE</span>
-                    <span class="text-xs text-sidebar-foreground/70">Administrator</span>
+                <div class="flex flex-col gap-0.5">
+                    <span class="text-sm font-semibold tracking-[0.12em]">FOODBRIDGE</span>
+                    <span class="text-xs text-muted-foreground">Panel Administrator</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2">
+                <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">A</span>
+                <div class="flex min-w-0 flex-col">
+                    <span class="truncate text-sm font-medium">Admin Platform</span>
+                    <span class="truncate text-xs text-muted-foreground">admin@foodbridge.id</span>
                 </div>
             </div>
         </div>
-        <nav class="flex-1 overflow-auto px-2 py-3">
-            <div class="px-2 py-1.5 text-xs font-medium text-sidebar-foreground/70">Utama</div>
-            <div class="space-y-1">
-                <a class="group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" href="#">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+
+        {{-- Navigation --}}
+        <nav class="flex-1 overflow-y-auto px-3 pb-6">
+            <div class="px-3 pb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Utama</div>
+            <div class="flex flex-col gap-1">
+                <a href="#" class="flex items-center gap-3 rounded-md bg-sidebar-accent px-3 py-2.5 text-sm font-medium text-sidebar-accent-foreground">
+                    <x-prototype-admin.icon name="layout-dashboard" class="h-4 w-4" />
                     <span>Dashboard</span>
                 </a>
-                <a class="group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" href="#">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                    <x-prototype-admin.icon name="user-check" class="h-4 w-4" />
                     <span>Verifikasi Akun</span>
-                    <span class="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-sidebar-primary px-1 text-[10px] font-medium text-sidebar-primary-foreground">5</span>
+                    <span class="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-secondary px-1.5 text-xs font-medium text-secondary-foreground">5</span>
                 </a>
-                <a class="group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" href="#">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                    <x-prototype-admin.icon name="triangle-alert" class="h-4 w-4" />
                     <span>Laporan Makanan</span>
                 </a>
             </div>
-            <div class="mt-4 px-2 py-1.5 text-xs font-medium text-sidebar-foreground/70">Manajemen Data</div>
-            <div class="space-y-1">
-                <a class="group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" href="#">Pengguna</a>
-                <a class="group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" href="#">Postingan Makanan</a>
-                <a class="group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" href="#">Klaim</a>
-                <a class="group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" href="#">Kategori Gizi</a>
+
+            <div class="px-3 pb-2 pt-6 text-xs font-medium uppercase tracking-wide text-muted-foreground">Manajemen Data</div>
+            <div class="flex flex-col gap-1">
+                <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                    <x-prototype-admin.icon name="users" class="h-4 w-4" />
+                    <span>Pengguna</span>
+                </a>
+                <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                    <x-prototype-admin.icon name="utensils-crossed" class="h-4 w-4" />
+                    <span>Postingan Makanan</span>
+                </a>
+                <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                    <x-prototype-admin.icon name="clipboard-check" class="h-4 w-4" />
+                    <span>Klaim</span>
+                </a>
+                <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                    <x-prototype-admin.icon name="tags" class="h-4 w-4" />
+                    <span>Kategori Gizi</span>
+                </a>
             </div>
-            <div class="mt-4 px-2 py-1.5 text-xs font-medium text-sidebar-foreground/70">Lainnya</div>
-            <div class="space-y-1">
-                <a class="group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" href="#">Request Board</a>
+
+            <div class="px-3 pb-2 pt-6 text-xs font-medium uppercase tracking-wide text-muted-foreground">Lainnya</div>
+            <div class="flex flex-col gap-1">
+                <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                    <x-prototype-admin.icon name="message-square" class="h-4 w-4" />
+                    <span>Request Board</span>
+                </a>
             </div>
         </nav>
-        <div class="mt-auto border-t border-sidebar-border p-2">
-            <button class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+
+        {{-- Footer --}}
+        <div class="border-t border-sidebar-border p-3">
+            <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                <x-prototype-admin.icon name="log-out" class="h-4 w-4" />
                 <span>Logout</span>
-            </button>
+            </a>
         </div>
     </aside>
-    <main class="flex flex-col">
-        <header class="flex h-14 items-center gap-4 border-b bg-background px-4">
-            <div class="flex-1"></div>
-        </header>
-        <div class="flex-1 p-4"></div>
-    </main>
+
+    {{-- Area konten: sengaja kosong --}}
+    <div class="hidden flex-1 lg:block"></div>
 </div>
