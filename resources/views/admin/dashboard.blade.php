@@ -1,22 +1,8 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Administrator area') }}
-        </h2>
-    </x-slot>
-
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <p class="text-lg font-medium">
-                        {{ __('Reserved for administrators') }}
-                    </p>
-                    <p class="mt-1 text-sm text-gray-600">
-                        {{ __('Account verification and blocking screens arrive in a later change.') }}
-                    </p>
-                </div>
-            </div>
-        </div>
+<x-admin-layout title="Dashboard" subtitle="Ringkasan operasional platform FoodBridge." :pending-verifications="$pendingVerifications">
+    <div class="rounded-lg border border-border bg-card p-6">
+        <p class="text-sm font-medium">Area administrator</p>
+        <p class="mt-1 text-sm text-muted-foreground">
+            Verifikasi akun, laporan makanan, dan manajemen data tersedia pada menu di samping.
+        </p>
     </div>
-</x-app-layout>
+</x-admin-layout>
