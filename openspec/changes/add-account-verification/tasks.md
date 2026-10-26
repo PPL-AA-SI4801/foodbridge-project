@@ -35,9 +35,9 @@
 
 ## 4. Documentation
 
-- [ ] 4.1 Update `docs/DB.md` to state that account status is the access source of truth, document status records the review outcome, and approval/rejection updates both together; verify the documented flow matches the implemented actions and the existing `docs/DB.md` status vocabulary.
-- [ ] 4.2 Update `docs/FIRST_SETUP.md`: replace the manual `php artisan tinker` activation workaround with the administrator verification flow, describe approve/reject and the required reason, and keep a note that `diblokir` remains supported by the gate but blocking is a later feature; verify the documented steps work as written.
-- [ ] 4.3 Remove stale “admin approval screens are a later change” wording from `docs/FIRST_SETUP.md`; verify `grep -rn -i "later change\|approval screens" docs/FIRST_SETUP.md` returns nothing that contradicts the delivered flow.
+- [x] 4.1 Update `docs/DB.md` to state that account status is the access source of truth, document status records the review outcome, and approval/rejection updates both together; verify the documented flow matches the implemented actions and the existing `docs/DB.md` status vocabulary.
+- [x] 4.2 Update `docs/FIRST_SETUP.md`: replace the manual `php artisan tinker` activation workaround with the administrator verification flow, describe approve/reject and the required reason, and keep a note that `diblokir` remains supported by the gate but blocking is a later feature; verify the documented steps work as written.
+- [x] 4.3 Remove stale “admin approval screens are a later change” wording from `docs/FIRST_SETUP.md`; verify `grep -rn -i "later change\|approval screens" docs/FIRST_SETUP.md` returns nothing that contradicts the delivered flow.
 
 ## 5. Integration verification
 
