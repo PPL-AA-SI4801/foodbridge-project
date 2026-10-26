@@ -26,6 +26,20 @@ class VerificationDocument extends Model
     }
 
     /**
+     * The human-readable label for the document type.
+     */
+    public function jenisDokumenLabel(): string
+    {
+        return match ($this->jenis_dokumen) {
+            'nib' => 'NIB',
+            'akta_pendirian' => 'Akta Pendirian',
+            'izin_operasional' => 'Izin Operasional',
+            'lainnya' => 'Dokumen Lainnya',
+            default => 'Dokumen',
+        };
+    }
+
+    /**
      * The account that uploaded this document.
      */
     public function user(): BelongsTo

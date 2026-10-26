@@ -9,6 +9,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -51,6 +52,27 @@ class User extends Authenticatable
     public function hasRole(Role ...$roles): bool
     {
         return in_array($this->role, $roles, true);
+    }
+
+    /**
+     * Limit the query to Donor and Penerima accounts awaiting verification.
+     */
+    public function scopePendingVerification(Builder $query): void
+    {
+        $query->whereIn('role', [Role::Donor->value, Role::Penerima->value])
+            ->where('status_akun', AccountStatus::Menunggu->value);
+    }
+
+    /**
+     * The business or institution name for this account's role.
+     */
+    public function profileName(): ?string
+    {
+        return match ($this->role) {
+            Role::Donor => $this->donorProfile?->nama_usaha,
+            Role::Penerima => $this->recipientProfile?->nama_lembaga,
+            default => null,
+        };
     }
 
     /**
