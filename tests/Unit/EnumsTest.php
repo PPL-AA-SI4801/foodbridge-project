@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Enums\AccountStatus;
 use App\Enums\Role;
+use App\Enums\VerificationStatus;
 use App\Models\User;
 use PHPUnit\Framework\TestCase;
 
@@ -22,6 +23,14 @@ class EnumsTest extends TestCase
         $this->assertSame(
             ['menunggu', 'aktif', 'ditolak', 'diblokir'],
             array_column(AccountStatus::cases(), 'value'),
+        );
+    }
+
+    public function test_verification_status_values_match_the_documented_erd_vocabulary(): void
+    {
+        $this->assertSame(
+            ['menunggu', 'disetujui', 'ditolak'],
+            array_column(VerificationStatus::cases(), 'value'),
         );
     }
 
@@ -47,21 +56,9 @@ class EnumsTest extends TestCase
         }
     }
 
-    public function test_each_inactive_status_has_its_own_refusal_message(): void
+    public function test_each_inactive_status_has_its_own_indonesian_refusal_message(): void
     {
         $this->assertNull(AccountStatus::Aktif->refusalMessage());
-
-        $messages = array_map(
-            fn (AccountStatus $status) => $status->refusalMessage(),
-            [AccountStatus::Menunggu, AccountStatus::Ditolak, AccountStatus::Diblokir],
-        );
-
-        $this->assertNotContains(null, $messages);
-        $this->assertCount(3, array_unique($messages));
-    }
-
-    public function test_inactive_status_messages_are_in_indonesian(): void
-    {
         $this->assertSame(
             'Akun Anda sedang menunggu verifikasi administrator.',
             AccountStatus::Menunggu->refusalMessage(),

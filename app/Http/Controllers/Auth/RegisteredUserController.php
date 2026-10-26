@@ -89,6 +89,6 @@ class RegisteredUserController extends Controller
 
         return redirect()
             ->route('login')
-            ->with('status', 'Registration successful. Your account is waiting for administrator verification.');
+            ->with('status', 'Pendaftaran berhasil. Akun Anda sedang menunggu verifikasi administrator.');
     }
 }
