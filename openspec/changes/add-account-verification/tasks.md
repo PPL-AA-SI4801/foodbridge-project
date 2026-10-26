@@ -41,9 +41,9 @@
 
 ## 5. Integration verification
 
-- [ ] 5.1 Run `php artisan optimize:clear`, `php artisan route:list`, `vendor/bin/pint --dirty`, `php artisan test`, and `npm run build`; verify all commands succeed and the route list contains the verification and document routes.
-- [ ] 5.2 Verify access control: a guest is redirected to sign-in from the queue, detail, actions, and document routes; a signed-in Donor and Penerima receive 403 from each; an administrator reaches each.
-- [ ] 5.3 Verify document privacy: the uploaded file is absent from `public/`, the document URL only resolves through the administrator route, and a missing file returns 404.
-- [ ] 5.4 Verify double decisions: approve an account twice and confirm the second attempt is refused with the “already processed” notice while the account status and document outcome stay unchanged.
-- [ ] 5.5 Verify password recovery end to end through the log mailer and confirm no `remember_token` error occurs; verify a rejected account still cannot sign in and an approved account can.
-- [ ] 5.6 Verify `git status` contains no uploaded legality documents, generated build output, or unrelated changes before handing the change over.
+- [x] 5.1 Run `php artisan optimize:clear`, `php artisan route:list`, `vendor/bin/pint --dirty`, `php artisan test`, and `npm run build`; verify all commands succeed and the route list contains the verification and document routes.
+- [x] 5.2 Verify access control: a guest is redirected to sign-in from the queue, detail, actions, and document routes; a signed-in Donor and Penerima receive 403 from each; an administrator reaches each.
+- [x] 5.3 Verify document privacy: the uploaded file is absent from `public/`, the document URL only resolves through the administrator route, and a missing file returns 404.
+- [x] 5.4 Verify double decisions: approve an account twice and confirm the second attempt is refused with the “already processed” notice while the account status and document outcome stay unchanged.
+- [x] 5.5 Verify password recovery end to end through the log mailer and confirm no `remember_token` error occurs; verify a rejected account still cannot sign in and an approved account can.
+- [x] 5.6 Verify `git status` contains no uploaded legality documents, generated build output, or unrelated changes before handing the change over.
