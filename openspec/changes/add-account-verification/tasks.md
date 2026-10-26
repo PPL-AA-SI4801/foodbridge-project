@@ -20,7 +20,7 @@
 - [x] 2.6 Add `Admin\VerificationController@approve`: transaction, re-check role and `menunggu` status, require at least one document, set the account to `aktif`, mark pending documents `disetujui` with `verified_at`, clear `catatan`, and flash an Indonesian success message; verify an approved account signs in and the document row shows the review outcome in group 3.
 - [x] 2.7 Add `Admin\VerificationController@reject`: transaction, the same guards, set the account to `ditolak`, mark pending documents `ditolak` with `verified_at` and `catatan`, and flash an Indonesian success message; verify the rejected applicant is refused at sign-in and the reason is stored in group 3.
 - [x] 2.8 Add `Admin\VerificationDocumentController@show`: 404 when the private file is missing, otherwise stream it inline with a friendly filename, `Cache-Control: no-store, private`, and `X-Content-Type-Options: nosniff`; verify an administrator opens the document, a non-admin gets 403, and a guest is redirected in group 5.
-- [ ] 2.9 Verify the administrator route registration with `php artisan route:list --name=admin.verifications` and `php artisan route:list --name=admin.documents` after the controllers exist; verify both commands list every route.
+- [x] 2.9 Verify the administrator route registration with `php artisan route:list --name=admin.verifications` and `php artisan route:list --name=admin.documents` after the controllers exist; verify both commands list every route.
 
 ## 3. Administrator verification UI and end-to-end flow
 
