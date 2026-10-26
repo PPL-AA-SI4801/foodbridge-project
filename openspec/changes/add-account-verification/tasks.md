@@ -30,7 +30,7 @@
 - [x] 3.4 Update `resources/views/components/admin-layout.blade.php` to render `session('status')` and `session('error')` alerts and rename the header label to “Menunggu Verifikasi”; verify success and guard-failure messages appear after an administrator action.
 - [x] 3.5 Update `Admin\DashboardController` to use `pendingVerification()` and update `resources/views/admin/dashboard.blade.php` with a link to the queue and the same count; verify the dashboard, header, and sidebar badge show the same number.
 - [x] 3.6 Smoke-test approval: register a Donor, sign in as the administrator, confirm the applicant appears in the queue, open the document, approve, then sign in as the applicant and reach `/dashboard`; verify the document is recorded `disetujui` with `verified_at` and the account is `aktif`.
-- [ ] 3.7 Smoke-test rejection: register a Penerima, reject without a reason and confirm the Indonesian validation error, reject with a reason and confirm the account is `ditolak`, then attempt to sign in and confirm the dedicated Indonesian rejection alert and no session.
+- [x] 3.7 Smoke-test rejection: register a Penerima, reject without a reason and confirm the Indonesian validation error, reject with a reason and confirm the account is `ditolak`, then attempt to sign in and confirm the dedicated Indonesian rejection alert and no session.
 - [x] 3.8 Smoke-test the waiting message and Remember me removal: attempt to sign in as a pending account and confirm the dedicated Indonesian waiting alert, then confirm the login page has no Remember me control and still signs in an active account.
 
 ## 4. Documentation
