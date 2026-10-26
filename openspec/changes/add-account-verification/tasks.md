@@ -24,7 +24,7 @@
 
 ## 3. Administrator verification UI and end-to-end flow
 
-- [ ] 3.1 Add `resources/views/components/status-badge.blade.php` using the status map in `docs/design_system.md`; verify the queue and detail render `menunggu`, `disetujui`, `ditolak`, and `aktif` with distinct styles and `npm run build` succeeds.
+- [x] 3.1 Add `resources/views/components/status-badge.blade.php` using the status map in `docs/design_system.md`; verify the queue and detail render `menunggu`, `disetujui`, `ditolak`, and `aktif` with distinct styles and `npm run build` succeeds.
 - [ ] 3.2 Add `resources/views/admin/verifications/index.blade.php` using `x-admin-layout`: applicant name, role, business/institution, document type, and a review link, with an empty state; verify an administrator sees pending accounts and the empty state when none remain.
 - [ ] 3.3 Add `resources/views/admin/verifications/show.blade.php`: identity/profile card, document list with “Lihat Dokumen”, approve button, and reject form with the required reason; verify the document opens in a new tab, a processed account is read-only, and an account with no document cannot be approved or rejected.
 - [ ] 3.4 Update `resources/views/components/admin-layout.blade.php` to render `session('status')` and `session('error')` alerts and rename the header label to “Menunggu Verifikasi”; verify success and guard-failure messages appear after an administrator action.
