@@ -26,7 +26,7 @@ class EnsureAccountIsActive
         $request->session()->regenerateToken();
 
         return redirect()->route('login')->withErrors([
-            'email' => $user->status_akun->refusalMessage(),
+            'account_status' => $user->status_akun->refusalMessage(),
         ]);
     }
 }

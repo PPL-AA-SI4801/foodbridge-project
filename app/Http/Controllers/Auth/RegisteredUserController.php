@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Enums\AccountStatus;
 use App\Enums\Role;
+use App\Enums\VerificationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
@@ -75,7 +76,7 @@ class RegisteredUserController extends Controller
                 $user->verificationDocuments()->create([
                     'jenis_dokumen' => $validated['jenis_dokumen'],
                     'file_path' => $path,
-                    'status' => 'menunggu',
+                    'status' => VerificationStatus::Menunggu,
                 ]);
             });
         } catch (Throwable $exception) {

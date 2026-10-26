@@ -59,4 +59,20 @@ class EnumsTest extends TestCase
         $this->assertNotContains(null, $messages);
         $this->assertCount(3, array_unique($messages));
     }
+
+    public function test_inactive_status_messages_are_in_indonesian(): void
+    {
+        $this->assertSame(
+            'Akun Anda sedang menunggu verifikasi administrator.',
+            AccountStatus::Menunggu->refusalMessage(),
+        );
+        $this->assertSame(
+            'Pendaftaran Anda ditolak oleh administrator.',
+            AccountStatus::Ditolak->refusalMessage(),
+        );
+        $this->assertSame(
+            'Akun Anda telah diblokir.',
+            AccountStatus::Diblokir->refusalMessage(),
+        );
+    }
 }

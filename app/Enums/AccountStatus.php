@@ -24,9 +24,9 @@ enum AccountStatus: string
     {
         return match ($this) {
             self::Aktif => null,
-            self::Menunggu => 'Your account is waiting for administrator verification.',
-            self::Ditolak => 'Your registration was rejected by the administrator.',
-            self::Diblokir => 'Your account has been blocked.',
+            self::Menunggu => 'Akun Anda sedang menunggu verifikasi administrator.',
+            self::Ditolak => 'Pendaftaran Anda ditolak oleh administrator.',
+            self::Diblokir => 'Akun Anda telah diblokir.',
         };
     }
 }

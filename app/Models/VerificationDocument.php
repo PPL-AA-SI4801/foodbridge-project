@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\VerificationStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,7 @@ class VerificationDocument extends Model
     {
         return [
             'verified_at' => 'datetime',
+            'status' => VerificationStatus::class,
         ];
     }
 
