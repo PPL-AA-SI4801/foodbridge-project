@@ -260,11 +260,15 @@ The ERD only specifies the type `varchar(255)`. The values below are derived fro
 | `food_reviews.status_penanganan` | `menunggu` (pending), `diproses` (in progress), `selesai` (completed) (null for `ulasan`) |
 | `notifications.tipe` | e.g. `akun` (account), `klaim` (claim), `laporan` (report) |
 
+### Account verification ownership (PBI-03)
+
+`users.status_akun` is the only source of truth for whether an account may use the platform. `verification_documents.status` records the administrator's review outcome and is never consulted by the sign-in gate or `EnsureAccountIsActive`. Registration creates a Donor or Penerima account with `status_akun = menunggu` and one `verification_documents` row with `status = menunggu`. Approval is only allowed for an account that is still `menunggu` and has at least one document; it sets `users.status_akun = aktif` and all pending `verification_documents.status = disetujui`, with `verified_at` and cleared `catatan`. Rejection requires a reason; it sets `users.status_akun = ditolak` and all pending `verification_documents.status = ditolak`, with `verified_at` and `catatan`. Both writes happen in one transaction and re-check `status_akun = menunggu`, so a later decision is refused. `diblokir` remains a supported account status for the access gate, but blocking or unblocking active accounts is outside this change.
+
 ---
 
 ## 6. Main Data Flow
 
-1. **Registration:** `users` (role, `status_akun = menunggu`) → profile (`donor_profiles` / `recipient_profiles`) → `verification_documents`. Admin approves → `status_akun = aktif`.
+1. **Registration:** `users` (role, `status_akun = menunggu`) → profile (`donor_profiles` / `recipient_profiles`) → `verification_documents`. Admin approves → `status_akun = aktif` and pending documents `disetujui`; admin rejects with a reason → `status_akun = ditolak` and pending documents `ditolak` with the reason. Both decisions update account and document status together.
 2. **Posting:** Donor creates `food_posts` (`sisa_porsi = jumlah_porsi`). Once `batas_konsumsi` has passed, the post's status becomes `kedaluwarsa` and it no longer appears in the catalog.
 3. **Claim:** Recipient creates `claims` (`status = menunggu`). The daily quota is calculated from claims belonging to that `recipient_id` with `tanggal_klaim` equal to today. Donor approves or rejects → `approved_at` is filled in, and `sisa_porsi` decreases upon approval.
 4. **Pickup method** (after approval):

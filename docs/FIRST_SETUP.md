@@ -200,13 +200,17 @@ Open <http://localhost:8000/register> to create a donor or recipient account:
 2. Fill in the account and profile details, choose a document type, and upload one legality document.
 3. Submit. You return to the sign-in page with a notice that the account is waiting for verification.
 
-New accounts are always created with `status_akun = menunggu` and **cannot sign in until an administrator verifies them**. The sign-in page says the account is waiting for verification. Admin approval screens are a later change, so activate a new account by hand for now:
+New accounts are always created with `status_akun = menunggu` and **cannot sign in until an administrator verifies them**. The sign-in page says the account is waiting for verification.
 
-```powershell
-php artisan tinker --execute="App\Models\User::where('email', 'new-donor@example.com')->update(['status_akun' => 'aktif']);"
-```
+Administrator verification flow:
 
-Replace the email address with the one you registered, then sign in normally. Running the same command with `'ditolak'` or `'diblokir'` lets you test the other refusal messages.
+1. Sign in as the administrator seed account (`admin@foodbridge.test` / `password`).
+2. Open **Verifikasi Akun** in the administrator menu, or `/admin/verifications`.
+3. Review the applicant's identity, profile, and legality document. Open **Lihat Dokumen** to view the private document in a new tab.
+4. Choose **Setujui Pendaftaran** to set the account to `aktif`; the applicant can then sign in and reach `/dashboard`.
+5. Or choose **Tolak Pendaftaran** and enter a reason (required, up to 255 characters); the account becomes `ditolak` and the applicant cannot sign in.
+
+The administrator decision updates the account status and all pending legality documents together. `diblokir` remains a supported account status for the access gate, but blocking or unblocking active accounts is a later feature.
 
 **Upload rules:** one PDF, JPG, JPEG, or PNG file, at most **2 MB**. Legality documents are stored privately under `storage/app/private/verification-documents/{user_id}/` and are never served from `public/`. Email addresses and business/institution names must be unique, and passwords need at least 8 characters.
 

@@ -46,7 +46,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => 'Email atau kata sandi yang Anda masukkan tidak cocok.',
             ]);
         }
 
@@ -74,7 +74,7 @@ class LoginRequest extends FormRequest
         $this->session()->regenerateToken();
 
         throw ValidationException::withMessages([
-            'email' => $user->status_akun->refusalMessage(),
+            'account_status' => $user->status_akun->refusalMessage(),
         ])->redirectTo(route('login'));
     }
 
@@ -94,10 +94,10 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+            'email' => sprintf(
+                'Terlalu banyak percobaan masuk. Silakan coba lagi dalam %d detik.',
+                $seconds,
+            ),
         ]);
     }
 

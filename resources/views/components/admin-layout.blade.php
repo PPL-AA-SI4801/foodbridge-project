@@ -63,7 +63,7 @@
 
                             <span class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm">
                                 <x-icon name="user-check" class="h-4 w-4 text-muted-foreground" />
-                                <span class="hidden text-muted-foreground sm:inline">Verifikasi Pending:</span>
+                                <span class="hidden text-muted-foreground sm:inline">Menunggu Verifikasi:</span>
                                 <span class="font-semibold">{{ $pendingVerifications }}</span>
                             </span>
 
@@ -77,6 +77,24 @@
                 </header>
 
                 <main class="flex-1 p-6 lg:p-8">
+                    @if (session('status') || session('error'))
+                        <div class="mb-6 flex flex-col gap-3">
+                            @if (session('status'))
+                                <div role="status" class="flex items-start gap-3 rounded-md border border-[#86EFAC] bg-[#DCFCE7] px-4 py-3 text-sm font-medium text-[#166534]">
+                                    <x-icon name="clipboard-check" class="mt-0.5 h-4 w-4 shrink-0" />
+                                    <p>{{ session('status') }}</p>
+                                </div>
+                            @endif
+
+                            @if (session('error'))
+                                <div role="alert" class="flex items-start gap-3 rounded-md border border-[#FCA5A5] bg-[#FEE2E2] px-4 py-3 text-sm font-medium text-[#B91C1C]">
+                                    <x-icon name="triangle-alert" class="mt-0.5 h-4 w-4 shrink-0" />
+                                    <p>{{ session('error') }}</p>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
                     {{ $slot }}
                 </main>
             </div>

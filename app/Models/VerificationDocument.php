@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\VerificationStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +21,22 @@ class VerificationDocument extends Model
     {
         return [
             'verified_at' => 'datetime',
+            'status' => VerificationStatus::class,
         ];
+    }
+
+    /**
+     * The human-readable label for the document type.
+     */
+    public function jenisDokumenLabel(): string
+    {
+        return match ($this->jenis_dokumen) {
+            'nib' => 'NIB',
+            'akta_pendirian' => 'Akta Pendirian',
+            'izin_operasional' => 'Izin Operasional',
+            'lainnya' => 'Dokumen Lainnya',
+            default => 'Dokumen',
+        };
     }
 
     /**
