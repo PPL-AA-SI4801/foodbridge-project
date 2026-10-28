@@ -186,7 +186,7 @@ Every migration must show `Ran`, and the eleven application tables from the tabl
 | Penerima | `penerima@foodbridge.test` | Panti Penerima Demo |
 | Administrator | `admin@foodbridge.test` | — |
 
-Sign in at <http://localhost:8000/login>; a successful sign-in lands on `/dashboard`, and signing out from the navigation returns you to the welcome page.
+Sign in at <http://localhost:8000/login>; a successful sign-in lands on the dashboard for the account's role (`/dashboard/donor`, `/dashboard/penerima`, or `/dashboard/admin`), and signing out from the navigation returns you to the welcome page.
 
 Sign-in is refused while `status_akun` is `menunggu` (waiting for verification), `ditolak` (registration rejected), or `diblokir` (blocked after approval), each with its own message on the sign-in page. Only new registrations start as `menunggu` — the seeded accounts are already `aktif`.
 
@@ -207,7 +207,7 @@ Administrator verification flow:
 1. Sign in as the administrator seed account (`admin@foodbridge.test` / `password`).
 2. Open **Verifikasi Akun** in the administrator menu, or `/admin/verifications`.
 3. Review the applicant's identity, profile, and legality document. Open **Lihat Dokumen** to view the private document in a new tab.
-4. Choose **Setujui Pendaftaran** to set the account to `aktif`; the applicant can then sign in and reach `/dashboard`.
+4. Choose **Setujui Pendaftaran** to set the account to `aktif`; the applicant can then sign in and reach their role dashboard.
 5. Or choose **Tolak Pendaftaran** and enter a reason (required, up to 255 characters); the account becomes `ditolak` and the applicant cannot sign in.
 
 The administrator decision updates the account status and all pending legality documents together. `diblokir` remains a supported account status for the access gate, but blocking or unblocking active accounts is a later feature.

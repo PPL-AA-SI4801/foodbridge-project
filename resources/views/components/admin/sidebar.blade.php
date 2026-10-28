@@ -6,8 +6,8 @@ $navItems = [
     [
         'label' => 'Dashboard',
         'icon' => 'layout-dashboard',
-        'route' => 'admin.dashboard',
-        'active' => request()->routeIs('admin.dashboard'),
+        'route' => 'dashboard.admin',
+        'active' => request()->routeIs('dashboard.admin'),
     ],
     [
         'label' => 'Verifikasi Akun',

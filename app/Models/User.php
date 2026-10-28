@@ -64,6 +64,19 @@ class User extends Authenticatable
     }
 
     /**
+     * The named route for this account's role dashboard.
+     */
+    public function dashboardRouteName(): string
+    {
+        return match ($this->role) {
+            Role::Administrator => 'dashboard.admin',
+            Role::Donor => 'dashboard.donor',
+            Role::Penerima => 'dashboard.recipient',
+            default => 'dashboard.donor',
+        };
+    }
+
+    /**
      * The business or institution name for this account's role.
      */
     public function profileName(): ?string

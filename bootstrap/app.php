@@ -16,6 +16,15 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo('/login');
 
+        $middleware->redirectUsersTo(function (Request $request) {
+            return match ($request->user()?->role?->value) {
+                'administrator' => route('dashboard.admin'),
+                'donor' => route('dashboard.donor'),
+                'penerima' => route('dashboard.recipient'),
+                default => route('login'),
+            };
+        });
+
         $middleware->web(append: [
             EnsureAccountIsActive::class,
         ]);
