@@ -50,12 +50,8 @@ $link = fn (string $route): string => \Illuminate\Support\Facades\Route::has($ro
         <img
             src="{{ asset(rawurlencode('Logo Foodbridge.webp')) }}"
             alt="FoodBridge"
-            class="h-10 w-10 object-contain"
+            class="h-12 w-auto max-w-full object-contain"
         >
-        <div class="flex flex-col gap-0.5">
-            <span class="text-sm font-semibold tracking-[0.12em]">FOODBRIDGE</span>
-            <span class="text-xs text-muted-foreground">Panel Administrator</span>
-        </div>
 
         <button
             type="button"

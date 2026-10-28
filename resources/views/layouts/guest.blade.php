@@ -18,7 +18,7 @@
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
             <div>
                 <a href="/">
-                    <img src="{{ asset(rawurlencode('Logo Foodbridge.webp')) }}" alt="FoodBridge" class="w-20 h-20 object-contain" />
+                    <img src="{{ asset(rawurlencode('Logo Foodbridge.webp')) }}" alt="FoodBridge" class="h-24 w-auto max-w-full object-contain" />
                 </a>
             </div>
 
