@@ -47,9 +47,11 @@ $link = fn (string $route): string => \Illuminate\Support\Facades\Route::has($ro
     x-cloak>
     {{-- Brand --}}
     <div class="flex items-center gap-3 border-b border-sidebar-border p-5">
-        <div class="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <x-icon name="leaf" class="h-5 w-5" />
-        </div>
+        <img
+            src="{{ asset(rawurlencode('Logo Foodbridge.webp')) }}"
+            alt="FoodBridge"
+            class="h-10 w-10 object-contain"
+        >
         <div class="flex flex-col gap-0.5">
             <span class="text-sm font-semibold tracking-[0.12em]">FOODBRIDGE</span>
             <span class="text-xs text-muted-foreground">Panel Administrator</span>
