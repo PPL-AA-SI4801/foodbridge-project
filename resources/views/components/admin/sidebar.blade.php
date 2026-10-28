@@ -92,14 +92,28 @@ $link = fn (string $route): string => \Illuminate\Support\Facades\Route::has($ro
         </div>
 
         {{-- Manajemen Data --}}
-        <div class="mt-5 border-t border-border pt-5">
-            <div class="flex items-center gap-3 px-3 pb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <div class="mt-5 border-t border-border pt-5" x-data="{ dataOpen: true }">
+            <button
+                type="button"
+                @click="dataOpen = ! dataOpen"
+                class="flex w-full items-center gap-3 px-3 pb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground"
+                :aria-expanded="dataOpen"
+            >
                 <x-icon name="database" class="h-3.5 w-3.5" />
                 <span>Manajemen Data</span>
-                <x-icon name="chevron-down" class="ml-auto h-3.5 w-3.5" />
-            </div>
+                <x-icon name="chevron-down" class="ml-auto h-3.5 w-3.5 transition-transform" x-bind:class="dataOpen ? 'rotate-180' : ''" />
+            </button>
 
-            <div class="ml-[1.4rem] flex flex-col gap-0.5 border-l border-border pl-4">
+            <div
+                x-show="dataOpen"
+                x-transition:enter="transition ease-out duration-150"
+                x-transition:enter-start="opacity-0 -translate-y-1"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-100"
+                x-transition:leave-start="opacity-100 translate-y-0"
+                x-transition:leave-end="opacity-0 -translate-y-1"
+                class="ml-[1.4rem] mt-1 flex flex-col gap-0.5 border-l border-border pl-4"
+            >
                 @foreach ($dataItems as $item)
                     <a
                         href="{{ $link($item['route']) }}"
