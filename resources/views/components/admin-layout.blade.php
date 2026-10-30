@@ -47,7 +47,7 @@
                             </button>
 
                             <nav aria-label="Breadcrumb" class="flex min-w-0 items-center gap-2 text-sm">
-                                <a href="{{ route('admin.dashboard') }}" class="shrink-0 text-muted-foreground transition-colors hover:text-foreground">Beranda</a>
+                                <a href="{{ route('dashboard.admin') }}" class="shrink-0 text-muted-foreground transition-colors hover:text-foreground">Beranda</a>
 
                                 @if ($title)
                                     <x-icon name="chevron-right" class="h-4 w-4 shrink-0 text-muted-foreground" />
