@@ -34,6 +34,14 @@
                     </x-slot>
 
                     <x-slot name="content">
+                        @if (\Illuminate\Support\Facades\Route::has('profile.edit') && auth()->user()->hasRole(\App\Enums\Role::Donor, \App\Enums\Role::Penerima))
+                            <x-dropdown-link :href="route('profile.edit')">
+                                {{ __('Profil Saya') }}
+                            </x-dropdown-link>
+
+                            <div class="my-1 h-px bg-gray-100" aria-hidden="true"></div>
+                        @endif
+
                         <!-- Authentication -->
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
@@ -76,6 +84,12 @@
             </div>
 
             <div class="mt-3 space-y-1">
+                @if (\Illuminate\Support\Facades\Route::has('profile.edit') && auth()->user()->hasRole(\App\Enums\Role::Donor, \App\Enums\Role::Penerima))
+                    <x-responsive-nav-link :href="route('profile.edit')" :active="request()->routeIs('profile.edit')">
+                        {{ __('Profil Saya') }}
+                    </x-responsive-nav-link>
+                @endif
+
                 <!-- Authentication -->
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
