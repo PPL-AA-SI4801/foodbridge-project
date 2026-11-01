@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use App\Enums\FoodPostStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['judul', 'deskripsi', 'foto', 'jumlah_porsi', 'sisa_porsi', 'alamat', 'lat', 'lng', 'batas_konsumsi', 'status', 'donor_id', 'category_id'])]
+#[Fillable(['judul', 'deskripsi', 'foto', 'jumlah_porsi', 'sisa_porsi', 'alamat', 'catatan_kurir', 'lat', 'lng', 'batas_konsumsi', 'status', 'donor_id', 'category_id'])]
 #[WithoutTimestamps]
 class FoodPost extends Model
 {
@@ -23,7 +25,27 @@ class FoodPost extends Model
             'lat' => 'float',
             'lng' => 'float',
             'batas_konsumsi' => 'datetime',
+            'status' => FoodPostStatus::class,
         ];
+    }
+
+    /**
+     * Limit the query to posts that may appear in the recipient catalog.
+     */
+    public function scopeAvailable(Builder $query): void
+    {
+        $query->where('status', FoodPostStatus::Tersedia->value)
+            ->where('sisa_porsi', '>', 0)
+            ->where('batas_konsumsi', '>', now());
+    }
+
+    /**
+     * Limit the query to posts that have passed their consumption deadline.
+     */
+    public function scopeExpired(Builder $query): void
+    {
+        $query->where('batas_konsumsi', '<=', now())
+            ->where('status', '!=', FoodPostStatus::Kedaluwarsa->value);
     }
 
     /**

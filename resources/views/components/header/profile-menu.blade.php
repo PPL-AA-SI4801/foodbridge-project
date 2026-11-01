@@ -1,3 +1,9 @@
+@props(['displayName' => null])
+
+@php
+    $menuName = filled($displayName) ? $displayName : auth()->user()->nama;
+@endphp
+
 {{-- Menu profil: Profil Saya (FR-02, jika tersedia) dan Logout. --}}
 <div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false">
     <button
@@ -8,9 +14,9 @@
         class="flex items-center gap-2 rounded-md px-1.5 py-1 text-sm transition-colors hover:bg-accent"
     >
         <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-            {{ str(auth()->user()->nama)->substr(0, 1)->upper() }}
+            {{ str($menuName)->substr(0, 1)->upper() }}
         </span>
-        <span class="hidden text-sm font-medium sm:block">{{ auth()->user()->nama }}</span>
+        <span class="hidden max-w-44 truncate text-sm font-medium sm:block">{{ $menuName }}</span>
         <x-icon name="chevron-down" class="h-4 w-4 text-muted-foreground" />
     </button>
 
