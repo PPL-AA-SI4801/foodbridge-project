@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use App\Enums\FoodPostStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['judul', 'deskripsi', 'foto', 'jumlah_porsi', 'sisa_porsi', 'alamat', 'lat', 'lng', 'batas_konsumsi', 'status', 'donor_id', 'category_id'])]
+#[Fillable(['judul', 'deskripsi', 'foto', 'jumlah_porsi', 'sisa_porsi', 'alamat', 'catatan_kurir', 'lat', 'lng', 'batas_konsumsi', 'status', 'donor_id', 'category_id'])]
 #[WithoutTimestamps]
 class FoodPost extends Model
 {
