@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('jumlah_porsi');
             $table->timestamp('batas_waktu');
             $table->string('status');
-            $table->timestamp('created_at');
+            $table->timestamp('created_at')->useCurrent();
         });
     }
 

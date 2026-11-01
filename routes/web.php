@@ -4,7 +4,9 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\VerificationController;
 use App\Http\Controllers\Admin\VerificationDocumentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Donor\FoodPostController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Recipient\FoodCatalogController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -23,6 +25,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/penerima', [DashboardController::class, 'recipient'])
         ->name('dashboard.recipient')
         ->middleware('role:penerima');
+
+    Route::middleware('role:donor')->prefix('donor')->name('donor.')->group(function () {
+        Route::resource('food-posts', FoodPostController::class)
+            ->except(['show'])
+            ->parameters(['food-posts' => 'foodPost']);
+    });
+
+    Route::middleware('role:penerima')->prefix('penerima')->name('recipient.')->group(function () {
+        Route::get('/katalog', [FoodCatalogController::class, 'index'])->name('catalog.index');
+    });
 
     Route::middleware('role:donor,penerima')->group(function () {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

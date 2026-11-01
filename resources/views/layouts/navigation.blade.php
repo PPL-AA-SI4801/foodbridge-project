@@ -15,6 +15,18 @@
                     <x-nav-link :href="route(auth()->user()->dashboardRouteName())" :active="request()->routeIs(auth()->user()->dashboardRouteName())">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
+                    @if (\Illuminate\Support\Facades\Route::has('donor.food-posts.index') && auth()->user()->hasRole(\App\Enums\Role::Donor))
+                        <x-nav-link :href="route('donor.food-posts.index')" :active="request()->routeIs('donor.food-posts.*')">
+                            {{ __('Posting Makanan') }}
+                        </x-nav-link>
+                    @endif
+
+                    @if (\Illuminate\Support\Facades\Route::has('recipient.catalog.index') && auth()->user()->hasRole(\App\Enums\Role::Penerima))
+                        <x-nav-link :href="route('recipient.catalog.index')" :active="request()->routeIs('recipient.catalog.*')">
+                            {{ __('Katalog Makanan') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -74,6 +86,18 @@
             <x-responsive-nav-link :href="route(auth()->user()->dashboardRouteName())" :active="request()->routeIs(auth()->user()->dashboardRouteName())">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+            @if (\Illuminate\Support\Facades\Route::has('donor.food-posts.index') && auth()->user()->hasRole(\App\Enums\Role::Donor))
+                <x-responsive-nav-link :href="route('donor.food-posts.index')" :active="request()->routeIs('donor.food-posts.*')">
+                    {{ __('Posting Makanan') }}
+                </x-responsive-nav-link>
+            @endif
+
+            @if (\Illuminate\Support\Facades\Route::has('recipient.catalog.index') && auth()->user()->hasRole(\App\Enums\Role::Penerima))
+                <x-responsive-nav-link :href="route('recipient.catalog.index')" :active="request()->routeIs('recipient.catalog.*')">
+                    {{ __('Katalog Makanan') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->
