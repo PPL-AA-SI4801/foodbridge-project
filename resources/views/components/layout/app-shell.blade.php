@@ -48,57 +48,15 @@
                 aria-hidden="true"
             ></div>
 
-            <x-layout.sidebar id="app-sidebar">
-                @if (isset($sidebar))
-                    {{ $sidebar }}
-                @else
-                    <x-layout.sidebar-link
-                        :href="route($dashboardRoute)"
-                        :active="request()->routeIs($dashboardRoute)"
-                    >
-                        <x-slot name="icon">
-                            <x-icon name="layout-dashboard" class="h-4 w-4" />
-                        </x-slot>
-                        Dashboard
-                    </x-layout.sidebar-link>
-
-                    @if (\Illuminate\Support\Facades\Route::has('donor.food-posts.index') && $user->hasRole(\App\Enums\Role::Donor))
-                        <x-layout.sidebar-link
-                            :href="route('donor.food-posts.index')"
-                            :active="request()->routeIs('donor.food-posts.*')"
-                        >
-                            <x-slot name="icon">
-                                <x-icon name="utensils-crossed" class="h-4 w-4" />
-                            </x-slot>
-                            Posting Makanan
-                        </x-layout.sidebar-link>
-                    @endif
-
-                    @if (\Illuminate\Support\Facades\Route::has('recipient.catalog.index') && $user->hasRole(\App\Enums\Role::Penerima))
-                        <x-layout.sidebar-link
-                            :href="route('recipient.catalog.index')"
-                            :active="request()->routeIs('recipient.catalog.*')"
-                        >
-                            <x-slot name="icon">
-                                <x-icon name="package" class="h-4 w-4" />
-                            </x-slot>
-                            Katalog Makanan
-                        </x-layout.sidebar-link>
-                    @endif
-
-                    @if (\Illuminate\Support\Facades\Route::has('profile.edit'))
-                        <x-layout.sidebar-link
-                            :href="route('profile.edit')"
-                            :active="request()->routeIs('profile.*')"
-                        >
-                            <x-slot name="icon">
-                                <x-icon name="user" class="h-4 w-4" />
-                            </x-slot>
-                            Profil Saya
-                        </x-layout.sidebar-link>
-                    @endif
-                @endif
-            </x-layout.sidebar>
+            @if (isset($sidebar))
+                {{ $sidebar }}
+            @elseif ($user->hasRole(\App\Enums\Role::Donor))
+                <x-donor.sidebar />
+            @elseif ($user->hasRole(\App\Enums\Role::Penerima))
+                <x-recipient.sidebar />
+            @else
+                <x-admin.sidebar />
+            @endif
 
             <div class="flex min-w-0 flex-1 flex-col">
                 <x-layout.header
