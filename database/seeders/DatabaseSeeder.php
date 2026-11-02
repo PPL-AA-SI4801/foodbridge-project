@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(FoodCategorySeeder::class);
+
         $donor = User::create([
             'nama' => 'Donor Demo',
             'email' => 'donor@foodbridge.test',

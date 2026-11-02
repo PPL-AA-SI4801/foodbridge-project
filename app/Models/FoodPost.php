@@ -25,7 +25,27 @@ class FoodPost extends Model
             'lat' => 'float',
             'lng' => 'float',
             'batas_konsumsi' => 'datetime',
+            'status' => FoodPostStatus::class,
         ];
+    }
+
+    /**
+     * Limit the query to posts that may appear in the recipient catalog.
+     */
+    public function scopeAvailable(Builder $query): void
+    {
+        $query->where('status', FoodPostStatus::Tersedia->value)
+            ->where('sisa_porsi', '>', 0)
+            ->where('batas_konsumsi', '>', now());
+    }
+
+    /**
+     * Limit the query to posts that have passed their consumption deadline.
+     */
+    public function scopeExpired(Builder $query): void
+    {
+        $query->where('batas_konsumsi', '<=', now())
+            ->where('status', '!=', FoodPostStatus::Kedaluwarsa->value);
     }
 
     /**

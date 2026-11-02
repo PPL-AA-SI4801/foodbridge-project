@@ -1,4 +1,19 @@
-@props(['sidebar' => null])
+@props([
+    'title' => null,
+    'displayName' => null,
+    'maxWidth' => 'max-w-7xl',
+    'stickyHeader' => false,
+    'sidebar' => null,
+])
+
+@php
+    $user = auth()->user();
+    $dashboardRoute = $user->dashboardRouteName();
+    $displayName = $displayName ?? $user->profileName();
+    $roleLabel = $user->hasRole(\App\Enums\Role::Donor)
+        ? 'Donor Hub'
+        : ($user->hasRole(\App\Enums\Role::Penerima) ? 'Penerima / Yayasan' : null);
+@endphp
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -7,7 +22,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ $title ?: config('app.name', 'FoodBridge') }}</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -16,51 +31,70 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
+    <body class="bg-background font-sans text-foreground antialiased">
+        <div
+            class="flex min-h-screen"
+            x-data="{ sidebarOpen: false }"
+            @close-sidebar.window="sidebarOpen = false"
+            @keydown.escape.window="sidebarOpen = false"
+            @resize.window="if (window.innerWidth >= 1024) sidebarOpen = false"
+        >
+            {{-- Latar gelap untuk sidebar versi mobile --}}
+            <div
+                x-show="sidebarOpen"
+                x-cloak
+                @click="sidebarOpen = false"
+                class="fixed inset-0 z-40 bg-foreground/30 lg:hidden"
+                aria-hidden="true"
+            ></div>
+
             @if (isset($sidebar))
-                <x-layout.sidebar>
-                    {{ $sidebar }}
-                </x-layout.sidebar>
+                {{ $sidebar }}
+            @elseif ($user->hasRole(\App\Enums\Role::Donor))
+                <x-donor.sidebar />
+            @elseif ($user->hasRole(\App\Enums\Role::Penerima))
+                <x-recipient.sidebar />
+            @else
+                <x-admin.sidebar />
+            @endif
 
-                <div class="lg:pl-64 flex flex-col min-h-screen">
-                    @if (isset($header))
-                        {{ $header }}
-                    @elseif (isset($headerSlot))
-                        <x-layout.header>
-                            {{ $headerSlot }}
-                        </x-layout.header>
-                    @else
-                        @include('layouts.navigation')
-                    @endif
+            <div class="flex min-w-0 flex-1 flex-col">
+                <x-layout.header
+                    :max-width="$maxWidth"
+                    :sticky="$stickyHeader"
+                    :hide-logo-on-desktop="true"
+                    :role-label="$roleLabel"
+                >
+                    <x-slot name="sidebarToggle">
+                        <button
+                            type="button"
+                            @click="sidebarOpen = true"
+                            x-bind:aria-expanded="sidebarOpen"
+                            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
+                            aria-label="Buka menu"
+                            aria-controls="app-sidebar"
+                        >
+                            <x-icon name="menu" class="h-5 w-5" />
+                        </button>
+                    </x-slot>
 
-                    @isset($pageHeader)
-                        <header class="bg-white shadow">
-                            <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                                {{ $pageHeader }}
-                            </div>
-                        </header>
+                    @isset($headerActions)
+                        {{ $headerActions }}
                     @endisset
 
-                    <main class="flex-1">
-                        {{ $slot }}
-                    </main>
-                </div>
-            @else
-                @include('layouts.navigation')
+                    <x-header.profile-menu :display-name="$displayName" />
+                </x-layout.header>
 
                 @isset($pageHeader)
-                    <header class="bg-white shadow">
-                        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                            {{ $pageHeader }}
-                        </div>
-                    </header>
+                    <x-layout.page-header :max-width="$maxWidth">
+                        {{ $pageHeader }}
+                    </x-layout.page-header>
                 @endisset
 
-                <main>
+                <main class="flex-1">
                     {{ $slot }}
                 </main>
-            @endif
+            </div>
         </div>
     </body>
 </html>

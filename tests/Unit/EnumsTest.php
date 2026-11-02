@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Enums\AccountStatus;
+use App\Enums\FoodPostStatus;
 use App\Enums\Role;
 use App\Enums\VerificationStatus;
 use App\Models\User;
@@ -31,6 +32,14 @@ class EnumsTest extends TestCase
         $this->assertSame(
             ['menunggu', 'disetujui', 'ditolak'],
             array_column(VerificationStatus::cases(), 'value'),
+        );
+    }
+
+    public function test_food_post_status_values_match_the_documented_erd_vocabulary(): void
+    {
+        $this->assertSame(
+            ['tersedia', 'habis', 'kedaluwarsa'],
+            array_column(FoodPostStatus::cases(), 'value'),
         );
     }
 

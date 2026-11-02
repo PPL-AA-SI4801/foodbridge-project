@@ -46,11 +46,11 @@ $link = fn (string $route): string => \Illuminate\Support\Facades\Route::has($ro
     x-bind:class="sidebarOpen ? 'flex' : 'hidden lg:flex'"
     x-cloak>
     {{-- Brand --}}
-    <div class="flex items-center gap-3 border-b border-sidebar-border p-5">
+    <div class="flex h-16 items-center gap-3 border-b border-sidebar-border px-5">
         <img
             src="{{ asset(rawurlencode('Logo Foodbridge.webp')) }}"
             alt="FoodBridge"
-            class="h-12 w-auto max-w-full object-contain"
+            class="h-8 w-auto max-w-full object-contain"
         >
 
         <button
