@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Donor\FoodPostController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Recipient\FoodCatalogController;
+use App\Http\Controllers\Recipient\ClaimController as RecipientClaimController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -50,6 +51,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/verifications/{user}/approve', [VerificationController::class, 'approve'])->name('admin.verifications.approve');
         Route::post('/admin/verifications/{user}/reject', [VerificationController::class, 'reject'])->name('admin.verifications.reject');
         Route::get('/admin/documents/{verificationDocument}', [VerificationDocumentController::class, 'show'])->name('admin.documents.show');
+    });
+
+        Route::middleware(['auth', 'verified', 'role:penerima'])->prefix('recipient')->name('recipient.')->group(function () {
+        Route::get('/claims', [RecipientClaimController::class, 'index'])->name('claims.index');
+        Route::post('/food-posts/{foodPost}/claims', [RecipientClaimController::class, 'store'])->name('claims.store');
     });
 });
 
