@@ -58,6 +58,7 @@ $link = fn (string $route): string => \Illuminate\Support\Facades\Route::has($ro
             @click="$dispatch('close-sidebar')"
             class="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:hidden"
             aria-label="Tutup menu"
+            aria-controls="admin-sidebar"
         >
             <x-icon name="x" class="h-4 w-4" />
         </button>

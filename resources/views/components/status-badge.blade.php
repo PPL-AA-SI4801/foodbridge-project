@@ -11,6 +11,8 @@ $map = [
     'selesai' => ['label' => 'Selesai', 'class' => 'bg-[#DCFCE7] text-[#166534] border-[#86EFAC]'],
     'dibatalkan' => ['label' => 'Dibatalkan', 'class' => 'bg-[#F3E8FF] text-[#6B21A8] border-[#D8B4FE]'],
     'kedaluwarsa' => ['label' => 'Kedaluwarsa', 'class' => 'bg-[#E5E7EB] text-[#374151] border-[#D1D5DB]'],
+    'tersedia' => ['label' => 'Tersedia', 'class' => 'bg-[#DCFCE7] text-[#166534] border-[#86EFAC]'],
+    'habis' => ['label' => 'Habis', 'class' => 'bg-[#FEF3C7] text-[#92400E] border-[#FCD34D]'],
     'ditinjau' => ['label' => 'Ditinjau', 'class' => 'bg-[#FCE7F3] text-[#9D174D] border-[#F9A8D4]'],
     'aktif' => ['label' => 'Aktif', 'class' => 'bg-[#D97736] text-[#111816] border-[#D97736]'],
     'diblokir' => ['label' => 'Diblokir', 'class' => 'bg-[#111816] text-white border-[#111816]'],

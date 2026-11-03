@@ -82,6 +82,8 @@
                         {{ $headerActions }}
                     @endisset
 
+                    <x-header.notifications />
+
                     <x-header.profile-menu :display-name="$displayName" />
                 </x-layout.header>
 
