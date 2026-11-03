@@ -208,10 +208,7 @@
                         <span class="font-medium text-primary">{{ __('Masuk') }}</span>
                     </a>
 
-                    <x-button type="button" size="md" class="order-1 btn-block sm:order-2 sm:w-auto" @click="advance()">
-                        <x-slot:icon>
-                            <x-icon name="arrow-right" />
-                        </x-slot:icon>
+                    <x-button type="button" size="md" class="order-1 sm:order-2 self-start" @click="advance()">
                         {{ __('Lanjut') }}
                     </x-button>
                 </div>
@@ -311,9 +308,6 @@
                     </x-button>
 
                     <x-button type="submit" size="md" class="btn-block sm:w-auto">
-                        <x-slot:icon>
-                            <x-icon name="check" />
-                        </x-slot:icon>
                         {{ __('Daftar') }}
                     </x-button>
                 </div>
