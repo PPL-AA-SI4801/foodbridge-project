@@ -12,23 +12,18 @@ use Illuminate\Support\Facades\DB;
 
 class ClaimController extends Controller
 {
-    /**
-     * Menampilkan daftar klaim Penerima ("Klaim Saya") beserta sisa kuota harian.
-     * Kebutuhan: FR-05
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $recipientId = auth()->id();
+        $recipient = $request->user()->recipientProfile()->firstOrFail();
         $today = Carbon::today();
 
-        // Mengambil riwayat klaim oleh penerima yang sedang login
-        $claims = Claim::where('recipient_id', $recipientId)
-            ->with('foodPost')
-            ->latest()
+        $claims = Claim::where('recipient_id', $recipient->id)
+            ->with(['post.donor', 'post.category'])
+            ->orderByDesc('tanggal_klaim')
+            ->orderByDesc('id')
             ->paginate(10);
 
-        // Menghitung kuota klaim harian (maksimal 3 per hari, status rejected tidak dihitung)
-        $dailyClaimsCount = Claim::where('recipient_id', $recipientId)
+        $dailyClaimsCount = Claim::where('recipient_id', $recipient->id)
             ->whereDate('tanggal_klaim', $today)
             ->where('status', '!=', 'rejected')
             ->count();
@@ -36,19 +31,19 @@ class ClaimController extends Controller
         $dailyQuotaLimit = 3;
         $remainingQuota = max(0, $dailyQuotaLimit - $dailyClaimsCount);
 
-        return view('recipient.claims.index', compact('claims', 'remainingQuota', 'dailyClaimsCount'));
+        $statusCounts = Claim::where('recipient_id', $recipient->id)
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        return view('recipient.claims.index', compact('claims', 'remainingQuota', 'dailyClaimsCount', 'statusCounts'));
     }
 
-    /**
-     * Memproses pengajuan klaim berkuota harian (PBI-07).
-     * Kebutuhan: FR-05, NFR-01[cite: 1, 14, 17]
-     */
     public function store(Request $request, FoodPost $foodPost)
     {
-        $recipientId = auth()->id();
+        $recipientId = $request->user()->recipientProfile()->firstOrFail()->id;
         $today = Carbon::today();
 
-        // 1. Validasi input jumlah porsi (wajib integer, min 1, tidak melebihi sisa_porsi)[cite: 1]
         $request->validate([
             'jumlah_porsi' => ['required', 'integer', 'min:1', "max:{$foodPost->sisa_porsi}"],
         ], [
@@ -58,7 +53,6 @@ class ClaimController extends Controller
             'jumlah_porsi.max' => 'Jumlah porsi yang diklaim tidak boleh melebihi sisa porsi makanan.',
         ]);
 
-        // 2. Validasi kuota klaim harian (maksimal 3 kali, status rejected tidak dihitung)[cite: 1]
         $dailyClaimsCount = Claim::where('recipient_id', $recipientId)
             ->whereDate('tanggal_klaim', $today)
             ->where('status', '!=', 'rejected')
@@ -68,7 +62,6 @@ class ClaimController extends Controller
             return back()->withErrors(['jumlah_porsi' => 'Kuota klaim harian Anda sudah habis (3/3).']);
         }
 
-        // 3. Validasi status makanan (tidak boleh kedaluwarsa atau habis)[cite: 1]
         if ($foodPost->batas_konsumsi && Carbon::parse($foodPost->batas_konsumsi)->isPast()) {
             return back()->withErrors(['jumlah_porsi' => 'Makanan sudah kedaluwarsa dan tidak dapat diklaim.']);
         }
@@ -77,7 +70,6 @@ class ClaimController extends Controller
             return back()->withErrors(['jumlah_porsi' => 'Makanan sudah habis.']);
         }
 
-        // 4. Validasi pencegahan klaim ganda pada post yang sama
         $existingClaim = Claim::where('recipient_id', $recipientId)
             ->where('post_id', $foodPost->id)
             ->whereIn('status', ['pending', 'approved'])
@@ -87,7 +79,6 @@ class ClaimController extends Controller
             return back()->withErrors(['jumlah_porsi' => 'Anda sudah mengajukan klaim untuk makanan ini.']);
         }
 
-        // 5. Simpan klaim berstatus pending ke database & kirim notifikasi ke Donor[cite: 1, 14, 15]
         DB::transaction(function () use ($request, $foodPost, $recipientId, $today) {
             Claim::create([
                 'post_id' => $foodPost->id,
@@ -97,7 +88,6 @@ class ClaimController extends Controller
                 'tanggal_klaim' => $today,
             ]);
 
-            // Mengirim notifikasi in-app ke donor pemilik postingan (konteks PBI-08 / FR-10)[cite: 1, 15]
             InAppNotification::create([
                 'user_id' => $foodPost->donor_id,
                 'judul' => 'Pengajuan Klaim Baru',
