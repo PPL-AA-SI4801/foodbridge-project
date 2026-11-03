@@ -23,6 +23,12 @@ class RegisteredUserController extends Controller
      */
     public function create(): View
     {
+        // Discard stale input from a previous submission on a fresh visit,
+        // but keep it when re-rendering after a validation error.
+        if (! session()->has('errors')) {
+            session()->forget('_old_input');
+        }
+
         return view('auth.register');
     }
 
