@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './button.css';
 
 @plugin '@tailwindcss/forms';
 
@@ -35,6 +36,10 @@
 
     --primary: #133830;
     --primary-foreground: #FFFFFF;
+    --primary-300: color-mix(in oklab, var(--primary) 45%, white);
+    --primary-500: var(--primary);
+    --primary-600: color-mix(in oklab, var(--primary) 85%, black);
+    --primary-700: color-mix(in oklab, var(--primary) 70%, black);
 
     --secondary: #D97736;
     --secondary-foreground: #111816;
@@ -82,6 +87,10 @@
 
     --color-primary: var(--primary);
     --color-primary-foreground: var(--primary-foreground);
+    --color-primary-300: var(--primary-300);
+    --color-primary-500: var(--primary-500);
+    --color-primary-600: var(--primary-600);
+    --color-primary-700: var(--primary-700);
 
     --color-secondary: var(--secondary);
     --color-secondary-foreground: var(--secondary-foreground);
