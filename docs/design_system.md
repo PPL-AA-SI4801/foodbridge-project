@@ -9,10 +9,10 @@ Panduan visual untuk antarmuka FoodBridge (Laravel Blade + shadcn). Semua kompon
 | Prinsip | Aturan |
 |---|---|
 | Mode | Light mode saja, tanpa dark mode |
-| Gaya | Flat: tanpa shadow, pemisah antar elemen memakai border 1px |
+| Gaya | Flat: tanpa shadow, pemisah antar elemen memakai border 1px. Pengecualian: tombol utama memakai gradient inner stroke + shadow bertingkat |
 | Kerapatan | Lega: padding dan jarak antar elemen dibuat longgar |
 | Bahasa konten | Bahasa Indonesia untuk semua teks antarmuka |
-| Komponen | Standar/default shadcn, tanpa modifikasi gaya dulu |
+| Komponen | shadcn standar; komponen custom mengikuti panduan di bagian 9 |
 | Ikon | Lucide (bawaan shadcn) |
 | Notifikasi in-app | Toast |
 | Aksesibilitas | Default shadcn (kontras dan focus ring bawaan) |
@@ -27,7 +27,7 @@ Pola yang diambil dari gambar referensi:
 - **Kartu statistik:** label kecil huruf kapital berwarna muted, angka besar tebal, badge persentase (naik/turun), dan ikon di dalam kotak ber-border di pojok kanan.
 - **Kartu:** background terang, border tipis, sudut membulat sedang, jarak antar kartu lega.
 - **Tabel:** berada di dalam kartu, dengan kolom pencarian dan tombol aksi (Refresh/Ekspor) di atasnya.
-- **Tombol utama:** warna primary gelap dengan teks putih.
+- **Tombol utama:** solid primary dengan radius design system, teks putih, ikon di kiri, gradient inner stroke tipis, dan shadow bertingkat.
 
 Sidebar pada gambar referensi (hijau gelap) belum diadopsi, lihat bagian 8.
 
@@ -58,6 +58,17 @@ Sidebar pada gambar referensi (hijau gelap) belum diadopsi, lihat bagian 8.
 | `--border` | `#E6E9E4` | Border: abu hampir sama dengan off-white |
 | `--input` | `#DDE1DB` | Border input, sedikit lebih terlihat dari border biasa |
 | `--ring` | `#133830` | Focus ring |
+
+### 3.1.1 Skala Primary
+
+Skala ini diturunkan dari `--primary` memakai `color-mix`, jadi tidak ada hex baru yang di-hardcode. Jika `--primary` berubah, seluruh skala ikut berubah.
+
+| Token | Derivasi | Kegunaan |
+|---|---|---|
+| `--primary-300` | `color-mix(in oklab, var(--primary) 45%, white)` | Focus ring tombol |
+| `--primary-500` | `var(--primary)` | Background tombol |
+| `--primary-600` | `color-mix(in oklab, var(--primary) 85%, black)` | Hover tombol |
+| `--primary-700` | `color-mix(in oklab, var(--primary) 70%, black)` | Shade lebih gelap (cadangan) |
 
 ### 3.2 Catatan
 
@@ -150,7 +161,7 @@ Pola teks yang sering dipakai:
 |---|---|
 | Border radius | Sedang: `--radius: 0.5rem` |
 | Border | 1px, warna `--border` |
-| Shadow | Tidak dipakai |
+| Shadow | Tidak dipakai, kecuali tombol utama memakai shadow bertingkat (inner putih, outer ring primary, drop shadow hitam) |
 | Padding kartu | `p-6` |
 | Jarak antar kartu / section | `gap-6` |
 | Jarak antar field form | `gap-4` hingga `gap-6` |
@@ -182,9 +193,70 @@ Bagian berikut sengaja dilewati dulu dan akan diisi pada iterasi berikutnya:
 
 ## 9. Komponen
 
-Gunakan komponen shadcn standar tanpa mengubah gayanya. Ikon diambil dari Lucide.
+Gunakan komponen shadcn standar tanpa mengubah gayanya, kecuali Button global di bagian 9.1. Ikon diambil dari Lucide.
 
 Notifikasi in-app ditampilkan sebagai **toast** (komponen Sonner/Toast bawaan shadcn).
+
+### 9.1 Button (global)
+
+- Komponen: `resources/views/components/button.blade.php`
+- Style: `resources/css/button.css` (diimpor oleh `resources/css/app.css`)
+- Stack: Laravel Blade + plain CSS. Tidak memakai Tailwind atau JS framework.
+
+Aturan visual:
+
+- Radius mengikuti token `--radius-md` (6px), bukan pill.
+- Background solid `--primary-500`, teks putih, `font-weight: 500`, ukuran dasar 14px (text-sm), gap 12px.
+- Gradient inner stroke 1px lewat `::before`: putih 40% di atas → transparan di bawah.
+- Shadow bertingkat: inner putih 24% (blur 6, spread 2), outer ring `--primary-500` 1px, drop shadow hitam 20% (Y 3, blur 6).
+- Ikon Lucide di kiri label, dibungkus `.btn__icon` (1.25em) dan `aria-hidden="true"`.
+- Sizes: `sm` 12px / 8px 16px, `md` 14px / 12px 24px, `lg` 16px / 16px 32px (skala text-xs/sm/base).
+- Hover: background `--primary-600` (150ms ease, hanya perangkat hover).
+- Active: `scale(0.98)` dengan 120ms ease-out.
+- Focus-visible: outline 2px `--primary-300`, offset 2px.
+- Disabled: opacity 50%, tanpa shadow, `cursor: not-allowed`.
+- Reduced motion: transisi dan active scale dimatikan.
+
+Props:
+
+| Prop | Tipe | Default | Keterangan |
+|---|---|---|---|
+| `href` | `string\|null` | `null` | Jika diisi, dirender sebagai `<a>`; jika tidak, `<button>` |
+| `size` | `'sm'\|'md'\|'lg'` | `'md'` | Ukuran tombol |
+| `disabled` | `bool` | `false` | `<button>` mendapat atribut `disabled`; `<a>` mendapat `aria-disabled="true"` + `tabindex="-1"` |
+| `type` | `string` | `'button'` | Atribut `type` untuk `<button>` |
+
+Slots:
+
+- `icon` (named): ikon di kiri label, dirender di dalam `.btn__icon`.
+- Default slot: label tombol.
+
+Contoh pemakaian:
+
+```blade
+{{-- Submit utama (14px, mengikuti ukuran teks design system) --}}
+<x-button type="submit" size="md" class="btn-block">
+    <x-slot:icon>
+        <x-icon name="log-in" />
+    </x-slot:icon>
+    {{ __('Masuk') }}
+</x-button>
+
+{{-- Link navigasi --}}
+<x-button href="{{ route('register') }}" size="md" class="btn-block btn-secondary">
+    <x-slot:icon>
+        <x-icon name="user-plus" />
+    </x-slot:icon>
+    {{ __('Buat akun baru') }}
+</x-button>
+
+{{-- Disabled --}}
+<x-button size="sm" disabled>
+    {{ __('Simpan') }}
+</x-button>
+```
+
+Helper opsional: `.btn-block` untuk lebar 100%, `.btn-secondary` untuk CTA non-primary (transparan, teks muted, hover `--secondary`).
 
 ---
 
@@ -205,6 +277,10 @@ Tempel di file CSS utama (misalnya `resources/css/app.css`). Sesuaikan format ni
 
   --primary: #133830;
   --primary-foreground: #FFFFFF;
+  --primary-300: color-mix(in oklab, var(--primary) 45%, white);
+  --primary-500: var(--primary);
+  --primary-600: color-mix(in oklab, var(--primary) 85%, black);
+  --primary-700: color-mix(in oklab, var(--primary) 70%, black);
 
   --secondary: #D97736;
   --secondary-foreground: #111816;
@@ -244,6 +320,10 @@ Jika memakai Tailwind v4, petakan token ke tema:
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-300: var(--primary-300);
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-primary-700: var(--primary-700);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -259,3 +339,5 @@ Jika memakai Tailwind v4, petakan token ke tema:
   --radius-sm: calc(var(--radius) - 4px);
 }
 ```
+
+Gaya tombol utama (termasuk gradient inner stroke dan shadow bertingkat) berada di `resources/css/button.css` dan diimpor oleh `resources/css/app.css`.
