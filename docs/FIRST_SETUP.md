@@ -190,15 +190,15 @@ Sign in at <http://localhost:8000/login>; a successful sign-in lands on the dash
 
 Sign-in is refused while `status_akun` is `menunggu` (waiting for verification), `ditolak` (registration rejected), or `diblokir` (blocked after approval), each with its own message on the sign-in page. Only new registrations start as `menunggu` — the seeded accounts are already `aktif`.
 
-Forgot a password? **Forgot your password?** emails a reset link. In development `MAIL_MAILER=log`, so the link is written to `storage/logs/laravel.log` instead of being sent.
-
 ### Registration
 
-Open <http://localhost:8000/register> to create a donor or recipient account:
+Open <http://localhost:8000/register> to create a donor or recipient account. Registration is a two-step form:
 
-1. Choose **Donor** (business) or **Penerima** (institution); the form shows that role's profile fields.
-2. Fill in the account and profile details, choose a document type, and upload one legality document.
+1. **Akun** — choose **Donor** (business) or **Penerima** (institution), then enter your name, email, phone number, and password. **Lanjut** validates this step before continuing.
+2. **Profil** — fill in the profile fields for the chosen role, the address, choose a document type, and upload one legality document. **Kembali** returns to step 1 without losing input.
 3. Submit. You return to the sign-in page with a notice that the account is waiting for verification.
+
+If the server rejects a field, the form reopens on the step that contains the error.
 
 New accounts are always created with `status_akun = menunggu` and **cannot sign in until an administrator verifies them**. The sign-in page says the account is waiting for verification.
 

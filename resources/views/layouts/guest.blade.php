@@ -7,24 +7,24 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
-            <div>
-                <a href="/">
-                    <img src="{{ asset(rawurlencode('Logo Foodbridge.webp')) }}" alt="FoodBridge" class="h-24 w-auto max-w-full object-contain" />
-                </a>
-            </div>
+    <body class="bg-background font-sans text-foreground antialiased">
+        @php
+            $widthClass = $width === 'lg' ? 'max-w-2xl' : 'max-w-md';
+        @endphp
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
+        <div class="flex min-h-screen flex-col items-center justify-center px-4 py-6">
+            <a href="/" class="mb-5 block sm:mb-6">
+                <img src="{{ asset(rawurlencode('Logo Foodbridge.webp')) }}" alt="FoodBridge" class="h-14 w-auto max-w-full object-contain sm:h-16" />
+            </a>
+
+            <main class="w-full {{ $widthClass }} rounded-lg border border-border bg-card p-6">
                 {{ $slot }}
-            </div>
+            </main>
+
+            <p class="mt-5 text-xs text-muted-foreground">&copy; {{ date('Y') }} FoodBridge</p>
         </div>
     </body>
 </html>
