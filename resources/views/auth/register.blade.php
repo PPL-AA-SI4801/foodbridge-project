@@ -318,6 +318,7 @@
     <script>
         // Prevent the browser from restoring a stale two-step form state
         // (e.g. step 2 / a previously selected role) from the back/forward cache.
+        window.addEventListener('beforeunload', function () {});
         window.addEventListener('pageshow', function (event) {
             if (event.persisted) {
                 window.location.reload();
