@@ -208,11 +208,12 @@
                         <span class="font-medium text-primary">{{ __('Masuk') }}</span>
                     </a>
 
-                    <button type="button" @click="advance()"
-                            class="group order-1 inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-[background-color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-[0.98] motion-reduce:active:scale-100 sm:order-2 sm:w-auto">
+                    <x-button type="button" size="md" class="order-1 btn-block sm:order-2 sm:w-auto" @click="advance()">
+                        <x-slot:icon>
+                            <x-icon name="arrow-right" />
+                        </x-slot:icon>
                         {{ __('Lanjut') }}
-                        <x-icon name="arrow-right" class="h-4 w-4 transition-transform duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0" />
-                    </button>
+                    </x-button>
                 </div>
             </div>
 
@@ -305,16 +306,16 @@
                 </div>
 
                 <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
-                    <button type="button" @click="retreat()"
-                            class="inline-flex w-full items-center justify-center rounded-md border border-input bg-white px-4 py-2.5 text-sm font-semibold text-foreground transition-[background-color,border-color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-primary/30 hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-[0.98] motion-reduce:active:scale-100 sm:w-auto">
+                    <x-button type="button" size="md" class="btn-block sm:w-auto btn-secondary" @click="retreat()">
                         {{ __('Kembali') }}
-                    </button>
+                    </x-button>
 
-                    <button type="submit"
-                            class="group inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-[background-color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-[0.98] motion-reduce:active:scale-100 sm:w-auto">
+                    <x-button type="submit" size="md" class="btn-block sm:w-auto">
+                        <x-slot:icon>
+                            <x-icon name="check" />
+                        </x-slot:icon>
                         {{ __('Daftar') }}
-                        <x-icon name="check" class="h-4 w-4" />
-                    </button>
+                    </x-button>
                 </div>
             </div>
         </form>
