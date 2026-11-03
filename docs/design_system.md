@@ -211,7 +211,7 @@ Aturan visual:
 - Shadow bertingkat: inner putih 24% (blur 6, spread 2), outer ring `--primary-500` 1px, drop shadow hitam 20% (Y 3, blur 6).
 - Ikon Lucide di kiri label, dibungkus `.btn__icon` (1.25em) dan `aria-hidden="true"`.
 - Sizes: `sm` 12px / 8px 16px, `md` 14px / 12px 24px, `lg` 16px / 16px 32px (skala text-xs/sm/base).
-- Hover: background `--accent` (grey hampir putih), teks `--accent-foreground`, border `--border` (150ms ease, hanya perangkat hover).
+- Hover: background `--primary-600` (150ms ease, hanya perangkat hover).
 - Active: `scale(0.98)` dengan 120ms ease-out.
 - Focus-visible: outline 2px `--primary-300`, offset 2px.
 - Disabled: opacity 50%, tanpa shadow, `cursor: not-allowed`.
