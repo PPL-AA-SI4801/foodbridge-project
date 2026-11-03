@@ -83,11 +83,6 @@
         },
         "platform": {
             "php": "8.3.3"
-        },
-        "audit": {
-            "ignore": [
-                "PKSA-wtxr-p26d-nn42"
-            ]
         }
     },
     "minimum-stability": "stable",

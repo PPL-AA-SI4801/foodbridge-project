@@ -11,6 +11,8 @@
         @click="open = ! open"
         x-bind:aria-expanded="open"
         aria-haspopup="true"
+        aria-controls="profile-menu-dropdown"
+        aria-label="Menu profil {{ $menuName }}"
         class="flex items-center gap-2 rounded-md px-1.5 py-1 text-sm transition-colors hover:bg-accent"
     >
         <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
@@ -20,7 +22,7 @@
         <x-icon name="chevron-down" class="h-4 w-4 text-muted-foreground" />
     </button>
 
-    <div x-show="open" x-cloak @click.outside="open = false" class="absolute right-0 z-50 mt-2">
+    <div id="profile-menu-dropdown" x-show="open" x-cloak @click.outside="open = false" class="absolute right-0 z-50 mt-2">
         <div class="w-64 overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground">
             <div class="flex flex-col gap-0.5 px-3 py-2.5">
                 <span class="truncate text-sm font-medium">{{ auth()->user()->nama }}</span>

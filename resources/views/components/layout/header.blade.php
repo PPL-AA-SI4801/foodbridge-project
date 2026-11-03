@@ -23,10 +23,11 @@
                             'lg:hidden' => $hideLogoOnDesktop,
                         ])
                     >
-                        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                            <x-icon name="leaf" class="h-5 w-5" />
-                        </span>
-                        <span class="text-base font-semibold tracking-tight">{{ config('app.name', 'FoodBridge') }}</span>
+                        <img
+                            src="{{ asset(rawurlencode('Logo Foodbridge.webp')) }}"
+                            alt="{{ config('app.name', 'FoodBridge') }}"
+                            class="h-8 w-auto max-w-[8.5rem] object-contain"
+                        >
                     </a>
                 @endif
 

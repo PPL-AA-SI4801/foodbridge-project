@@ -20,6 +20,7 @@
             x-data="{ sidebarOpen: false }"
             @close-sidebar.window="sidebarOpen = false"
             @keydown.escape.window="sidebarOpen = false"
+            @resize.window="if (window.innerWidth >= 1024) sidebarOpen = false"
         >
             {{-- Latar gelap untuk sidebar versi mobile --}}
             <div
@@ -42,6 +43,7 @@
                                 class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground lg:hidden"
                                 aria-label="Buka menu"
                                 aria-controls="admin-sidebar"
+                                x-bind:aria-expanded="sidebarOpen"
                             >
                                 <x-icon name="menu" class="h-5 w-5" />
                             </button>

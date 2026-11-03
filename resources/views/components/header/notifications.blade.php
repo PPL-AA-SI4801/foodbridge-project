@@ -21,6 +21,7 @@ $unreadCount = once(fn () => \App\Models\InAppNotification::query()
         x-bind:aria-expanded="open"
         aria-label="Notifikasi"
         aria-haspopup="true"
+        aria-controls="notification-menu-dropdown"
         class="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
     >
         <x-icon name="bell" class="h-5 w-5" />
@@ -32,7 +33,7 @@ $unreadCount = once(fn () => \App\Models\InAppNotification::query()
         @endif
     </button>
 
-    <div x-show="open" x-cloak @click.outside="open = false" class="absolute right-0 z-50 mt-2">
+    <div id="notification-menu-dropdown" x-show="open" x-cloak @click.outside="open = false" class="absolute right-0 z-50 mt-2">
         <div class="w-80 overflow-hidden rounded-md border border-border bg-popover text-popover-foreground">
             <div class="flex items-center justify-between border-b border-border px-4 py-2.5">
                 <span class="text-sm font-medium">Notifikasi</span>
