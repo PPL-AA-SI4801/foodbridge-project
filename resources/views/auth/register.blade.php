@@ -100,7 +100,13 @@
             @csrf
 
             <!-- Step 1: Account -->
-            <div x-show="step === 1" x-ref="stepOne">
+            <div x-show="step === 1" x-ref="stepOne"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 -translate-x-2"
+                    x-transition:enter-end="opacity-100 translate-x-0"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 translate-x-0"
+                    x-transition:leave-end="opacity-0 translate-x-2">
                 <!-- Role -->
                 <fieldset>
                     <legend class="{{ $labelClass }}">{{ __('Saya mendaftar sebagai') }}</legend>
@@ -215,7 +221,13 @@
             </div>
 
             <!-- Step 2: Profile -->
-            <div x-show="step === 2" x-ref="stepTwo" x-cloak>
+            <div x-show="step === 2" x-ref="stepTwo" x-cloak
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-x-2"
+                    x-transition:enter-end="opacity-100 translate-x-0"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 translate-x-0"
+                    x-transition:leave-end="opacity-0 -translate-x-2">
                 <p class="text-sm text-muted-foreground">{{ __('Lengkapi profil dan unggah satu dokumen legalitas.') }}</p>
 
                 <div class="mt-4 grid gap-4 sm:grid-cols-2">

@@ -20,7 +20,7 @@
                 <img src="{{ asset(rawurlencode('Logo Foodbridge.webp')) }}" alt="FoodBridge" class="h-14 w-auto max-w-full object-contain sm:h-16" />
             </a>
 
-            <main class="w-full {{ $widthClass }} rounded-lg border border-border bg-card p-6">
+            <main class="auth-card w-full {{ $widthClass }} rounded-lg border border-border bg-card p-6">
                 {{ $slot }}
             </main>
 
