@@ -95,7 +95,7 @@
 
         <p class="sr-only" aria-live="polite" x-text="step === 1 ? @js(__('Langkah 1 dari 2: data akun')) : @js(__('Langkah 2 dari 2: profil dan dokumen'))"></p>
 
-        <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data"
+        <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" autocomplete="off"
                 @submit="if (step === 1) { $event.preventDefault(); advance(); }">
             @csrf
 
@@ -314,4 +314,14 @@
             </div>
         </form>
     </div>
+
+    <script>
+        // Prevent the browser from restoring a stale two-step form state
+        // (e.g. step 2 / a previously selected role) from the back/forward cache.
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+    </script>
 </x-guest-layout>
