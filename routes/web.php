@@ -57,6 +57,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/claims', [RecipientClaimController::class, 'index'])->name('claims.index');
         Route::post('/food-posts/{foodPost}/claims', [RecipientClaimController::class, 'store'])->name('claims.store');
     });
+
+        Route::middleware(['auth', 'verified', 'role:donor'])->prefix('donor')->name('donor.')->group(function () {
+        Route::get('/claims', [DonorClaimController::class, 'index'])->name('claims.index');
+        Route::patch('/claims/{claim}/approve', [DonorClaimController::class, 'approve'])->name('claims.approve');
+        Route::patch('/claims/{claim}/reject', [DonorClaimController::class, 'reject'])->name('claims.reject');
+    });
 });
 
 require __DIR__.'/auth.php';
