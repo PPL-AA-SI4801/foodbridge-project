@@ -17,6 +17,12 @@ $navItems = [
         'active' => request()->routeIs('recipient.catalog.*'),
     ],
     [
+        'label' => 'Klaim Saya',
+        'icon' => 'clipboard-check',
+        'route' => 'recipient.claims.index',
+        'active' => request()->routeIs('recipient.claims.*'),
+    ], 
+    [
         'label' => 'Profil Saya',
         'icon' => 'user',
         'route' => 'profile.edit',
