@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['jumlah_porsi', 'status', 'metode_pengambilan', 'kode_verifikasi', 'tanggal_klaim', 'approved_at', 'completed_at', 'post_id', 'recipient_id'])]
+#[Fillable(['jumlah_porsi', 'status', 'metode_pengambilan', 'kode_verifikasi', 'tanggal_klaim', 'approved_at', 'completed_at', 'post_id', 'recipient_id', 'user_id'])]
 #[WithoutTimestamps]
 class Claim extends Model
 {
@@ -35,11 +35,27 @@ class Claim extends Model
     }
 
     /**
+     * Alias untuk post agar kompatibel dengan pemanggilan foodPost() di controller.
+     */
+    public function foodPost(): BelongsTo
+    {
+        return $this->post();
+    }
+
+    /**
      * The recipient profile that submitted this claim.
      */
     public function recipient(): BelongsTo
     {
         return $this->belongsTo(RecipientProfile::class, 'recipient_id');
+    }
+
+    /**
+     * Relasi langsung ke User (penerima) untuk keperluan notifikasi.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
