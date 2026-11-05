@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\VerificationController;
 use App\Http\Controllers\Admin\VerificationDocumentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Donor\FoodPostController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Recipient\FoodCatalogController;
 use App\Http\Controllers\Recipient\ClaimController as RecipientClaimController;
@@ -41,6 +42,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     });
+
+    Route::get('/notifikasi', [NotificationController::class, 'index'])
+        ->name('notifications.index');
 
     Route::middleware('role:administrator')->group(function () {
         Route::get('/dashboard/admin', [AdminDashboardController::class, 'index'])
