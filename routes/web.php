@@ -9,6 +9,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Recipient\FoodCatalogController;
 use App\Http\Controllers\Recipient\ClaimController as RecipientClaimController;
+use App\Http\Controllers\Donor\ClaimController as DonorClaimController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {

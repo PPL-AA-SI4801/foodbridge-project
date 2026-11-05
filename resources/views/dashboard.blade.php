@@ -28,13 +28,19 @@
                     <a href="{{ route('donor.food-posts.index') }}" class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90">
                         {{ __('Posting Makanan') }}
                     </a>
+
+                    @if (\Illuminate\Support\Facades\Route::has('donor.claims.index'))
+                        <a href="{{ route('donor.claims.index') }}" class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90">
+                            {{ __('Klaim Masuk') }}
+                        </a>
+                    @endif
                 @else
                     <a href="{{ route('recipient.catalog.index') }}" class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90">
                         {{ __('Katalog Makanan') }}
                     </a>
-                
+
                     <a href="{{ route('recipient.claims.index') }}" class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90">
-                    Klaim Saya
+                        {{ __('Klaim Saya') }}
                     </a>
                 @endif
 

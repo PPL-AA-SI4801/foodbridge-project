@@ -17,6 +17,12 @@ $navItems = [
         'active' => request()->routeIs('donor.food-posts.*'),
     ],
     [
+        'label' => 'Klaim Masuk',
+        'icon' => 'clipboard-check',
+        'route' => 'donor.claims.index',
+        'active' => request()->routeIs('donor.claims.*'),
+    ],
+    [
         'label' => 'Profil Saya',
         'icon' => 'user',
         'route' => 'profile.edit',
