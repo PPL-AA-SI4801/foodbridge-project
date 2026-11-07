@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\FoodPostController as AdminFoodPostController;
 use App\Http\Controllers\Admin\RequestBoardController as AdminRequestBoardController;
 use App\Http\Controllers\Admin\VerificationController;
 use App\Http\Controllers\Admin\VerificationDocumentController;
@@ -63,6 +64,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/requests', [AdminRequestBoardController::class, 'index'])->name('admin.requests.index');
         Route::patch('/admin/requests/{foodRequest}/cancel', [AdminRequestBoardController::class, 'cancel'])->name('admin.requests.cancel');
         Route::delete('/admin/requests/{foodRequest}', [AdminRequestBoardController::class, 'destroy'])->name('admin.requests.destroy');
+
+        Route::resource('/admin/food-posts', AdminFoodPostController::class)
+            ->except(['show'])
+            ->names('admin.food-posts')
+            ->parameters(['food-posts' => 'foodPost']);
     });
 
         Route::middleware(['auth', 'verified', 'role:penerima'])->prefix('recipient')->name('recipient.')->group(function () {

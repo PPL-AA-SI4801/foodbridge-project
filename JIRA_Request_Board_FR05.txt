@@ -1,0 +1,142 @@
+PBI-05 – Request Board (Papan Kebutuhan Pangan)
+
+**Kebutuhan terkait:** `FR-05`, `FR-10`
+
+**User story:**
+Sebagai **Penerima**, saya ingin menyiarkan kebutuhan makanan mendesak lembaga saya ke Request Board secara proaktif, agar **Donor** terverifikasi dapat mengetahui dan memenuhi kebutuhan tersebut secara langsung tanpa harus menunggu postingan katalog tersedia.
+
+**Kriteria penerimaan:**
+
+* Penerima dengan akun terverifikasi (`aktif`) dapat mengajukan permintaan kebutuhan makanan dengan mengisi jenis/nama makanan (`judul`), kategori makanan (`category_id`), estimasi jumlah porsi (`jumlah_porsi`), tingkat urgensi (`normal`, `mendesak`, `darurat`), preferensi penerimaan (`ambil_sendiri`, `diantar_kurir`, `fleksibel`), batas waktu kebutuhan (`batas_waktu`), serta deskripsi opsional, dan tersimpan berstatus `open`.
+* Setiap Penerima dibatasi maksimal **3 permintaan berstatus `open`** secara bersamaan untuk mencegah spam. Permintaan berstatus `fulfilled`, `expired`, atau `cancelled` tidak mengurangi kuota permintaan terbuka.
+* Saat permintaan baru berhasil dibuat, sistem secara otomatis mengirimkan notifikasi in-app (`tipe = request`) ke seluruh akun Donor yang aktif/terverifikasi.
+* Permintaan yang melewati `batas_waktu` otomatis berubah status menjadi `expired` dan dihapus dari tampilan papan aktif Donor.
+* Donor dengan akun aktif dapat melihat daftar permintaan `open` di Request Board, memfilter berdasarkan kata kunci/kategori/urgensi, serta merespons permintaan (baik dengan mengalokasikan `food_posts` yang tersedia maupun membuat postingan baru) sehingga status permintaan berubah menjadi `in_progress` dan klaim otomatis terbuat berstatus `approved` beserta `kode_verifikasi`.
+* Penerima maupun Donor penyalur dapat menandai permintaan berstatus `in_progress` menjadi `fulfilled` (terpenuhi), yang sekaligus menyelesaikan klaim terkait (`completed`).
+* Administrator dapat memantau seluruh permintaan di Request Board serta melakukan moderasi (menutup menjadi `cancelled` atau menghapus permintaan yang tidak pantas).
+* Hanya pengguna dengan akun aktif yang dapat mengakses fitur sesuai perannya masing-masing (Penerima, Donor, Administrator).
+
+---
+
+### 1. Alur Bisnis (Probis)
+
+PBI ini mencakup bagian penyiaran kebutuhan makanan secara proaktif (*demand-side*) oleh Penerima, pemenuhan oleh Donor, serta pengawasan oleh Administrator pada proses bisnis *to-be* FoodBridge.
+
+**Alur:**
+
+1. Penerima membuka menu **Request Board** melalui sidebar navigasi.
+2. Penerima menekan **Buat Permintaan Kebutuhan** dan mengisi rincian kebutuhan (judul makanan, kategori, estimasi jumlah porsi, tingkat urgensi, metode penerimaan, batas waktu, dan deskripsi).
+3. Sistem memvalidasi data secara berurutan:
+   * Akun Penerima terverifikasi (`aktif`). Jika tidak, akses ditolak.
+   * Jumlah permintaan berstatus `open` milik Penerima belum mencapai batas maksimal (3 permintaan). Jika sudah mencapai 3, pengajuan ditolak dengan pesan batas kuota permintaan terbuka.
+   * Jumlah porsi minimal 1 (`>= 1`) dan `batas_waktu` berada di masa mendatang (`> now()`). Jika tidak valid, sistem menampilkan pesan kesalahan.
+4. Jika semua valid, sistem menyimpan permintaan berstatus `open`, mengirimkan notifikasi in-app ke seluruh Donor aktif, dan menampilkan pesan sukses.
+5. Donor membuka **Request Board**, melihat daftar kebutuhan `open`, dan memilih **Penuhi Kebutuhan Ini** (dengan mengalokasikan postingan makanan yang tersedia atau membuat postingan baru).
+6. Sistem mengubah status permintaan menjadi `in_progress`, mencatat `donor_id`, memotong `sisa_porsi` postingan Donor secara atomik, membuat record `claims` berstatus `approved` beserta `kode_verifikasi`, dan mengirimkan notifikasi ke Penerima.
+7. Setelah serah terima makanan selesai, Penerima atau Donor menekan **Tandai Terpenuhi**, sehingga status permintaan menjadi `fulfilled` dan status klaim menjadi `completed`.
+
+---
+
+### 2. Mockup / Halaman yang Terlibat
+
+| Halaman | Keterangan | Status |
+| --- | --- | --- |
+| Request Board Penerima (`/recipient/requests`) | Indikator kuota permintaan terbuka (maks. 3), form buat permintaan kebutuhan, filter status, dan daftar permintaan lembaga beserta aksi Batalkan / Hapus / Tandai Terpenuhi | Selesai |
+| Request Board Donor (`/donor/requests`) | Ringkasan kebutuhan aktif & darurat, pencarian & filter (kategori, urgensi), kartu kebutuhan Penerima beserta jarak, serta panel/aksi pemenuhan kebutuhan | Selesai |
+| Form Posting Makanan Terhubung (`/donor/food-posts/create?request_id={id}`) | Titik masuk pemenuhan via postingan baru dengan field yang terisi otomatis (*pre-filled*) dari permintaan Penerima | Selesai |
+| Request Board Administrator (`/admin/requests`) | Tabel pemantauan seluruh permintaan kebutuhan, filter status/urgensi/kategori, serta aksi moderasi (Tutup & Hapus) | Selesai |
+| Pesan kesalahan batas 3 permintaan & validasi input | Tampilan error pada halaman Request Board Penerima dan Donor | Selesai |
+
+---
+
+### 3. Rancangan Tabel Terkait
+
+**Tabel `food_requests` (ERD subbab 4.3), ditulis oleh PBI ini:**
+
+| Kolom | Tipe | Keterangan untuk PBI ini |
+| --- | --- | --- |
+| `id` | bigint, PK | – |
+| `recipient_id` | bigint, FK | Relasi ke `recipient_profiles`, Penerima yang mengajukan permintaan |
+| `category_id` | bigint, FK | Relasi ke `food_categories`, kategori makanan yang dibutuhkan |
+| `judul` | varchar(255) | Wajib diisi, nama/jenis makanan yang dibutuhkan |
+| `deskripsi` | varchar(255), nullable | Opsional, rincian tambahan kebutuhan |
+| `jumlah_porsi` | integer | Wajib bilangan bulat >= 1 |
+| `urgency_level` | varchar(255) | Wajib diisi: `normal`, `mendesak`, atau `darurat` |
+| `metode_penerimaan` | varchar(255), nullable | Preferensi pengambilan/pengantaran: `ambil_sendiri`, `diantar_kurir`, atau `fleksibel` |
+| `batas_waktu` | timestamp | Wajib setelah waktu sekarang, dasar penentuan kedaluwarsa otomatis |
+| `status` | varchar(255) | Diisi otomatis `open` saat dibuat; diperbarui ke `in_progress`, `fulfilled`, `expired`, atau `cancelled` |
+| `donor_id` | bigint, FK, nullable | Relasi ke `donor_profiles`, diisi saat Donor merespons permintaan |
+| `claim_id` | bigint, FK, nullable | Relasi ke `claims`, diisi otomatis saat Donor memenuhi lewat postingan makanan |
+| `created_at` | timestamp | Diisi otomatis waktu pembuatan |
+
+**Tabel lain yang ditulis oleh PBI ini:**
+
+| Tabel | Kolom | Fungsi |
+| --- | --- | --- |
+| `claims` | `post_id`, `recipient_id`, `jumlah_porsi`, `status`, `metode_pengambilan`, `kode_verifikasi`, `tanggal_klaim`, `approved_at`, `completed_at` | Mencatat klaim otomatis berstatus `approved` saat Donor memenuhi permintaan dengan postingan makanan |
+| `food_posts` | `sisa_porsi`, `status` | Mengurangi `sisa_porsi` (dan menandai `habis` bila 0) saat postingan dialokasikan ke permintaan |
+| `notifications` | `user_id`, `judul`, `pesan`, `tipe`, `is_read`, `created_at` | Mengirim notifikasi in-app (`tipe = request`) ke Donor dan Penerima |
+
+**Tabel yang hanya dibaca:**
+
+| Tabel | Kolom | Fungsi |
+| --- | --- | --- |
+| `users` | `id`, `role`, `status_akun` | Validasi peran (`penerima`, `donor`, `administrator`) dan akun aktif |
+| `recipient_profiles` | `id`, `user_id`, `nama_lembaga`, `jenis_lembaga`, `alamat`, `lat`, `lng` | Menghubungkan Penerima dengan permintaan serta perhitungan jarak |
+| `donor_profiles` | `id`, `user_id`, `nama_usaha`, `lat`, `lng` | Menghubungkan Donor dengan respons pemenuhan kebutuhan |
+| `food_categories` | `id`, `nama_kategori` | Daftar kategori makanan untuk form dan filter |
+
+---
+
+### 4. Use Case
+
+**Penyiaran dan Pemenuhan Kebutuhan Makanan di Request Board (`FR-05`). Aktor: Penerima, Donor, Administrator.**
+
+| Bagian | Isi |
+| --- | --- |
+| **Prakondisi** | Pengguna sudah login dan akun berstatus `aktif`. |
+| **Alur utama** | 1. Penerima membuka menu Request Board. 2. Penerima menekan Buat Permintaan Kebutuhan dan mengisi judul, kategori, jumlah porsi, tingkat urgensi, metode penerimaan, dan batas waktu. 3. Sistem memvalidasi akun, kuota maksimal 3 permintaan `open`, dan format input. 4. Sistem menyimpan permintaan berstatus `open` dan mengirim notifikasi ke seluruh Donor aktif. 5. Donor membuka Request Board, memilih permintaan `open`, dan menekan Penuhi Kebutuhan Ini. 6. Sistem mengubah status menjadi `in_progress`, membuat klaim `approved` (bila menggunakan postingan makanan), dan mengirim notifikasi ke Penerima. 7. Penerima/Donor menandai permintaan sebagai `fulfilled`. |
+| **Alur alternatif** | 5a. Donor memilih Buat Postingan Baru untuk Ini, melengkapi form postingan yang telah *pre-filled*, dan sistem langsung menghubungkan postingan baru tersebut ke permintaan Penerima. 3a. Penerima membatalkan permintaan `open` miliknya menjadi `cancelled`. 3b. Administrator memfilter, menutup (`cancelled`), atau menghapus permintaan dari halaman Request Board Admin. |
+| **Alur pengecualian** | 3a. Akun belum terverifikasi: akses ditolak. 3b. Permintaan `open` aktif sudah mencapai 3: pengajuan ditolak dengan pesan batas kuota. 3c. Jumlah porsi tidak valid atau batas waktu sudah lewat: sistem menampilkan pesan kesalahan. 5b. Permintaan sudah melewati `batas_waktu` saat direspons: status otomatis menjadi `expired` dan pemenuhan ditolak. 5c. Sisa porsi postingan Donor tidak mencukupi atau kedaluwarsa: pemenuhan ditolak. |
+| **Pascakondisi** | Permintaan kebutuhan tersimpan dan diperbarui sesuai siklus hidup (`open` -> `in_progress` -> `fulfilled`), serta terintegrasi dengan klaim dan notifikasi. Pada alur pengecualian, perubahan data tidak disimpan. |
+
+---
+
+### 5. Test Case
+
+Berikut adalah daftar pengujian otomatis yang tersedia pada codebase (`tests/Feature/RequestBoardTest.php` dan `tests/Unit/EnumsTest.php`):
+
+| ID | Nama test case (Method di Codebase) | Tipe | Level |
+| --- | --- | --- | --- |
+| `TC-05-01` | Buat permintaan kebutuhan valid & kirim notifikasi ke seluruh Donor terverifikasi (`test_penerima_can_create_food_request_and_notifies_all_verified_donors`) | Normal | Feature |
+| `TC-05-02` | Tolak permintaan ke-4 ketika Penerima sudah memiliki 3 permintaan `open` aktif (`test_penerima_cannot_exceed_three_simultaneous_open_requests`) | Exception (batas) | Feature |
+| `TC-05-03` | Kedaluwarsa otomatis untuk permintaan `open` yang melewati `batas_waktu` (`test_overdue_open_requests_are_automatically_marked_expired`) | Normal | Feature |
+| `TC-05-04` | Donor memenuhi permintaan menggunakan postingan yang ada, membuat klaim `approved`, dan Penerima menandai `fulfilled` (`test_donor_can_fulfil_request_with_existing_food_post_and_creates_approved_claim`) | Normal | Feature |
+| `TC-05-05` | Administrator memantau, menutup (`cancel`), dan menghapus (`destroy`) permintaan di Request Board (`test_administrator_can_monitor_and_moderate_requests`) | Normal | Feature |
+| `TC-05-06` | Validasi nilai enum `FoodRequestStatus`, `UrgencyLevel`, dan *casting* model `FoodRequest` (`test_food_request_status_and_urgency_enums_and_model_casts`) | Normal | Unit |
+
+---
+
+### 6. Skenario Test
+
+| ID | Skenario (langkah sesuai implementasi test) |
+| --- | --- |
+| `TC-05-01` | Siapkan 1 Penerima aktif, 2 Donor aktif, dan 1 Donor berstatus `menunggu` -> Penerima kirim `POST /recipient/requests` dengan judul “Nasi Kotak untuk Anak Panti”, 30 porsi, urgensi `darurat`, metode `diantar_kurir`, batas waktu +5 jam |
+| `TC-05-02` | Siapkan 3 record `food_requests` berstatus `open` milik Penerima -> Penerima kirim permintaan ke-4 (“Permintaan Keempat”, 15 porsi) ke `POST /recipient/requests` |
+| `TC-05-03` | Siapkan 1 permintaan `open` dengan `batas_waktu` 1 jam lalu (“Permintaan Sudah Lewat Tenggat”) dan 1 permintaan `open` dengan `batas_waktu` +3 jam (“Permintaan Masih Aktif”) -> Donor akses `GET /donor/requests` |
+| `TC-05-04` | Siapkan `FoodPost` Donor (“Nasi Box Ayam Bakar”, `sisa_porsi = 40`) dan `FoodRequest` Penerima (“Kebutuhan Makan Siang Panti”, 25 porsi, `open`) -> Donor kirim `POST /donor/requests/{id}/fulfil` dengan `post_id` -> Penerima kirim `PATCH /recipient/requests/{id}/complete` |
+| `TC-05-05` | Siapkan `FoodRequest` berstatus `open` (“Permintaan Untuk Dimoderasi”) -> Admin akses `GET /admin/requests` -> Admin kirim `PATCH /admin/requests/{id}/cancel` -> Admin kirim `DELETE /admin/requests/{id}` |
+| `TC-05-06` | Instansiasi model `FoodRequest` dengan `urgency_level = 'darurat'`, `status = 'open'`, `metode_penerimaan = 'diantar_kurir'` dan periksa hasil *cast* enum serta konstanta `MAX_OPEN_REQUESTS` |
+
+---
+
+### 7. Input dan Output yang Diharapkan
+
+| ID | Input | Output yang diharapkan |
+| --- | --- | --- |
+| `TC-05-01` | `judul = "Nasi Kotak untuk Anak Panti"`, `jumlah_porsi = 30`, `urgency_level = "darurat"`, `metode_penerimaan = "diantar_kurir"`, `batas_waktu = +5 jam` | Redirect ke `recipient.requests.index` tanpa error; record `food_requests` tersimpan berstatus `open`; notifikasi `tipe = request` terbuat untuk kedua Donor aktif dan tidak terbuat untuk Donor berstatus `menunggu` |
+| `TC-05-02` | Permintaan ke-4 saat sudah ada 3 permintaan `open` aktif | Session memiliki flash `error`, jumlah record di tabel `food_requests` tetap 3 |
+| `TC-05-03` | Akses `GET /donor/requests` saat terdapat permintaan yang melewati `batas_waktu` | Halaman menampilkan “Permintaan Masih Aktif”, tidak menampilkan “Permintaan Sudah Lewat Tenggat”, dan status record yang lewat tenggat berubah menjadi `expired` |
+| `TC-05-04` | `post_id` dari postingan berstok 40 porsi untuk kebutuhan 25 porsi, dilanjutkan aksi `complete` oleh Penerima | Saat `fulfil`: status permintaan menjadi `in_progress`, `sisa_porsi` postingan menjadi `15`, record `claims` terbuat berstatus `approved` (25 porsi) dengan `kode_verifikasi`, notifikasi terkirim ke Penerima. Saat `complete`: status permintaan menjadi `fulfilled` dan status `claims` menjadi `completed` |
+| `TC-05-05` | Aksi `cancel` lalu `destroy` oleh Administrator pada permintaan `open` | Halaman indeks Admin menampilkan judul permintaan; setelah `cancel` status berubah menjadi `cancelled`; setelah `destroy` record hilang dari `food_requests` dan notifikasi `tipe = request` tercatat untuk Penerima |
+| `TC-05-06` | `FoodRequest` dengan `status = 'open'`, `urgency_level = 'darurat'`, `metode_penerimaan = 'diantar_kurir'` | Kasus `FoodRequestStatus` sesuai (`open`, `in_progress`, `fulfilled`, `expired`, `cancelled`), `UrgencyLevel` sesuai (`normal`, `mendesak`, `darurat`), `metodePenerimaanLabel()` mengembalikan `"Diantar / Kurir"`, dan `MAX_OPEN_REQUESTS = 3` |
