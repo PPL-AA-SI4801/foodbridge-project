@@ -32,6 +32,11 @@ final class NotificationPresenter
                 'label' => 'Postingan Makanan',
                 'iconClass' => 'bg-secondary/10 text-secondary',
             ],
+            'request', 'food_request', 'kebutuhan', 'request_board' => [
+                'icon' => 'message-square',
+                'label' => 'Request Board',
+                'iconClass' => 'bg-[#FEF3C7] text-[#92400E]',
+            ],
             default => [
                 'icon' => 'bell',
                 'label' => 'Informasi',

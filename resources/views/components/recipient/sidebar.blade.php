@@ -23,6 +23,12 @@ $navItems = [
         'active' => request()->routeIs('recipient.claims.*'),
     ], 
     [
+        'label' => 'Request Board',
+        'icon' => 'message-square',
+        'route' => 'recipient.requests.index',
+        'active' => request()->routeIs('recipient.requests.*'),
+    ],
+    [
         'label' => 'Profil Saya',
         'icon' => 'user',
         'route' => 'profile.edit',

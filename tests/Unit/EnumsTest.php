@@ -4,8 +4,11 @@ namespace Tests\Unit;
 
 use App\Enums\AccountStatus;
 use App\Enums\FoodPostStatus;
+use App\Enums\FoodRequestStatus;
 use App\Enums\Role;
+use App\Enums\UrgencyLevel;
 use App\Enums\VerificationStatus;
+use App\Models\FoodRequest;
 use App\Models\User;
 use PHPUnit\Framework\TestCase;
 
@@ -80,5 +83,33 @@ class EnumsTest extends TestCase
             'Akun Anda telah diblokir.',
             AccountStatus::Diblokir->refusalMessage(),
         );
+    }
+
+    public function test_food_request_status_and_urgency_enums_and_model_casts(): void
+    {
+        $this->assertSame(
+            ['open', 'in_progress', 'fulfilled', 'expired', 'cancelled'],
+            array_column(FoodRequestStatus::cases(), 'value'),
+        );
+
+        $this->assertSame(
+            ['normal', 'mendesak', 'darurat'],
+            array_column(UrgencyLevel::cases(), 'value'),
+        );
+
+        $request = new FoodRequest([
+            'judul' => 'Nasi Kotak',
+            'jumlah_porsi' => 25,
+            'urgency_level' => 'darurat',
+            'status' => 'open',
+            'metode_penerimaan' => 'diantar_kurir',
+        ]);
+
+        $this->assertSame(FoodRequestStatus::Open, $request->status);
+        $this->assertTrue($request->status->isOpen());
+        $this->assertTrue($request->status->isActive());
+        $this->assertSame(UrgencyLevel::Darurat, $request->urgency_level);
+        $this->assertSame('Diantar / Kurir', $request->metodePenerimaanLabel());
+        $this->assertSame(3, FoodRequest::MAX_OPEN_REQUESTS);
     }
 }

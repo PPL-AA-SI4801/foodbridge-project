@@ -34,6 +34,12 @@
                             {{ __('Klaim Masuk') }}
                         </a>
                     @endif
+
+                    @if (\Illuminate\Support\Facades\Route::has('donor.requests.index'))
+                        <a href="{{ route('donor.requests.index') }}" class="inline-flex items-center justify-center rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-accent">
+                            {{ __('Request Board') }}
+                        </a>
+                    @endif
                 @else
                     <a href="{{ route('recipient.catalog.index') }}" class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90">
                         {{ __('Katalog Makanan') }}
@@ -42,6 +48,12 @@
                     <a href="{{ route('recipient.claims.index') }}" class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90">
                         {{ __('Klaim Saya') }}
                     </a>
+
+                    @if (\Illuminate\Support\Facades\Route::has('recipient.requests.index'))
+                        <a href="{{ route('recipient.requests.index') }}" class="inline-flex items-center justify-center rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-accent">
+                            {{ __('Request Board') }}
+                        </a>
+                    @endif
                 @endif
 
                 <a href="{{ route('profile.edit') }}" class="inline-flex items-center justify-center rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-accent">

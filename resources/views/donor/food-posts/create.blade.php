@@ -60,6 +60,7 @@
             'method' => 'POST',
             'submitLabel' => 'Terbitkan Postingan Sekarang',
             'foodPost' => null,
+            'prefillRequest' => $prefillRequest ?? null,
         ])
     </div>
 </x-donor-form-layout>
