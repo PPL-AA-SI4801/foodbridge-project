@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\Role;
 use App\Models\InAppNotification;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -43,5 +44,44 @@ class NotificationController extends Controller
                 ? User::query()->pendingVerification()->count()
                 : 0,
         ]);
+    }
+
+    /**
+     * Open one of the authenticated account's notifications and mark it as read.
+     */
+    public function open(Request $request, InAppNotification $notification): RedirectResponse
+    {
+        abort_unless($notification->user_id === $request->user()->id, 403);
+
+        $notification->markAsRead();
+
+        return redirect()
+            ->route('notifications.index')
+            ->with('status', 'Notifikasi ditandai sudah dibaca.');
+    }
+
+    /**
+     * Mark one of the authenticated account's notifications as read.
+     */
+    public function markAsRead(Request $request, InAppNotification $notification): RedirectResponse
+    {
+        abort_unless($notification->user_id === $request->user()->id, 403);
+
+        $notification->markAsRead();
+
+        return back()->with('status', 'Notifikasi ditandai sudah dibaca.');
+    }
+
+    /**
+     * Mark every unread notification of the authenticated account as read.
+     */
+    public function markAllAsRead(Request $request): RedirectResponse
+    {
+        $request->user()
+            ->inAppNotifications()
+            ->unread()
+            ->update(['is_read' => true]);
+
+        return back()->with('status', 'Semua notifikasi ditandai sudah dibaca.');
     }
 }

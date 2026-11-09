@@ -51,6 +51,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/notifikasi', [NotificationController::class, 'index'])
         ->name('notifications.index');
 
+    Route::patch('/notifikasi/baca-semua', [NotificationController::class, 'markAllAsRead'])
+        ->name('notifications.read-all');
+
+    Route::get('/notifikasi/{notification}', [NotificationController::class, 'open'])
+        ->name('notifications.open');
+
+    Route::patch('/notifikasi/{notification}/baca', [NotificationController::class, 'markAsRead'])
+        ->name('notifications.read');
+
     Route::middleware('role:administrator')->group(function () {
         Route::get('/dashboard/admin', [AdminDashboardController::class, 'index'])
             ->name('dashboard.admin');
@@ -71,7 +80,7 @@ Route::middleware('auth')->group(function () {
             ->parameters(['food-posts' => 'foodPost']);
     });
 
-        Route::middleware(['auth', 'verified', 'role:penerima'])->prefix('recipient')->name('recipient.')->group(function () {
+    Route::middleware(['auth', 'verified', 'role:penerima'])->prefix('recipient')->name('recipient.')->group(function () {
         Route::get('/claims', [RecipientClaimController::class, 'index'])->name('claims.index');
         Route::post('/food-posts/{foodPost}/claims', [RecipientClaimController::class, 'store'])->name('claims.store');
 
@@ -82,7 +91,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/requests/{foodRequest}', [RecipientFoodRequestController::class, 'destroy'])->name('requests.destroy');
     });
 
-        Route::middleware(['auth', 'verified', 'role:donor'])->prefix('donor')->name('donor.')->group(function () {
+    Route::middleware(['auth', 'verified', 'role:donor'])->prefix('donor')->name('donor.')->group(function () {
         Route::get('/claims', [DonorClaimController::class, 'index'])->name('claims.index');
         Route::patch('/claims/{claim}/approve', [DonorClaimController::class, 'approve'])->name('claims.approve');
         Route::patch('/claims/{claim}/reject', [DonorClaimController::class, 'reject'])->name('claims.reject');

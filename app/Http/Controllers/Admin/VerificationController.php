@@ -7,6 +7,7 @@ use App\Enums\Role;
 use App\Enums\VerificationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\RejectVerificationRequest;
+use App\Models\InAppNotification;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -87,6 +88,13 @@ class VerificationController extends Controller
                     'verified_at' => $reviewedAt,
                 ]);
 
+            InAppNotification::create([
+                'user_id' => $user->id,
+                'judul' => 'Akun Anda Telah Diverifikasi',
+                'pesan' => 'Selamat! Pendaftaran akun Anda telah disetujui. Anda sekarang dapat masuk dan menggunakan seluruh fitur FoodBridge.',
+                'tipe' => 'akun',
+            ]);
+
             return 'approved';
         });
 
@@ -144,6 +152,13 @@ class VerificationController extends Controller
                     'catatan' => $catatan,
                     'verified_at' => $reviewedAt,
                 ]);
+
+            InAppNotification::create([
+                'user_id' => $user->id,
+                'judul' => 'Pendaftaran Akun Ditolak',
+                'pesan' => sprintf('Pendaftaran akun Anda ditolak. Alasan: %s', $catatan),
+                'tipe' => 'akun',
+            ]);
 
             return 'rejected';
         });

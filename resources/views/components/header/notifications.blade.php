@@ -2,19 +2,19 @@
 @props(['limit' => 5])
 
 @php
-$notifications = once(fn () => \App\Models\InAppNotification::query()
+$notifications = \App\Models\InAppNotification::query()
     ->where('user_id', auth()->id())
     ->latest()
     ->limit($limit)
-    ->get());
+    ->get();
 
-$unreadCount = once(fn () => \App\Models\InAppNotification::query()
+$unreadCount = \App\Models\InAppNotification::query()
     ->where('user_id', auth()->id())
     ->where('is_read', false)
-    ->count());
+    ->count();
 @endphp
 
-<div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false">
+<div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false" dusk="notification-bell" data-unread-count="{{ $unreadCount }}">
     <button
         type="button"
         @click="open = ! open"
@@ -65,10 +65,29 @@ $unreadCount = once(fn () => \App\Models\InAppNotification::query()
 
                             <div class="flex min-w-0 flex-1 flex-col gap-0.5">
                                 <div class="flex items-start justify-between gap-2">
-                                    <span class="min-w-0 flex-1 truncate text-sm font-medium">{{ $notification->judul }}</span>
+                                    <a
+                                        href="{{ route('notifications.open', $notification) }}"
+                                        title="Buka notifikasi"
+                                        class="min-w-0 flex-1 truncate text-sm font-medium transition-colors hover:text-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    >
+                                        {{ $notification->judul }}
+                                    </a>
 
                                     @if (! $notification->is_read)
-                                        <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-secondary" aria-hidden="true"></span>
+                                        <form method="POST" action="{{ route('notifications.read', $notification) }}" class="shrink-0">
+                                            @csrf
+                                            @method('PATCH')
+
+                                            <button
+                                                type="submit"
+                                                dusk="header-mark-read-{{ $notification->id }}"
+                                                title="Tandai sudah dibaca"
+                                                aria-label="Tandai {{ $notification->judul }} sebagai sudah dibaca"
+                                                class="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-card hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                            >
+                                                <x-icon name="check" class="h-3.5 w-3.5" />
+                                            </button>
+                                        </form>
                                     @endif
                                 </div>
 
@@ -82,6 +101,22 @@ $unreadCount = once(fn () => \App\Models\InAppNotification::query()
 
             @if (\Illuminate\Support\Facades\Route::has('notifications.index'))
                 <div class="border-t border-border p-1">
+                    @if ($unreadCount > 0 && \Illuminate\Support\Facades\Route::has('notifications.read-all'))
+                        <form method="POST" action="{{ route('notifications.read-all') }}">
+                            @csrf
+                            @method('PATCH')
+
+                            <button
+                                type="submit"
+                                dusk="header-mark-all-read"
+                                class="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                                <x-icon name="check" class="h-4 w-4" />
+                                Tandai semua dibaca
+                            </button>
+                        </form>
+                    @endif
+
                     <a
                         href="{{ route('notifications.index') }}"
                         class="flex items-center justify-between gap-3 rounded-sm px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
