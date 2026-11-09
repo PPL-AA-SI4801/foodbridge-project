@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -43,6 +44,26 @@ class InAppNotification extends Model
         return [
             'is_read' => 'boolean',
         ];
+    }
+
+    /**
+     * Limit the query to notifications that have not been read yet.
+     */
+    public function scopeUnread(Builder $query): void
+    {
+        $query->where('is_read', false);
+    }
+
+    /**
+     * Mark this notification as read.
+     */
+    public function markAsRead(): bool
+    {
+        if ($this->is_read) {
+            return true;
+        }
+
+        return $this->update(['is_read' => true]);
     }
 
     /**

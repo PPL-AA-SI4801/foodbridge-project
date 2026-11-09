@@ -89,9 +89,9 @@ class ClaimController extends Controller
             ]);
 
             InAppNotification::create([
-                'user_id' => $foodPost->donor_id,
+                'user_id' => $foodPost->donor->user_id,
                 'judul' => 'Pengajuan Klaim Baru',
-                'pesan' => 'Penerima mengajukan klaim sebanyak ' . $request->jumlah_porsi . ' porsi pada postingan ' . $foodPost->judul,
+                'pesan' => 'Penerima mengajukan klaim sebanyak '.$request->jumlah_porsi.' porsi pada postingan '.$foodPost->judul,
                 'tipe' => 'claim',
             ]);
         });

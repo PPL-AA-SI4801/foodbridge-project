@@ -118,6 +118,84 @@ class NotificationPageTest extends TestCase
             ->assertSee('Kembali ke dashboard');
     }
 
+    public function test_guests_cannot_mark_notifications_as_read(): void
+    {
+        $user = $this->activeUser(Role::Donor);
+        $notification = $this->notificationFor($user);
+
+        $this->patch(route('notifications.read', $notification))
+            ->assertRedirect(route('login'));
+
+        $this->assertFalse($notification->fresh()->is_read);
+    }
+
+    public function test_a_user_can_mark_their_own_notification_as_read(): void
+    {
+        $user = $this->activeUser(Role::Donor);
+        $notification = $this->notificationFor($user);
+
+        $this->actingAs($user)
+            ->from(route('notifications.index'))
+            ->patch(route('notifications.read', $notification))
+            ->assertRedirect(route('notifications.index'))
+            ->assertSessionHas('status', 'Notifikasi ditandai sudah dibaca.');
+
+        $this->assertTrue($notification->fresh()->is_read);
+    }
+
+    public function test_a_user_cannot_mark_another_users_notification_as_read(): void
+    {
+        $user = $this->activeUser(Role::Donor);
+        $otherUser = $this->activeUser(Role::Penerima);
+        $notification = $this->notificationFor($otherUser);
+
+        $this->actingAs($user)
+            ->from(route('notifications.index'))
+            ->patch(route('notifications.read', $notification))
+            ->assertForbidden();
+
+        $this->assertFalse($notification->fresh()->is_read);
+    }
+
+    public function test_a_user_can_mark_all_of_their_notifications_as_read(): void
+    {
+        $user = $this->activeUser(Role::Donor);
+        $otherUser = $this->activeUser(Role::Penerima);
+
+        $first = $this->notificationFor($user);
+        $second = $this->notificationFor($user);
+        $alreadyRead = $this->notificationFor($user, ['is_read' => true]);
+        $otherNotification = $this->notificationFor($otherUser);
+
+        $this->actingAs($user)
+            ->from(route('notifications.index', ['filter' => 'unread']))
+            ->patch(route('notifications.read-all'))
+            ->assertRedirect(route('notifications.index', ['filter' => 'unread']))
+            ->assertSessionHas('status', 'Semua notifikasi ditandai sudah dibaca.');
+
+        $this->assertTrue($first->fresh()->is_read);
+        $this->assertTrue($second->fresh()->is_read);
+        $this->assertTrue($alreadyRead->fresh()->is_read);
+        $this->assertFalse($otherNotification->fresh()->is_read);
+    }
+
+    public function test_the_page_shows_the_mark_as_read_actions(): void
+    {
+        $user = $this->activeUser(Role::Donor);
+
+        $this->notificationFor($user, [
+            'judul' => 'Klaim baru menunggu persetujuan',
+            'pesan' => 'Ada penerima yang mengajukan klaim untuk postingan Anda.',
+            'tipe' => 'claim',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('notifications.index'))
+            ->assertOk()
+            ->assertSee('Tandai semua dibaca')
+            ->assertSee('Tandai dibaca');
+    }
+
     public function test_administrators_keep_the_admin_shell(): void
     {
         $admin = $this->activeUser(Role::Administrator);

@@ -33,15 +33,38 @@
             <p class="mt-1.5 max-w-2xl text-sm leading-6 text-muted-foreground">{{ $roleDescription }}</p>
         </div>
 
-        <span class="inline-flex w-fit shrink-0 items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
-            <span @class([
-                'h-2 w-2 rounded-full',
-                'bg-secondary' => $unreadCount > 0,
-                'bg-muted-foreground/40' => $unreadCount === 0,
-            ]) aria-hidden="true"></span>
-            {{ $unreadCount > 0 ? $unreadCount.' belum dibaca' : 'Semua sudah dibaca' }}
-        </span>
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="inline-flex w-fit shrink-0 items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                <span @class([
+                    'h-2 w-2 rounded-full',
+                    'bg-secondary' => $unreadCount > 0,
+                    'bg-muted-foreground/40' => $unreadCount === 0,
+                ]) aria-hidden="true"></span>
+                {{ $unreadCount > 0 ? $unreadCount.' belum dibaca' : 'Semua sudah dibaca' }}
+            </span>
+
+            @if ($unreadCount > 0)
+                <form method="POST" action="{{ route('notifications.read-all') }}">
+                    @csrf
+                    @method('PATCH')
+
+                    <x-button type="submit" size="sm" class="btn-secondary" dusk="mark-all-read">
+                        <x-slot:icon>
+                            <x-icon name="check" />
+                        </x-slot:icon>
+                        Tandai semua dibaca
+                    </x-button>
+                </form>
+            @endif
+        </div>
     </div>
+
+    @if (! $isAdmin && session('status'))
+        <div role="status" class="mb-6 flex items-start gap-3 rounded-md border border-[#86EFAC] bg-[#DCFCE7] px-4 py-3 text-sm font-medium text-[#166534]">
+            <x-icon name="clipboard-check" class="mt-0.5 h-4 w-4 shrink-0" />
+            <p>{{ session('status') }}</p>
+        </div>
+    @endif
 
     {{-- Daftar notifikasi --}}
     <section class="overflow-hidden rounded-2xl border border-border bg-card" aria-labelledby="notification-list-title">
@@ -172,19 +195,40 @@
                                             @endif
                                         </div>
 
-                                        <p class="mt-1 break-words text-sm font-semibold leading-5 text-foreground">
+                                        <a
+                                            href="{{ route('notifications.open', $notification) }}"
+                                            dusk="open-notification-{{ $notification->id }}"
+                                            title="Buka notifikasi"
+                                            class="mt-1 block break-words text-sm font-semibold leading-5 text-foreground transition-colors hover:text-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                        >
                                             {{ $notification->judul }}
-                                        </p>
+                                        </a>
 
                                         <p class="mt-1 break-words text-sm leading-6 text-muted-foreground">
                                             {{ $notification->pesan }}
                                         </p>
 
                                         @if (! $notification->is_read)
-                                            <span class="mt-2 inline-flex items-center gap-1.5 text-[11px] font-semibold text-secondary">
-                                                <span class="h-1.5 w-1.5 rounded-full bg-secondary" aria-hidden="true"></span>
-                                                Belum dibaca
-                                            </span>
+                                            <div class="mt-2 flex flex-wrap items-center gap-3">
+                                                <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-secondary">
+                                                    <span class="h-1.5 w-1.5 rounded-full bg-secondary" aria-hidden="true"></span>
+                                                    Belum dibaca
+                                                </span>
+
+                                                <form method="POST" action="{{ route('notifications.read', $notification) }}">
+                                                    @csrf
+                                                    @method('PATCH')
+
+                                                    <button
+                                                        type="submit"
+                                                        dusk="mark-read-{{ $notification->id }}"
+                                                        class="inline-flex items-center gap-1 text-[11px] font-semibold text-primary transition-colors hover:text-primary/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                                    >
+                                                        <x-icon name="check" class="h-3 w-3" />
+                                                        Tandai dibaca
+                                                    </button>
+                                                </form>
+                                            </div>
                                         @endif
                                     </div>
                                 </li>
