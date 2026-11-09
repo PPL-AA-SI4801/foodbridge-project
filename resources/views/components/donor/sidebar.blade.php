@@ -23,6 +23,12 @@ $navItems = [
         'active' => request()->routeIs('donor.claims.*'),
     ],
     [
+        'label' => 'Request Board',
+        'icon' => 'message-square',
+        'route' => 'donor.requests.index',
+        'active' => request()->routeIs('donor.requests.*'),
+    ],
+    [
         'label' => 'Profil Saya',
         'icon' => 'user',
         'route' => 'profile.edit',
