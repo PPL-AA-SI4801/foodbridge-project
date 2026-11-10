@@ -2,9 +2,9 @@
 
 ## 1. Design tokens and typography
 
-- [ ] 1.1 Update `resources/css/app.css`: set `--primary` and `--sidebar-primary` to `#2A9263`, point `--ring` and `--chart-1` at the primary family, set `--background`/`--sidebar` to `#FAFAFA`, `--card`/`--popover` to `#FFFFFF`, and `--border`/`--sidebar-border` to `#E8E9E8`; verify `npm run build` succeeds and the compiled CSS resolves the new values.
-- [ ] 1.2 Change `--font-sans` to an Inter-first stack and replace the Figtree/Instrument Sans references in `resources/views/components/layout/app-shell.blade.php`, `resources/views/components/admin-layout.blade.php`, and `resources/views/layouts/guest.blade.php`; verify page source requests Inter and contains no Figtree or Instrument Sans request.
-- [ ] 1.3 Update `docs/design_system.md` sections 3, 5, 6, 7, and 8 with the new primary `#2A9263`, Inter, sidebar tokens, sidebar width, content surface, and header measurements; verify every value matches `resources/css/app.css`.
+- [x] 1.1 Update `resources/css/app.css`: set `--primary` and `--sidebar-primary` to `#2A9263`, point `--ring` and `--chart-1` at the primary family, set `--background`/`--sidebar` to `#FAFAFA`, `--card`/`--popover` to `#FFFFFF`, and `--border`/`--sidebar-border` to `#E8E9E8`; verify `npm run build` succeeds and the compiled CSS resolves the new values.
+- [x] 1.2 Change `--font-sans` to an Inter-first stack and replace the Figtree/Instrument Sans references in `resources/views/components/layout/app-shell.blade.php`, `resources/views/components/admin-layout.blade.php`, `resources/views/layouts/guest.blade.php`, and `vite.config.js`; verify page source requests Inter and contains no Figtree or Instrument Sans request.
+- [x] 1.3 Update `docs/design_system.md` sections 3, 5, 6, 7, and 8 with the new primary `#2A9263`, Inter, sidebar tokens, sidebar width, content surface, and header measurements; verify every value matches `resources/css/app.css`.
 
 ## 2. Shared shell primitives
 

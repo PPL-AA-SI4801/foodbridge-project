@@ -29,7 +29,7 @@ Pola yang diambil dari gambar referensi:
 - **Tabel:** berada di dalam kartu, dengan kolom pencarian dan tombol aksi (Refresh/Ekspor) di atasnya.
 - **Tombol utama:** solid primary dengan radius design system, teks putih, ikon di kiri, gradient inner stroke tipis, dan shadow bertingkat.
 
-Sidebar pada gambar referensi (hijau gelap) belum diadopsi, lihat bagian 8.
+Sidebar memakai permukaan terang (`#FAFAFA`) dengan item aktif hijau primary dan kartu pengguna di bagian bawah, mengikuti gambar referensi dashboard.
 
 ---
 
@@ -39,13 +39,13 @@ Sidebar pada gambar referensi (hijau gelap) belum diadopsi, lihat bagian 8.
 
 | Token | Hex | Keterangan |
 |---|---|---|
-| `--background` | `#F7F8F6` | Background halaman (off-white) |
+| `--background` | `#FAFAFA` | Background halaman (off-white) |
 | `--foreground` | `#111816` | Warna teks utama |
-| `--card` | `#FCFCFB` | Surface kartu, sedikit lebih terang dari background agar terbaca |
+| `--card` | `#FFFFFF` | Surface kartu dan content surface |
 | `--card-foreground` | `#111816` | Teks di dalam kartu |
-| `--popover` | `#FCFCFB` | Dropdown, dialog, toast |
+| `--popover` | `#FFFFFF` | Dropdown, dialog, toast |
 | `--popover-foreground` | `#111816` | Teks di dalam popover |
-| `--primary` | `#133830` | Warna utama: tombol utama, link, fokus |
+| `--primary` | `#2A9263` | Warna utama: tombol utama, link, fokus |
 | `--primary-foreground` | `#FFFFFF` | Teks di atas primary |
 | `--secondary` | `#D97736` | Warna sekunder: tombol sekunder, aksen |
 | `--secondary-foreground` | `#111816` | Teks di atas secondary (gelap, lihat catatan) |
@@ -55,9 +55,17 @@ Sidebar pada gambar referensi (hijau gelap) belum diadopsi, lihat bagian 8.
 | `--accent-foreground` | `#111816` | Teks pada state hover |
 | `--destructive` | `#E7000B` | Aksi berbahaya (hapus, tolak) |
 | `--destructive-foreground` | `#FFFFFF` | Teks di atas destructive |
-| `--border` | `#E6E9E4` | Border: abu hampir sama dengan off-white |
+| `--border` | `#E8E9E8` | Border: abu hampir sama dengan off-white |
 | `--input` | `#DDE1DB` | Border input, sedikit lebih terlihat dari border biasa |
-| `--ring` | `#133830` | Focus ring |
+| `--ring` | `#2A9263` | Focus ring |
+| `--sidebar` | `#FAFAFA` | Background sidebar |
+| `--sidebar-foreground` | `#111816` | Teks sidebar |
+| `--sidebar-primary` | `#2A9263` | Item aktif sidebar |
+| `--sidebar-primary-foreground` | `#FFFFFF` | Teks item aktif sidebar |
+| `--sidebar-accent` | `#EFF1ED` | Hover item sidebar |
+| `--sidebar-accent-foreground` | `#111816` | Teks hover item sidebar |
+| `--sidebar-border` | `#E8E9E8` | Border dan divider sidebar |
+| `--sidebar-ring` | `#2A9263` | Focus ring sidebar |
 
 ### 3.1.1 Skala Primary
 
@@ -75,12 +83,13 @@ Skala ini diturunkan dari `--primary` memakai `color-mix`, jadi tidak ada hex ba
 - **Muted text** memakai nada yang sama dengan border tetapi lebih gelap (`#6B746E`), kontrasnya sekitar 4,5:1 terhadap background.
 - **Teks di atas secondary** harus gelap (`#111816`). Teks putih di atas `#D97736` hanya sekitar 3,2:1 sehingga kurang terbaca.
 - Karena `--secondary` berwarna oranye, komponen shadcn yang memakai variant `secondary` (Button, Badge) ikut menjadi oranye. State hover umum memakai `--accent`, bukan secondary.
+- **Teks putih di atas `--primary` (`#2A9263`)** memiliki kontras sekitar 3,9:1, di bawah WCAG AA untuk teks 14px. Ini disengaja agar sesuai gambar referensi; jika kontras AA ketat dibutuhkan, item aktif sidebar memakai `--primary-600` tanpa mengubah warna tombol.
 
 ### 3.3 Warna Chart
 
 | Token | Hex |
 |---|---|
-| `--chart-1` | `#133830` |
+| `--chart-1` | `#2A9263` |
 | `--chart-2` | `#D97736` |
 | `--chart-3` | `#4A9B86` |
 | `--chart-4` | `#E8B77A` |
@@ -141,6 +150,7 @@ Pemakaian: `<x-status-badge status="disetujui" />`
 | Properti | Nilai |
 |---|---|
 | Font | Inter, fallback `ui-sans-serif, system-ui, sans-serif` (satu font untuk heading dan body) |
+| Sumber font | `fonts.bunny.net`, bobot 400/500/600/700, `display=swap` |
 | Skala ukuran | Default Tailwind (`text-xs` sampai `text-3xl`) |
 
 Pola teks yang sering dipakai:
@@ -166,6 +176,7 @@ Pola teks yang sering dipakai:
 | Jarak antar kartu / section | `gap-6` |
 | Jarak antar field form | `gap-4` hingga `gap-6` |
 | Padding halaman | `p-6` (mobile), `lg:p-8` (desktop) |
+| Content surface | `#FFFFFF`, border `--border`, radius `--radius-lg`, inset ~22px (`1.375rem`) dari background |
 
 ---
 
@@ -175,8 +186,11 @@ Pola teks yang sering dipakai:
 |---|---|
 | Desktop | Mulai breakpoint `lg` (1024px) ke atas |
 | Mobile | Di bawah `lg`, termasuk tablet |
-| Bottom navigation Penerima | Tampil di bawah `lg`, menggantikan sidebar |
-| Lebar sidebar, tinggi header, max-width konten | Ditentukan kemudian |
+| Navigasi mobile | Sidebar menjadi drawer overlay di bawah `lg` |
+| Lebar sidebar | ~380px (`23.75rem`) pada `lg` ke atas |
+| Tinggi header | ~104px, termasuk breadcrumb dan judul halaman |
+| Content surface | Mulai dari border sidebar, inset ~22px di atas/kanan/bawah |
+| Lebar konten | Mengisi sisa lebar viewport tanpa max-width tambahan |
 
 ---
 
@@ -184,10 +198,11 @@ Pola teks yang sering dipakai:
 
 Bagian berikut sengaja dilewati dulu dan akan diisi pada iterasi berikutnya:
 
-- Gaya sidebar (state aktif, warna, lebar)
 - Rasio foto makanan dan ilustrasi empty state
 - Gaya loading (skeleton/spinner)
 - Komponen custom di luar shadcn (Food Card, Stat Card, input kode 6 digit, uploader foto)
+
+Gaya sidebar, lebar, header, dan content surface sudah ditentukan di bagian 6 dan 7.
 
 ---
 
@@ -266,16 +281,16 @@ Tempel di file CSS utama (misalnya `resources/css/app.css`). Sesuaikan format ni
 
 ```css
 :root {
-  --background: #F7F8F6;
+  --background: #FAFAFA;
   --foreground: #111816;
 
-  --card: #FCFCFB;
+  --card: #FFFFFF;
   --card-foreground: #111816;
 
-  --popover: #FCFCFB;
+  --popover: #FFFFFF;
   --popover-foreground: #111816;
 
-  --primary: #133830;
+  --primary: #2A9263;
   --primary-foreground: #FFFFFF;
   --primary-300: color-mix(in oklab, var(--primary) 45%, white);
   --primary-500: var(--primary);
@@ -294,15 +309,24 @@ Tempel di file CSS utama (misalnya `resources/css/app.css`). Sesuaikan format ni
   --destructive: #E7000B;
   --destructive-foreground: #FFFFFF;
 
-  --border: #E6E9E4;
+  --border: #E8E9E8;
   --input: #DDE1DB;
-  --ring: #133830;
+  --ring: #2A9263;
 
-  --chart-1: #133830;
+  --chart-1: #2A9263;
   --chart-2: #D97736;
   --chart-3: #4A9B86;
   --chart-4: #E8B77A;
   --chart-5: #6B746E;
+
+  --sidebar: #FAFAFA;
+  --sidebar-foreground: #111816;
+  --sidebar-primary: #2A9263;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EFF1ED;
+  --sidebar-accent-foreground: #111816;
+  --sidebar-border: #E8E9E8;
+  --sidebar-ring: #2A9263;
 
   --radius: 0.5rem;
 }
@@ -334,6 +358,16 @@ Jika memakai Tailwind v4, petakan token ke tema:
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
