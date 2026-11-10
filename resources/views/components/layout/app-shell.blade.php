@@ -126,7 +126,7 @@
                         </x-layout.page-header>
                     @endisset
 
-                    <main @class(['flex-1', 'p-6 lg:p-8' => $padded])>
+                    <main @class(['flex-1', 'p-4' => $padded])>
                         {{ $slot }}
                     </main>
                 </div>
