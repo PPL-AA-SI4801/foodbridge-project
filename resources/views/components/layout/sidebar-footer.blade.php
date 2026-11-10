@@ -10,28 +10,34 @@
     $displayEmail = $email ?? $user->email;
 @endphp
 
-<div {{ $attributes->class(['mt-auto p-3 lg:p-4']) }}>
-    <div class="rounded-xl border border-sidebar-border bg-card p-3">
-        <div class="flex items-center gap-3">
-            <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                {{ str($displayName)->substr(0, 1)->upper() }}
-            </span>
+<div {{ $attributes->class(['mt-auto p-4']) }}>
+    <div class="flex flex-col gap-[10px] rounded-[10px] border border-[#e8e9e8] bg-white p-[12px]">
+        <div class="flex items-center gap-3 overflow-clip">
+            <img
+                src="{{ asset('icons/premium.svg') }}"
+                alt=""
+                class="h-[42px] w-[42px] shrink-0"
+            >
 
-            <div class="flex min-w-0 flex-col">
-                <span class="truncate text-sm font-semibold text-foreground">{{ $displayName }}</span>
-                <span class="truncate text-xs text-muted-foreground">{{ $displayEmail }}</span>
+            <div class="flex min-w-0 flex-1 flex-col gap-[5px]">
+                <span class="truncate text-[14px] font-semibold leading-[normal] text-[#0d1c2e]">
+                    {{ $displayName }}
+                </span>
+                <span class="truncate text-[12px] font-normal leading-[1.5] text-sidebar-muted">
+                    {{ $displayEmail }}
+                </span>
             </div>
         </div>
 
         @if ($showLogout)
-            <form method="POST" action="{{ route('logout') }}" class="mt-3">
+            <form method="POST" action="{{ route('logout') }}">
                 @csrf
 
                 <button
                     type="submit"
-                    class="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    class="flex h-10 w-full items-center justify-center gap-3 rounded-[8px] border border-[#e8e9e8] bg-white px-3 text-[14px] font-normal text-sidebar-muted transition-colors hover:bg-sidebar-accent"
                 >
-                    <x-icon name="log-out" class="h-4 w-4" />
+                    <x-icon name="log-out" class="h-[18px] w-[18px] shrink-0" />
                     <span>Logout</span>
                 </button>
             </form>

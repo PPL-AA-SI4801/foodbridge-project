@@ -22,10 +22,10 @@
 
     @if (! is_null($pendingVerifications))
         <x-slot name="status">
-            <span class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm">
-                <x-icon name="user-check" class="h-4 w-4 text-muted-foreground" />
-                <span class="hidden text-muted-foreground sm:inline">Menunggu Verifikasi:</span>
-                <span class="font-semibold">{{ $pendingVerifications }}</span>
+            <span class="flex h-10 items-center gap-3 rounded-[8px] border border-[#e8e9e8] bg-white px-3 text-[14px] font-normal text-sidebar-muted">
+                <x-icon name="user-check" class="h-[18px] w-[18px] shrink-0" />
+                <span>Menunggu Verifikasi:</span>
+                <span class="font-bold text-[#0d1c2e]">{{ $pendingVerifications }}</span>
             </span>
         </x-slot>
     @endif

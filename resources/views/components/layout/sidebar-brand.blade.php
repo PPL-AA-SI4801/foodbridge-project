@@ -7,19 +7,19 @@
     $homeUrl = $href ?? route(auth()->user()->dashboardRouteName());
 @endphp
 
-<div {{ $attributes->class(['flex min-h-20 items-center gap-3 px-5 lg:min-h-24 lg:px-6']) }}>
-    <a href="{{ $homeUrl }}" class="flex min-w-0 items-center gap-2.5">
+<div {{ $attributes->class(['flex items-center justify-between gap-3 p-4']) }}>
+    <a href="{{ $homeUrl }}" class="flex min-w-0 items-center">
         <img
             src="{{ asset(rawurlencode('Logo Foodbridge.webp')) }}"
             alt="{{ config('app.name', 'FoodBridge') }}"
-            class="h-9 w-auto max-w-[9.5rem] object-contain"
+            class="h-[55px] w-[194px] max-w-full object-contain"
         >
     </a>
 
     <button
         type="button"
         @click="$dispatch('close-sidebar')"
-        class="ml-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:hidden"
+        class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sidebar-muted transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:hidden"
         aria-label="Tutup menu"
         aria-controls="{{ $sidebarId }}"
     >

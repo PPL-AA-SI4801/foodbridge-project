@@ -47,7 +47,7 @@ Sidebar memakai permukaan terang (`#FAFAFA`) dengan item aktif hijau primary dan
 | `--popover-foreground` | `#111816` | Teks di dalam popover |
 | `--primary` | `#2A9263` | Warna utama: tombol utama, link, fokus |
 | `--primary-foreground` | `#FFFFFF` | Teks di atas primary |
-| `--secondary` | `#D97736` | Warna sekunder: tombol sekunder, aksen |
+| `--secondary` | `#D26C29` | Warna sekunder: tombol sekunder, aksen |
 | `--secondary-foreground` | `#111816` | Teks di atas secondary (gelap, lihat catatan) |
 | `--muted` | `#EFF1ED` | Background area redup (header tabel, skeleton) |
 | `--muted-foreground` | `#6B746E` | Teks sekunder, placeholder, label kecil |
@@ -66,6 +66,8 @@ Sidebar memakai permukaan terang (`#FAFAFA`) dengan item aktif hijau primary dan
 | `--sidebar-accent-foreground` | `#111816` | Teks hover item sidebar |
 | `--sidebar-border` | `#E8E9E8` | Border dan divider sidebar |
 | `--sidebar-ring` | `#2A9263` | Focus ring sidebar |
+| `--sidebar-muted` | `#444644` | Teks sekunder sidebar (label, link inaktif) |
+| `--sidebar-placeholder` | `#969996` | Placeholder pencarian sidebar |
 
 ### 3.1.1 Skala Primary
 
@@ -90,7 +92,7 @@ Skala ini diturunkan dari `--primary` memakai `color-mix`, jadi tidak ada hex ba
 | Token | Hex |
 |---|---|
 | `--chart-1` | `#2A9263` |
-| `--chart-2` | `#D97736` |
+| `--chart-2` | `#D26C29` |
 | `--chart-3` | `#4A9B86` |
 | `--chart-4` | `#E8B77A` |
 | `--chart-5` | `#6B746E` |
@@ -187,9 +189,9 @@ Pola teks yang sering dipakai:
 | Desktop | Mulai breakpoint `lg` (1024px) ke atas |
 | Mobile | Di bawah `lg`, termasuk tablet |
 | Navigasi mobile | Sidebar menjadi drawer overlay di bawah `lg` |
-| Lebar sidebar | ~380px (`23.75rem`) pada `lg` ke atas |
-| Tinggi header | ~104px, termasuk breadcrumb dan judul halaman |
-| Content surface | Mulai dari border sidebar, inset ~22px di atas/kanan/bawah |
+| Lebar sidebar | ~270px (`16.875rem`) pada `lg` ke atas |
+| Tinggi header | ~79px, termasuk breadcrumb dan judul halaman |
+| Content surface | Mulai dari border sidebar, inset ~16px di semua sisi |
 | Lebar konten | Mengisi sisa lebar viewport tanpa max-width tambahan |
 
 ---
@@ -297,7 +299,7 @@ Tempel di file CSS utama (misalnya `resources/css/app.css`). Sesuaikan format ni
   --primary-600: color-mix(in oklab, var(--primary) 85%, black);
   --primary-700: color-mix(in oklab, var(--primary) 70%, black);
 
-  --secondary: #D97736;
+  --secondary: #D26C29;
   --secondary-foreground: #111816;
 
   --muted: #EFF1ED;
@@ -314,7 +316,7 @@ Tempel di file CSS utama (misalnya `resources/css/app.css`). Sesuaikan format ni
   --ring: #2A9263;
 
   --chart-1: #2A9263;
-  --chart-2: #D97736;
+  --chart-2: #D26C29;
   --chart-3: #4A9B86;
   --chart-4: #E8B77A;
   --chart-5: #6B746E;
@@ -327,6 +329,9 @@ Tempel di file CSS utama (misalnya `resources/css/app.css`). Sesuaikan format ni
   --sidebar-accent-foreground: #111816;
   --sidebar-border: #E8E9E8;
   --sidebar-ring: #2A9263;
+
+  --sidebar-muted: #444644;
+  --sidebar-placeholder: #969996;
 
   --radius: 0.5rem;
 }
@@ -367,6 +372,9 @@ Jika memakai Tailwind v4, petakan token ke tema:
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-placeholder: var(--sidebar-placeholder);
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);

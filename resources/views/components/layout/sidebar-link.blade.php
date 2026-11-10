@@ -13,11 +13,11 @@
 
 @if ($isDisabled)
     <span
-        {{ $attributes->class(['flex min-h-[52px] cursor-not-allowed items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted-foreground/60']) }}
+        {{ $attributes->class(['flex h-10 cursor-not-allowed items-center gap-3 rounded-[8px] border border-[#fafafa] bg-[#fafafa] px-3 text-[14px] font-normal text-sidebar-muted/60']) }}
         aria-disabled="true"
     >
         @if ($icon)
-            <x-icon :name="$icon" class="h-5 w-5 shrink-0" />
+            <x-icon :name="$icon" class="h-[18px] w-[18px] shrink-0" />
         @endif
 
         <span class="truncate">{{ $label }}</span>
@@ -31,23 +31,19 @@
         x-show="navMatches($el.dataset.navLabel)"
         @click="$dispatch('close-sidebar')"
         {{ $attributes->class([
-            'flex min-h-[52px] items-center gap-3 rounded-lg px-3 text-sm transition-colors',
-            'bg-sidebar-primary font-semibold text-sidebar-primary-foreground shadow-sm hover:bg-primary-600' => $active,
-            'font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground' => ! $active,
+            'flex h-10 items-center gap-3 rounded-[8px] border px-3 text-[14px] transition-colors',
+            'border-[rgba(255,255,255,0.4)] bg-[#2a9263] font-medium text-white shadow-[inset_0px_4px_6px_0px_rgba(255,255,255,0.24)]' => $active,
+            'border-[#fafafa] bg-[#fafafa] font-normal text-sidebar-muted hover:bg-white' => ! $active,
         ]) }}
     >
         @if ($icon)
-            <x-icon :name="$icon" class="h-5 w-5 shrink-0" />
+            <x-icon :name="$icon" class="h-[18px] w-[18px] shrink-0" />
         @endif
 
         <span class="truncate">{{ $label }}</span>
 
         @if ($badge)
-            <span @class([
-                'ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-semibold',
-                'bg-white/20 text-white' => $active,
-                'bg-secondary text-white' => ! $active,
-            ])>
+            <span class="ml-auto inline-flex items-center justify-center rounded-[99px] bg-[#d26c29] px-[8px] py-[4px] text-[12px] font-bold leading-[normal] text-white">
                 {{ $badge }}
             </span>
         @endif
