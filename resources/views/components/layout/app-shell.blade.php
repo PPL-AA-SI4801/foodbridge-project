@@ -85,7 +85,7 @@
                 <x-admin.sidebar />
             @endif
 
-            <div class="flex min-w-0 flex-1 flex-col bg-background p-4 pl-0">
+            <div class="flex min-w-0 flex-1 flex-col bg-background p-2 lg:p-4 lg:pl-0">
                 <div data-content-surface class="flex min-h-[calc(100vh-2rem)] flex-1 flex-col overflow-clip rounded-[10px] border border-[#e8e9e8] bg-white lg:min-h-[calc(100vh-2rem)]">
                     <x-layout.header
                         :title="$title"
@@ -126,7 +126,7 @@
                         </x-layout.page-header>
                     @endisset
 
-                    <main @class(['flex-1', 'p-6 lg:p-8' => $padded])>
+                    <main @class(['flex-1', 'p-4' => $padded])>
                         {{ $slot }}
                     </main>
                 </div>

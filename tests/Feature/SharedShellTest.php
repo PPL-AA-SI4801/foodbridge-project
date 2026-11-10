@@ -179,7 +179,6 @@ class SharedShellTest extends TestCase
         $this->assertStringContainsString('aria-label="Breadcrumb"', $html);
         $this->assertStringContainsString('FoodBridge', $html);
         $this->assertStringContainsString('Menunggu Verifikasi:', $html);
-        $this->assertStringContainsString('aria-label="Menu profil', $html);
         $this->assertStringContainsString('MENU UTAMA', $html);
         $this->assertStringContainsString('MANAJEMEN DATA', $html);
         $this->assertStringContainsString('Verifikasi Akun', $html);

@@ -31,14 +31,9 @@
 
 <header @class(['flex min-h-[79px] items-center border-b border-[#e8e9e8] bg-white', 'sticky top-0 z-20' => $sticky])>
     <div class="w-full {{ filled($maxWidth) ? $maxWidth.' mx-auto' : '' }} px-4 py-4">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex min-w-0 items-start gap-3">
-                @isset($sidebarToggle)
-                    {{ $sidebarToggle }}
-                @endisset
-
-                <div class="min-w-0 flex-1 flex-col gap-2">
-                    <nav aria-label="Breadcrumb" class="flex min-w-0 items-center gap-3">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+            <div class="order-2 min-w-0 flex-1 flex-col gap-2 sm:order-1">
+                <nav aria-label="Breadcrumb" class="flex min-w-0 items-center gap-3">
                     <a
                         href="{{ route(auth()->user()->dashboardRouteName()) }}"
                         class="shrink-0 text-[12px] font-normal leading-[normal] text-sidebar-muted transition-colors hover:text-foreground"
@@ -70,22 +65,25 @@
                     </h1>
                 @endif
             </div>
-        </div>
 
-            <div class="flex shrink-0 items-center gap-4">
-                @isset($status)
-                    {{ $status }}
+            <div class="order-1 flex w-full items-center justify-between gap-4 sm:order-2 sm:w-auto sm:justify-end">
+                @isset($sidebarToggle)
+                    {{ $sidebarToggle }}
                 @endisset
 
-                @isset($actions)
-                    {{ $actions }}
-                @endisset
+                <div class="flex items-center gap-2">
+                    @isset($status)
+                        {{ $status }}
+                    @endisset
 
-                <div class="relative flex h-10 w-[42px] items-center justify-center rounded-[8px] border border-[#e8e9e8] bg-white">
-                    <x-header.notifications />
+                    @isset($actions)
+                        {{ $actions }}
+                    @endisset
+
+                    <div class="relative flex h-9 w-9 items-center justify-center rounded-[8px] border border-[#e8e9e8] bg-white">
+                        <x-header.notifications />
+                    </div>
                 </div>
-
-                <x-header.profile-menu :display-name="$displayName" />
             </div>
         </div>
     </div>
