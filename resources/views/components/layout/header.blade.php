@@ -1,68 +1,89 @@
 @props([
-    'maxWidth' => 'max-w-7xl',
-    'showLogo' => true,
-    'hideLogoOnDesktop' => false,
-    'sticky' => false,
     'title' => null,
+    'breadcrumb' => null,
     'roleLabel' => null,
+    'maxWidth' => null,
+    'sticky' => false,
+    'displayName' => null,
 ])
 
-<header @class(['border-b border-border bg-card/95 backdrop-blur', 'sticky top-0 z-30' => $sticky])>
-    <div class="{{ $maxWidth }} mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex h-16 items-center justify-between gap-4">
-            <div class="flex min-w-0 items-center gap-3">
+@php
+    $items = $breadcrumb;
+
+    if (is_string($items)) {
+        $items = [['label' => $items]];
+    } elseif (is_null($items)) {
+        $items = [];
+    } else {
+        $items = collect($items)
+            ->map(fn ($item) => is_array($item) ? $item : ['label' => $item])
+            ->all();
+    }
+
+    if (blank($items)) {
+        $defaultCrumb = $roleLabel ?? $title;
+
+        if (filled($defaultCrumb)) {
+            $items = [['label' => $defaultCrumb]];
+        }
+    }
+@endphp
+
+<header @class(['border-b border-border bg-card', 'sticky top-0 z-20' => $sticky])>
+    <div class="{{ filled($maxWidth) ? $maxWidth.' mx-auto' : '' }} px-4 py-3 sm:px-6 lg:px-7 lg:py-4">
+        <div class="flex min-h-[56px] flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex min-w-0 items-start gap-3">
                 @isset($sidebarToggle)
                     {{ $sidebarToggle }}
                 @endisset
 
-                @if ($showLogo)
-                    <a
-                        href="{{ route(auth()->user()->dashboardRouteName()) }}"
-                        @class([
-                            'flex shrink-0 items-center gap-2.5',
-                            'lg:hidden' => $hideLogoOnDesktop,
-                        ])
-                    >
-                        <img
-                            src="{{ asset(rawurlencode('Logo Foodbridge.webp')) }}"
-                            alt="{{ config('app.name', 'FoodBridge') }}"
-                            class="h-8 w-auto max-w-[8.5rem] object-contain"
+                <div class="min-w-0">
+                    <nav aria-label="Breadcrumb" class="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                        <a
+                            href="{{ route(auth()->user()->dashboardRouteName()) }}"
+                            class="shrink-0 transition-colors hover:text-foreground"
                         >
-                    </a>
-                @endif
+                            FoodBridge
+                        </a>
 
-                @if ($title || $roleLabel || isset($left))
-                    <div class="hidden min-w-0 items-center gap-3 sm:flex">
-                        @if ($roleLabel)
-                            <span class="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                                <span class="h-1.5 w-1.5 rounded-full bg-primary"></span>
-                                {{ $roleLabel }}
-                            </span>
-                        @endif
+                        @foreach ($items as $item)
+                            <x-icon name="chevron-right" class="h-3 w-3 shrink-0" />
 
-                        @if ($title)
-                            <h1 class="truncate text-base font-semibold">{{ $title }}</h1>
-                        @endif
+                            @if (filled($item['href'] ?? null))
+                                <a
+                                    href="{{ $item['href'] }}"
+                                    class="truncate transition-colors hover:text-foreground"
+                                >
+                                    {{ $item['label'] }}
+                                </a>
+                            @else
+                                <span class="truncate font-medium text-foreground">{{ $item['label'] }}</span>
+                            @endif
+                        @endforeach
+                    </nav>
 
-                        @isset($left)
-                            <div class="flex min-w-0 items-center gap-4">{{ $left }}</div>
-                        @endisset
-                    </div>
-                @endif
+                    @if ($title)
+                        <h1 class="mt-0.5 truncate text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+                            {{ $title }}
+                        </h1>
+                    @endif
+                </div>
             </div>
 
-            <div class="flex shrink-0 items-center gap-2 sm:gap-3">
-                @isset($center)
-                    <div class="hidden items-center md:flex">{{ $center }}</div>
+            <div class="flex shrink-0 items-center gap-2">
+                @isset($status)
+                    {{ $status }}
                 @endisset
 
-                <div class="flex items-center gap-2 sm:gap-3">
-                    {{ $slot }}
-                </div>
-
-                @isset($right)
-                    <div class="hidden items-center sm:flex">{{ $right }}</div>
+                @isset($actions)
+                    {{ $actions }}
                 @endisset
+
+                <x-header.notifications />
+
+                <div class="h-6 w-px bg-border" aria-hidden="true"></div>
+
+                <x-header.profile-menu :display-name="$displayName" />
             </div>
         </div>
     </div>

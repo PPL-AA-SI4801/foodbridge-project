@@ -8,10 +8,10 @@
 
 ## 2. Shared shell primitives
 
-- [ ] 2.1 Add `resources/views/components/layout/sidebar.blade.php` as the frame (aside, responsive classes, `id` prop, mobile close control) and verify it renders with `id="app-sidebar"` and `id="admin-sidebar"` when passed each value.
-- [ ] 2.2 Add `sidebar-brand`, `sidebar-search`, `sidebar-section`, `sidebar-link`, and `sidebar-footer` components under `resources/views/components/layout/`; verify a Blade template using each one compiles and renders the expected labels, icons, and `aria-current="page"` for the active link.
-- [ ] 2.3 Add the shared `layout/header` component with breadcrumb, page title, optional status slot, notifications, and profile menu; verify it renders the mobile `Buka menu` control and the `dusk="notification-bell"` marker.
-- [ ] 2.4 Rewrite `resources/views/components/layout/app-shell.blade.php` to use the new sidebar frame and a bordered, rounded content surface with the shared header; verify the response contains exactly one `<html>`, one `id="app-sidebar"`, and one content surface per page.
+- [x] 2.1 Add `resources/views/components/layout/sidebar.blade.php` as the frame (aside, responsive classes, `id` prop, mobile close control) and verify it renders with `id="app-sidebar"` and `id="admin-sidebar"` when passed each value.
+- [x] 2.2 Add `sidebar-brand`, `sidebar-search`, `sidebar-section`, `sidebar-link`, and `sidebar-footer` components under `resources/views/components/layout/`; verify a Blade template using each one compiles and renders the expected labels, icons, and `aria-current="page"` for the active link.
+- [x] 2.3 Add the shared `layout/header` component with breadcrumb, page title, optional status slot, notifications, and profile menu; verify it renders the mobile `Buka menu` control and the `dusk="notification-bell"` marker.
+- [x] 2.4 Rewrite `resources/views/components/layout/app-shell.blade.php` to use the new sidebar frame and a bordered, rounded content surface with the shared header; verify the response contains exactly one `<html>`, one `id="app-sidebar"`, and one content surface per page.
 
 ## 3. Role sidebars
 

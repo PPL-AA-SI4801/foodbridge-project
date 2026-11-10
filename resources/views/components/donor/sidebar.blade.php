@@ -39,12 +39,7 @@ $navItems = [
 $link = fn (string $route): string => \Illuminate\Support\Facades\Route::has($route) ? route($route) : '#';
 @endphp
 
-<aside {{ $attributes->class(['fixed inset-y-0 left-0 z-50 w-[19rem] shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground lg:static lg:z-auto lg:flex']) }}
-    id="app-sidebar"
-    aria-label="Navigasi donor"
-    x-bind:class="sidebarOpen ? 'flex' : 'hidden lg:flex'"
-    x-cloak>
-    {{-- Brand --}}
+{{-- Brand --}}
     <div class="flex h-16 items-center gap-3 border-b border-sidebar-border px-5">
         <img
             src="{{ asset(rawurlencode('Logo Foodbridge.webp')) }}"
@@ -108,4 +103,3 @@ $link = fn (string $route): string => \Illuminate\Support\Facades\Route::has($ro
             </button>
         </form>
     </div>
-</aside>
