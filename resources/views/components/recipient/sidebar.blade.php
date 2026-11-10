@@ -28,7 +28,7 @@
         ],
         [
             'label' => 'Ulasan dan Laporan',
-            'icon' => 'file-text',
+            'icon' => 'star',
             'route' => 'recipient.reviews.index',
             'active' => request()->routeIs('recipient.reviews.*'),
         ],

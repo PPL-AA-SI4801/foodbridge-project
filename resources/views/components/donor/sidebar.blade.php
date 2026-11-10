@@ -38,7 +38,7 @@
         ],
         [
             'label' => 'Ulasan dan Laporan',
-            'icon' => 'file-text',
+            'icon' => 'star',
             'route' => 'donor.reviews.index',
             'active' => request()->routeIs('donor.reviews.*'),
         ],
