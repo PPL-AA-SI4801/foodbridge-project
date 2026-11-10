@@ -31,7 +31,7 @@
 
 <header @class(['flex min-h-[79px] items-center border-b border-[#e8e9e8] bg-white', 'sticky top-0 z-20' => $sticky])>
     <div class="w-full {{ filled($maxWidth) ? $maxWidth.' mx-auto' : '' }} px-4 py-4">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
             <div class="order-2 min-w-0 flex-1 flex-col gap-2 sm:order-1">
                 <nav aria-label="Breadcrumb" class="flex min-w-0 items-center gap-3">
                     <a
