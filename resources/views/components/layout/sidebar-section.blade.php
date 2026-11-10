@@ -5,6 +5,7 @@
 
 <section
     {{ $attributes->class(['flex flex-col gap-1 px-3 pt-3 lg:px-4']) }}
+    x-show="navQuery.trim() === '' || navSectionHasMatches($el)"
     @if ($label) aria-label="{{ $label }}" @endif
 >
     @if ($label)

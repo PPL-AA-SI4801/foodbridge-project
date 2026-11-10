@@ -58,6 +58,14 @@
             @endif
         @endforeach
     </x-layout.sidebar-section>
+
+    <p
+        x-show="navQuery.trim() !== '' && !navHasMatches($el)"
+        x-cloak
+        class="px-4 py-6 text-center text-sm text-muted-foreground"
+    >
+        Menu tidak ditemukan.
+    </p>
 </nav>
 
 <x-layout.sidebar-footer />

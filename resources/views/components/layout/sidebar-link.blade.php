@@ -28,6 +28,8 @@
         @if ($active) aria-current="page" @endif
         data-nav-item
         data-nav-label="{{ strtolower($label) }}"
+        x-show="navMatches($el.dataset.navLabel)"
+        @click="$dispatch('close-sidebar')"
         {{ $attributes->class([
             'flex min-h-[52px] items-center gap-3 rounded-lg px-3 text-sm transition-colors',
             'bg-sidebar-primary font-semibold text-sidebar-primary-foreground shadow-sm hover:bg-primary-600' => $active,

@@ -35,9 +35,29 @@
     <body class="bg-background font-sans text-foreground antialiased">
         <div
             class="flex min-h-screen"
-            x-data="{ sidebarOpen: false, navQuery: '' }"
+            x-data="{
+                sidebarOpen: false,
+                navQuery: '',
+                navMatches(label) {
+                    const query = this.navQuery.trim().toLowerCase();
+
+                    return query === '' || label.toLowerCase().includes(query);
+                },
+                navSectionHasMatches(el) {
+                    return Array.from(el.querySelectorAll('[data-nav-label]'))
+                        .some((item) => this.navMatches(item.dataset.navLabel));
+                },
+                navHasMatches(el) {
+                    const nav = el.closest('nav');
+
+                    return Array.from((nav ?? document).querySelectorAll('[data-nav-label]'))
+                        .some((item) => this.navMatches(item.dataset.navLabel));
+                },
+            }"
             @close-sidebar.window="sidebarOpen = false"
             @keydown.escape.window="sidebarOpen = false"
+            @keydown.window.cmd.k.prevent="$refs.navSearch.focus()"
+            @keydown.window.ctrl.k.prevent="$refs.navSearch.focus()"
             @resize.window="if (window.innerWidth >= 1024) sidebarOpen = false"
         >
             {{-- Latar gelap untuk sidebar versi mobile --}}

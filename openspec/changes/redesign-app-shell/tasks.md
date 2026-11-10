@@ -26,9 +26,9 @@
 
 ## 5. Interaction behavior
 
-- [ ] 5.1 Implement the Alpine navigation filter (case-insensitive label match, no-results message, Escape clears) and the `Cmd/Ctrl+K` focus shortcut; verify filtering, empty state, and shortcut behavior in a browser.
-- [ ] 5.2 Keep the responsive drawer behavior: hidden below `lg`, opens from `Buka menu`, closes on Escape, backdrop, and link activation; verify at 375 px, 768 px, and 1440 px viewports.
-- [ ] 5.3 Enforce route-guarded navigation everywhere, including the admin data group and `Ulasan dan Laporan`; verify no unavailable destination renders as an anchor with `href="#"`.
+- [x] 5.1 Implement the Alpine navigation filter (case-insensitive label match, no-results message, Escape clears) and the `Cmd/Ctrl+K` focus shortcut; verify filtering, empty state, and shortcut behavior in a browser.
+- [x] 5.2 Keep the responsive drawer behavior: hidden below `lg`, opens from `Buka menu`, closes on Escape, backdrop, and link activation; verify at 375 px, 768 px, and 1440 px viewports.
+- [x] 5.3 Enforce route-guarded navigation everywhere, including the admin data group and `Ulasan dan Laporan`; verify no unavailable destination renders as an anchor with `href="#"`.
 
 ## 6. Verification
 
