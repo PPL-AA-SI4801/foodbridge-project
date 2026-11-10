@@ -32,6 +32,6 @@
 
 ## 6. Verification
 
-- [ ] 6.1 Add or update feature tests for the shared shell: one shell per page, role-specific sidebar IDs, active `aria-current`, route-guarded items, and the new header structure; verify `php artisan test`.
-- [ ] 6.2 Run `php artisan dusk` (or the affected Browser tests) to confirm notification dropdown selectors and mobile drawer behavior still pass.
-- [ ] 6.3 Visually compare administrator, donor, and recipient dashboards at 1920 px against `references/Dashboard Admin.png`, `references/Dashboard Donor.png`, and `references/Dashboard Penerima.png`; verify sidebar width, active pill, header, and content surface match the reference measurements, and record any intentional deviation (for example active-pill contrast).
+- [x] 6.1 Add or update feature tests for the shared shell: one shell per page, role-specific sidebar IDs, active `aria-current`, route-guarded items, and the new header structure; verify `php artisan test`.
+- [x] 6.2 Run `php artisan dusk` (or the affected Browser tests) to confirm notification dropdown selectors and mobile drawer behavior still pass.
+- [x] 6.3 Visually compare administrator, donor, and recipient dashboards at 1920 px against `references/Dashboard Admin.png`, `references/Dashboard Donor.png`, and `references/Dashboard Penerima.png`; verify sidebar width, active pill, header, and content surface match the reference measurements, and record any intentional deviation (for example active-pill contrast).

@@ -29,8 +29,8 @@
     }
 @endphp
 
-<header @class(['border-b border-border bg-card', 'sticky top-0 z-20' => $sticky])>
-    <div class="{{ filled($maxWidth) ? $maxWidth.' mx-auto' : '' }} px-4 py-3 sm:px-6 lg:px-7 lg:py-4">
+<header @class(['flex min-h-[104px] items-center border-b border-border bg-card', 'sticky top-0 z-20' => $sticky])>
+    <div class="w-full {{ filled($maxWidth) ? $maxWidth.' mx-auto' : '' }} px-4 py-3 sm:px-6 lg:px-7 lg:py-4">
         <div class="flex min-h-[56px] flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex min-w-0 items-start gap-3">
                 @isset($sidebarToggle)
