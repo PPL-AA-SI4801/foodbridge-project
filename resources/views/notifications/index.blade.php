@@ -3,9 +3,9 @@
 @endphp
 
 @if ($isAdmin)
-    <x-admin-layout title="Notifikasi" :pending-verifications="$pendingVerifications ?? 0">
+    <x-app-layout padded title="Notifikasi" :pending-verifications="$pendingVerifications ?? 0">
         @include('notifications._content')
-    </x-admin-layout>
+    </x-app-layout>
 @else
     <x-app-layout>
         <div class="px-4 py-8 sm:px-6 lg:px-8">

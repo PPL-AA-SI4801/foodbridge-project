@@ -21,8 +21,8 @@
 
 ## 4. Admin shell migration
 
-- [ ] 4.1 Reduce `resources/views/components/admin-layout.blade.php` to a thin wrapper over the shared shell and move admin views to the shared layout without changing their page content; verify every admin route returns the shared shell with `id="admin-sidebar"` and no `id="app-sidebar"`.
-- [ ] 4.2 Remove the now-duplicated admin header/sidebar markup and confirm the admin header shows the breadcrumb, page title, pending-verification status, notifications, and profile menu; verify `php artisan test --filter=NotificationPageTest`.
+- [x] 4.1 Reduce `resources/views/components/admin-layout.blade.php` to a thin wrapper over the shared shell and move admin views to the shared layout without changing their page content; verify every admin route returns the shared shell with `id="admin-sidebar"` and no `id="app-sidebar"`.
+- [x] 4.2 Remove the now-duplicated admin header/sidebar markup and confirm the admin header shows the breadcrumb, page title, pending-verification status, notifications, and profile menu; verify `php artisan test --filter=NotificationPageTest`.
 
 ## 5. Interaction behavior
 

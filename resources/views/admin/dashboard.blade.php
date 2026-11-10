@@ -1,4 +1,4 @@
-<x-admin-layout title="Dashboard" :pending-verifications="$pendingVerifications">
+<x-app-layout padded title="Dashboard" :pending-verifications="$pendingVerifications">
     <div class="grid gap-6 md:grid-cols-2">
         <div class="rounded-lg border border-border bg-card p-6">
             <p class="text-sm font-medium">Area administrator</p>
@@ -59,4 +59,4 @@
             </a>
         @endif
     </div>
-</x-admin-layout>
+</x-app-layout>

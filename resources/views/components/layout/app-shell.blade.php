@@ -4,6 +4,7 @@
     'maxWidth' => null,
     'stickyHeader' => false,
     'sidebar' => null,
+    'padded' => false,
 ])
 
 @php
@@ -103,7 +104,7 @@
                         </x-layout.page-header>
                     @endisset
 
-                    <main class="flex-1">
+                    <main @class(['flex-1', 'p-6 lg:p-8' => $padded])>
                         {{ $slot }}
                     </main>
                 </div>

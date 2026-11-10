@@ -1,4 +1,4 @@
-<x-admin-layout title="Verifikasi Akun" :pending-verifications="$pendingVerifications">
+<x-app-layout padded title="Verifikasi Akun" :pending-verifications="$pendingVerifications">
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
             <h1 class="text-2xl font-semibold">Verifikasi Akun</h1>
@@ -97,4 +97,4 @@
             </div>
         </div>
     @endif
-</x-admin-layout>
+</x-app-layout>

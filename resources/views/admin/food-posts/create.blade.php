@@ -1,4 +1,4 @@
-<x-admin-layout title="Buat Postingan Makanan" :pending-verifications="$pendingVerifications">
+<x-app-layout padded title="Buat Postingan Makanan" :pending-verifications="$pendingVerifications">
     <div class="mb-6">
         <h1 class="text-2xl font-semibold">Buat Postingan Makanan</h1>
         <p class="mt-1 text-sm text-muted-foreground">
@@ -12,4 +12,4 @@
         'submitLabel' => 'Simpan Postingan',
         'foodPost' => null,
     ])
-</x-admin-layout>
+</x-app-layout>
