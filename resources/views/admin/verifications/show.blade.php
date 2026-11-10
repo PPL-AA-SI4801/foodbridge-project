@@ -1,4 +1,4 @@
-<x-admin-layout title="Detail Verifikasi" :pending-verifications="$pendingVerifications">
+<x-app-layout padded title="Detail Verifikasi" :pending-verifications="$pendingVerifications">
     @php
         $isPending = $user->status_akun === \App\Enums\AccountStatus::Menunggu;
         $hasDocument = $user->verificationDocuments->isNotEmpty();
@@ -223,4 +223,4 @@
             </section>
         </aside>
     </div>
-</x-admin-layout>
+</x-app-layout>

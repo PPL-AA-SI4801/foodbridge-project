@@ -1,111 +1,82 @@
 @props([])
 
 @php
-$user = auth()->user();
+    $user = auth()->user();
+    $donorProfile = $user->donorProfile;
+    $pendingClaims = $donorProfile
+        ? \App\Models\Claim::query()
+            ->whereHas('post', fn ($query) => $query->where('donor_id', $donorProfile->id))
+            ->whereIn('status', ['pending', 'menunggu'])
+            ->count()
+        : 0;
 
-$navItems = [
-    [
-        'label' => 'Dashboard',
-        'icon' => 'layout-dashboard',
-        'route' => 'dashboard.donor',
-        'active' => request()->routeIs('dashboard.donor'),
-    ],
-    [
-        'label' => 'Posting Makanan',
-        'icon' => 'utensils-crossed',
-        'route' => 'donor.food-posts.index',
-        'active' => request()->routeIs('donor.food-posts.*'),
-    ],
-    [
-        'label' => 'Klaim Masuk',
-        'icon' => 'clipboard-check',
-        'route' => 'donor.claims.index',
-        'active' => request()->routeIs('donor.claims.*'),
-    ],
-    [
-        'label' => 'Request Board',
-        'icon' => 'message-square',
-        'route' => 'donor.requests.index',
-        'active' => request()->routeIs('donor.requests.*'),
-    ],
-    [
-        'label' => 'Profil Saya',
-        'icon' => 'user',
-        'route' => 'profile.edit',
-        'active' => request()->routeIs('profile.*'),
-    ],
-];
-
-$link = fn (string $route): string => \Illuminate\Support\Facades\Route::has($route) ? route($route) : '#';
+    $navItems = [
+        [
+            'label' => 'Dashboard',
+            'icon' => 'layout-dashboard',
+            'route' => 'dashboard.donor',
+            'active' => request()->routeIs('dashboard.donor'),
+        ],
+        [
+            'label' => 'Posting Makanan',
+            'icon' => 'utensils-crossed',
+            'route' => 'donor.food-posts.index',
+            'active' => request()->routeIs('donor.food-posts.*'),
+        ],
+        [
+            'label' => 'Klaim Masuk',
+            'icon' => 'clipboard-check',
+            'route' => 'donor.claims.index',
+            'active' => request()->routeIs('donor.claims.*'),
+            'badge' => $pendingClaims,
+        ],
+        [
+            'label' => 'Request Board',
+            'icon' => 'message-square',
+            'route' => 'donor.requests.index',
+            'active' => request()->routeIs('donor.requests.*'),
+        ],
+        [
+            'label' => 'Ulasan dan Laporan',
+            'icon' => 'star',
+            'route' => 'donor.reviews.index',
+            'active' => request()->routeIs('donor.reviews.*'),
+        ],
+        [
+            'label' => 'Profil Saya',
+            'icon' => 'user',
+            'route' => 'profile.edit',
+            'active' => request()->routeIs('profile.*'),
+        ],
+    ];
 @endphp
 
-<aside {{ $attributes->class(['fixed inset-y-0 left-0 z-50 w-[19rem] shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground lg:static lg:z-auto lg:flex']) }}
-    id="app-sidebar"
-    aria-label="Navigasi donor"
-    x-bind:class="sidebarOpen ? 'flex' : 'hidden lg:flex'"
-    x-cloak>
-    {{-- Brand --}}
-    <div class="flex h-16 items-center gap-3 border-b border-sidebar-border px-5">
-        <img
-            src="{{ asset(rawurlencode('Logo Foodbridge.webp')) }}"
-            alt="FoodBridge"
-            class="h-8 w-auto max-w-full object-contain"
-        >
+<x-layout.sidebar-brand sidebar-id="app-sidebar" />
 
-        <button
-            type="button"
-            @click="$dispatch('close-sidebar')"
-            class="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:hidden"
-            aria-label="Tutup menu"
-        >
-            <x-icon name="x" class="h-4 w-4" />
-        </button>
-    </div>
+<x-layout.sidebar-search />
 
-    {{-- Navigasi --}}
-    <nav class="flex-1 overflow-y-auto px-3 py-4">
-        <div class="flex flex-col gap-1">
-            @foreach ($navItems as $item)
-                @if (\Illuminate\Support\Facades\Route::has($item['route']))
-                    <a
-                        href="{{ $link($item['route']) }}"
-                        @class([
-                            'relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors',
-                            'bg-accent font-medium text-accent-foreground' => $item['active'],
-                            'text-muted-foreground hover:bg-accent hover:text-accent-foreground' => ! $item['active'],
-                        ])
-                    >
-                        @if ($item['active'])
-                            <span class="absolute bottom-2 left-0 top-2 w-0.5 rounded-full bg-secondary" aria-hidden="true"></span>
-                        @endif
+<nav class="flex-1 overflow-y-auto pb-4">
+    <x-layout.sidebar-section label="MENU UTAMA">
+        @foreach ($navItems as $item)
+            @if (\Illuminate\Support\Facades\Route::has($item['route']))
+                <x-layout.sidebar-link
+                    :label="$item['label']"
+                    :icon="$item['icon']"
+                    :href="route($item['route'])"
+                    :active="$item['active']"
+                    :badge="$item['badge'] ?? null"
+                />
+            @endif
+        @endforeach
+    </x-layout.sidebar-section>
 
-                        <x-icon :name="$item['icon']" class="h-4 w-4" />
-                        <span>{{ $item['label'] }}</span>
-                    </a>
-                @endif
-            @endforeach
-        </div>
-    </nav>
+    <p
+        x-show="navQuery.trim() !== '' && !navHasMatches($el)"
+        x-cloak
+        class="px-4 py-6 text-center text-sm text-muted-foreground"
+    >
+        Menu tidak ditemukan.
+    </p>
+</nav>
 
-    {{-- Pengguna dan logout --}}
-    <div class="border-t border-sidebar-border p-4">
-        <div class="mb-3 flex items-center gap-3 px-1">
-            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-                {{ str(auth()->user()->nama)->substr(0, 1)->upper() }}
-            </span>
-            <div class="flex min-w-0 flex-col">
-                <span class="truncate text-sm font-medium">{{ auth()->user()->nama }}</span>
-                <span class="truncate text-xs text-muted-foreground">{{ auth()->user()->email }}</span>
-            </div>
-        </div>
-
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-
-            <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-md border border-input px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
-                <x-icon name="log-out" class="h-4 w-4" />
-                <span>Logout</span>
-            </button>
-        </form>
-    </div>
-</aside>
+<x-layout.sidebar-footer />

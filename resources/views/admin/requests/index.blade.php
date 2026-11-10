@@ -15,7 +15,7 @@
     $inputClasses = 'block w-full rounded-lg border border-input bg-white px-3 py-2 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
 @endphp
 
-<x-admin-layout title="Request Board" :pending-verifications="$pendingVerifications">
+<x-app-layout padded title="Request Board" :pending-verifications="$pendingVerifications">
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
             <h1 class="text-2xl font-semibold">Request Board</h1>
@@ -239,4 +239,4 @@
             @endif
         </div>
     @endif
-</x-admin-layout>
+</x-app-layout>

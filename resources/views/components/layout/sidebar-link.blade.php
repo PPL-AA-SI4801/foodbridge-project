@@ -1,25 +1,51 @@
-@props(['active' => false, 'href' => '#'])
+@props([
+    'label',
+    'icon' => null,
+    'href' => null,
+    'active' => false,
+    'badge' => null,
+    'disabled' => false,
+])
 
 @php
-$classes = ($active ?? false)
-            ? 'group relative flex items-center gap-3 rounded-md bg-sidebar-accent px-3 py-2.5 text-sm font-medium text-sidebar-accent-foreground'
-            : 'group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground';
+    $isDisabled = $disabled || blank($href) || $href === '#';
 @endphp
 
-<a
-    href="{{ $href }}"
-    {{ $attributes->merge(['class' => $classes]) }}
-    @if ($active) aria-current="page" @endif
->
-    @if ($active)
-        <span class="absolute bottom-2 left-0 top-2 w-0.5 rounded-full bg-secondary" aria-hidden="true"></span>
-    @endif
+@if ($isDisabled)
+    <span
+        {{ $attributes->class(['flex h-10 cursor-not-allowed items-center gap-3 rounded-[8px] border border-[#fafafa] bg-[#fafafa] px-3 text-[14px] font-normal text-sidebar-muted/60']) }}
+        aria-disabled="true"
+    >
+        @if ($icon)
+            <x-icon :name="$icon" class="h-[18px] w-[18px] shrink-0" />
+        @endif
 
-    @if (isset($icon))
-        <span class="shrink-0 text-muted-foreground group-hover:text-sidebar-accent-foreground">
-            {{ $icon }}
-        </span>
-    @endif
+        <span class="truncate">{{ $label }}</span>
+    </span>
+@else
+    <a
+        href="{{ $href }}"
+        @if ($active) aria-current="page" @endif
+        data-nav-item
+        data-nav-label="{{ strtolower($label) }}"
+        x-show="navMatches($el.dataset.navLabel)"
+        @click="$dispatch('close-sidebar')"
+        {{ $attributes->class([
+            'flex h-10 items-center gap-3 rounded-[8px] border px-3 text-[14px] transition-colors',
+            'border-[rgba(255,255,255,0.4)] bg-[#2a9263] font-medium text-white shadow-[inset_0px_4px_6px_0px_rgba(255,255,255,0.24)]' => $active,
+            'border-[#fafafa] bg-[#fafafa] font-normal text-sidebar-muted hover:bg-white' => ! $active,
+        ]) }}
+    >
+        @if ($icon)
+            <x-icon :name="$icon" class="h-[18px] w-[18px] shrink-0" />
+        @endif
 
-    <span class="truncate">{{ $slot }}</span>
-</a>
+        <span class="truncate">{{ $label }}</span>
+
+        @if ($badge)
+            <span class="ml-auto inline-flex items-center justify-center rounded-[99px] bg-[#d26c29] px-[8px] py-[4px] text-[12px] font-bold leading-[normal] text-white">
+                {{ $badge }}
+            </span>
+        @endif
+    </a>
+@endif
