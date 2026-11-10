@@ -17,7 +17,7 @@
     <body class="bg-background font-sans text-foreground antialiased">
         <div
             class="flex min-h-screen"
-            x-data="{ sidebarOpen: false }"
+            x-data="{ sidebarOpen: false, navQuery: '' }"
             @close-sidebar.window="sidebarOpen = false"
             @keydown.escape.window="sidebarOpen = false"
             @resize.window="if (window.innerWidth >= 1024) sidebarOpen = false"

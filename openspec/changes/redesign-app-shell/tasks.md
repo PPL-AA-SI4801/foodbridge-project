@@ -15,9 +15,9 @@
 
 ## 3. Role sidebars
 
-- [ ] 3.1 Move the donor sidebar onto the shared primitives and data: Dashboard, Posting Makanan, Klaim Masuk with claim count badge, Request Board, Ulasan dan Laporan (route-guarded), and Profil Saya; verify `php artisan test --filter=LayoutIntegrationTest` still sees `Donor Hub`, `Posting Makanan`, `Profil Saya`, and no `Katalog Makanan`.
-- [ ] 3.2 Move the recipient sidebar onto the shared primitives and data: Dashboard, Katalog Makanan, Klaim Saya, Request Board, Ulasan dan Laporan (route-guarded), and Profil Saya; verify the layout test still sees `Penerima / Yayasan`, `Katalog Makanan`, and `Profil Saya`.
-- [ ] 3.3 Move the admin sidebar onto the shared primitives with the `MENU UTAMA` group and a route-guarded `MANAJEMEN DATA` group; keep `id="admin-sidebar"` and existing verification/report badges; verify no sidebar anchor renders `href="#"`.
+- [x] 3.1 Move the donor sidebar onto the shared primitives and data: Dashboard, Posting Makanan, Klaim Masuk with claim count badge, Request Board, Ulasan dan Laporan (route-guarded), and Profil Saya; verify `php artisan test --filter=LayoutIntegrationTest` still sees `Donor Hub`, `Posting Makanan`, `Profil Saya`, and no `Katalog Makanan`.
+- [x] 3.2 Move the recipient sidebar onto the shared primitives and data: Dashboard, Katalog Makanan, Klaim Saya, Request Board, Ulasan dan Laporan (route-guarded), and Profil Saya; verify the layout test still sees `Penerima / Yayasan`, `Katalog Makanan`, and `Profil Saya`.
+- [x] 3.3 Move the admin sidebar onto the shared primitives with the `MENU UTAMA` group and a route-guarded `MANAJEMEN DATA` group; keep `id="admin-sidebar"` and existing verification/report badges; verify no sidebar anchor renders `href="#"`.
 
 ## 4. Admin shell migration
 
