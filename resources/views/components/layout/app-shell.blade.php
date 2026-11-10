@@ -13,6 +13,8 @@
     $isDonor = $user->hasRole(\App\Enums\Role::Donor);
     $isRecipient = $user->hasRole(\App\Enums\Role::Penerima);
     $roleLabel = $isDonor ? 'Donor Hub' : ($isRecipient ? 'Penerima / Yayasan' : null);
+    $greetingRole = $isDonor ? 'Donor' : ($isRecipient ? 'Penerima' : ($user->hasRole(\App\Enums\Role::Administrator) ? 'Admin' : null));
+    $title = $title ?: ($greetingRole ? 'Selamat Datang, '.$greetingRole.' 👋' : null);
     $sidebarId = $user->hasRole(\App\Enums\Role::Administrator) ? 'admin-sidebar' : 'app-sidebar';
 @endphp
 
