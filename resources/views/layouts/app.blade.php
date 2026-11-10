@@ -38,16 +38,16 @@
 
     @if (! is_null($pendingVerifications) && $isAdmin)
         <x-slot name="status">
-            <span class="flex h-10 items-center gap-3 rounded-[8px] border border-[#e8e9e8] bg-white px-3 text-[14px] font-normal text-sidebar-muted">
-                <x-icon name="user-check" class="h-[18px] w-[18px] shrink-0" />
+            <span class="flex h-9 items-center gap-2 rounded-[8px] border border-[#e8e9e8] bg-white px-2.5 text-[12px] font-normal text-sidebar-muted">
+                <x-icon name="user-check" class="h-4 w-4 shrink-0" />
                 <span>Menunggu Verifikasi:</span>
                 <span class="font-bold text-[#0d1c2e]">{{ $pendingVerifications }}</span>
             </span>
         </x-slot>
     @elseif ($dailyQuotaStatus)
         <x-slot name="status">
-            <span class="flex h-10 items-center gap-3 rounded-[8px] border border-[#e8e9e8] bg-white px-3 text-[14px] font-normal text-sidebar-muted">
-                <x-icon name="package" class="h-[18px] w-[18px] shrink-0" />
+            <span class="flex h-9 items-center gap-2 rounded-[8px] border border-[#e8e9e8] bg-white px-2.5 text-[12px] font-normal text-sidebar-muted">
+                <x-icon name="package" class="h-4 w-4 shrink-0" />
                 <span>Kuota Harian:</span>
                 <span class="font-bold text-[#0d1c2e]">{{ $dailyQuotaStatus }}</span>
             </span>

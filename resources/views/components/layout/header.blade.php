@@ -66,21 +66,23 @@
                 @endif
             </div>
 
-            <div class="order-1 flex shrink-0 items-center gap-4 sm:order-2">
+            <div class="order-1 flex w-full items-center justify-between gap-4 sm:order-2 sm:w-auto sm:justify-end">
                 @isset($sidebarToggle)
                     {{ $sidebarToggle }}
                 @endisset
 
-                @isset($status)
-                    {{ $status }}
-                @endisset
+                <div class="flex items-center gap-2">
+                    @isset($status)
+                        {{ $status }}
+                    @endisset
 
-                @isset($actions)
-                    {{ $actions }}
-                @endisset
+                    @isset($actions)
+                        {{ $actions }}
+                    @endisset
 
-                <div class="relative flex h-10 w-[42px] items-center justify-center rounded-[8px] border border-[#e8e9e8] bg-white">
-                    <x-header.notifications />
+                    <div class="relative flex h-9 w-9 items-center justify-center rounded-[8px] border border-[#e8e9e8] bg-white">
+                        <x-header.notifications />
+                    </div>
                 </div>
             </div>
         </div>
