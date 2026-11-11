@@ -2,9 +2,9 @@
 
 ## 1. Seeder scaffolding and orchestration
 
-- [ ] 1.1 Create split seeder classes (`DemoUserSeeder`, `VerificationDocumentSeeder`, `FoodPostSeeder`, `ClaimSeeder`, `FoodRequestSeeder`, `InAppNotificationSeeder`) under `database/seeders/` and wire them in `DatabaseSeeder::run()` in dependency order; verify `php artisan migrate:fresh --seed` completes without errors.
-- [ ] 1.2 Make all seeders idempotent using `firstOrCreate`/`updateOrCreate` keyed by stable identifiers; verify re-running `php artisan db:seed` does not duplicate rows.
-- [ ] 1.3 Add a placeholder image asset and document the copy step; verify seeded `foto`/`foto_bukti` paths resolve or gracefully 404.
+- [x] 1.1 Create split seeder classes (`DemoUserSeeder`, `VerificationDocumentSeeder`, `FoodPostSeeder`, `ClaimSeeder`, `FoodRequestSeeder`, `InAppNotificationSeeder`) under `database/seeders/` and wire them in `DatabaseSeeder::run()` in dependency order; verify `php artisan migrate:fresh --seed` completes without errors.
+- [x] 1.2 Make all seeders idempotent using `firstOrCreate`/`updateOrCreate` keyed by stable identifiers; verify re-running `php artisan db:seed` does not duplicate rows.
+- [x] 1.3 Add a placeholder image asset and document the copy step; verify seeded `foto`/`foto_bukti` paths resolve or gracefully 404.
 
 ## 2. Users and profiles
 
