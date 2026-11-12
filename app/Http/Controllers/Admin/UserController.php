@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\AccountStatus;
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
+use App\Models\InAppNotification;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -76,6 +77,16 @@ class UserController extends Controller
             }
 
             $user->update(['status_akun' => AccountStatus::Diblokir]);
+
+            InAppNotification::create([
+                'user_id' => $user->id,
+                'judul' => 'Akun Anda Diblokir',
+                'pesan' => 'Akun Anda telah diblokir oleh administrator. Anda tidak dapat mengakses FoodBridge.',
+                'tipe' => 'akun',
+            ]);
+
+            // End any browser session that belongs to the blocked account immediately.
+            DB::table('sessions')->where('user_id', $user->id)->delete();
 
             return 'blocked';
         });

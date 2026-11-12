@@ -4,8 +4,10 @@ namespace Tests\Feature\Admin;
 
 use App\Enums\AccountStatus;
 use App\Enums\Role;
+use App\Models\InAppNotification;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use Tests\TestCase;
 
@@ -83,6 +85,62 @@ class UserManagementTest extends TestCase
 
         $this->assertSame(AccountStatus::Diblokir, $donor->fresh()->status_akun);
         $this->assertSame(AccountStatus::Diblokir, $recipient->fresh()->status_akun);
+    }
+
+    public function test_blocking_an_account_creates_an_account_notification(): void
+    {
+        $admin = $this->activeUser(Role::Administrator);
+        $donor = $this->activeUser(Role::Donor);
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.block', $donor))
+            ->assertRedirect(route('admin.users.index'));
+
+        $notification = InAppNotification::query()
+            ->where('user_id', $donor->id)
+            ->sole();
+
+        $this->assertSame('Akun Anda Diblokir', $notification->judul);
+        $this->assertSame('akun', $notification->tipe);
+        $this->assertStringContainsString('telah diblokir oleh administrator', $notification->pesan);
+        $this->assertFalse($notification->is_read);
+    }
+
+    public function test_blocking_an_account_deletes_its_active_sessions(): void
+    {
+        $admin = $this->activeUser(Role::Administrator);
+        $donor = $this->activeUser(Role::Donor);
+
+        DB::table('sessions')->insert([
+            'id' => 'session-'.$donor->id,
+            'user_id' => $donor->id,
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'PHPUnit',
+            'payload' => '',
+            'last_activity' => now()->timestamp,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.block', $donor))
+            ->assertRedirect(route('admin.users.index'));
+
+        $this->assertDatabaseMissing('sessions', ['id' => 'session-'.$donor->id]);
+    }
+
+    public function test_a_blocked_account_loses_access_to_authenticated_pages(): void
+    {
+        $admin = $this->activeUser(Role::Administrator);
+        $donor = $this->activeUser(Role::Donor);
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.block', $donor));
+
+        $this->actingAs($donor->refresh())
+            ->get(route('dashboard.donor'))
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors([
+                'account_status' => 'Akun Anda telah diblokir.',
+            ]);
     }
 
     public function test_only_active_accounts_can_be_blocked(): void
