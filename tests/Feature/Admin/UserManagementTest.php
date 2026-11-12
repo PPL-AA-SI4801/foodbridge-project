@@ -67,6 +67,20 @@ class UserManagementTest extends TestCase
             ->assertDontSee('Penerima Diblokir');
     }
 
+    public function test_administrator_dashboard_shows_user_management_summary(): void
+    {
+        $admin = $this->activeUser(Role::Administrator);
+        $this->activeUser(Role::Donor);
+        $blocked = $this->activeUser(Role::Penerima);
+        $blocked->update(['status_akun' => AccountStatus::Diblokir]);
+
+        $this->actingAs($admin)
+            ->get(route('dashboard.admin'))
+            ->assertOk()
+            ->assertSee('Manajemen Pengguna')
+            ->assertSee('2 akun Donor/Penerima, 1 diblokir.');
+    }
+
     public function test_administrator_can_block_an_active_donor_or_recipient(): void
     {
         $admin = $this->activeUser(Role::Administrator);

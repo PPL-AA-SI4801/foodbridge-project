@@ -32,6 +32,33 @@
             </span>
         </a>
 
+        @if (\Illuminate\Support\Facades\Route::has('admin.users.index'))
+            <a
+                href="{{ route('admin.users.index') }}"
+                class="group rounded-lg border border-border bg-card p-6 transition-colors hover:bg-accent/40 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            >
+                <div class="flex items-start justify-between gap-4">
+                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-muted text-foreground">
+                        <x-icon name="users" class="h-5 w-5" />
+                    </span>
+
+                    <span class="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-accent px-2 text-sm font-semibold text-primary">
+                        {{ $blockedUsersCount ?? 0 }}
+                    </span>
+                </div>
+
+                <p class="mt-4 text-sm font-medium">Manajemen Pengguna</p>
+                <p class="mt-1 text-sm text-muted-foreground">
+                    {{ $totalUsersCount ?? 0 }} akun Donor/Penerima, {{ $blockedUsersCount ?? 0 }} diblokir.
+                </p>
+
+                <span class="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                    Kelola pengguna
+                    <x-icon name="chevron-right" class="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </span>
+            </a>
+        @endif
+
         @if (\Illuminate\Support\Facades\Route::has('admin.requests.index'))
             <a
                 href="{{ route('admin.requests.index') }}"
