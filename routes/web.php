@@ -66,6 +66,7 @@ Route::middleware('auth')->group(function () {
             ->name('dashboard.admin');
 
         Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+        Route::post('/admin/users/{user}/block', [AdminUserController::class, 'block'])->name('admin.users.block');
 
         Route::get('/admin/verifications', [VerificationController::class, 'index'])->name('admin.verifications.index');
         Route::get('/admin/verifications/{user}', [VerificationController::class, 'show'])->name('admin.verifications.show');

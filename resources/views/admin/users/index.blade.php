@@ -155,6 +155,26 @@
                                             Tinjau
                                             <x-icon name="chevron-right" class="h-4 w-4" />
                                         </a>
+                                    @elseif ($user->status_akun === \App\Enums\AccountStatus::Aktif)
+                                        <form
+                                            method="POST"
+                                            action="{{ route('admin.users.block', $user) }}"
+                                            class="inline"
+                                            onsubmit="return confirm('Blokir akun {{ $user->nama }}? Akun ini tidak akan bisa masuk lagi.');"
+                                        >
+                                            @csrf
+
+                                            <button
+                                                type="submit"
+                                                dusk="block-user-{{ $user->id }}"
+                                                class="inline-flex items-center gap-1 rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2"
+                                            >
+                                                <x-icon name="lock" class="h-4 w-4" />
+                                                Blokir
+                                            </button>
+                                        </form>
+                                    @elseif ($user->status_akun === \App\Enums\AccountStatus::Diblokir)
+                                        <span class="text-xs font-medium text-muted-foreground">Sudah diblokir</span>
                                     @else
                                         <span class="text-muted-foreground">—</span>
                                     @endif

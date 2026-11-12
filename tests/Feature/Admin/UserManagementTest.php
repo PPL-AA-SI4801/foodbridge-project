@@ -65,6 +65,78 @@ class UserManagementTest extends TestCase
             ->assertDontSee('Penerima Diblokir');
     }
 
+    public function test_administrator_can_block_an_active_donor_or_recipient(): void
+    {
+        $admin = $this->activeUser(Role::Administrator);
+        $donor = $this->activeUser(Role::Donor);
+        $recipient = $this->activeUser(Role::Penerima);
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.block', $donor))
+            ->assertRedirect(route('admin.users.index'))
+            ->assertSessionHas('status', 'Akun berhasil diblokir.');
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.block', $recipient))
+            ->assertRedirect(route('admin.users.index'))
+            ->assertSessionHas('status', 'Akun berhasil diblokir.');
+
+        $this->assertSame(AccountStatus::Diblokir, $donor->fresh()->status_akun);
+        $this->assertSame(AccountStatus::Diblokir, $recipient->fresh()->status_akun);
+    }
+
+    public function test_only_active_accounts_can_be_blocked(): void
+    {
+        $admin = $this->activeUser(Role::Administrator);
+        $pending = $this->activeUser(Role::Donor);
+        $pending->update(['status_akun' => AccountStatus::Menunggu]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.block', $pending))
+            ->assertRedirect(route('admin.users.index'))
+            ->assertSessionHas('error', 'Hanya akun aktif yang dapat diblokir.');
+
+        $this->assertSame(AccountStatus::Menunggu, $pending->fresh()->status_akun);
+    }
+
+    public function test_already_blocked_accounts_cannot_be_blocked_again(): void
+    {
+        $admin = $this->activeUser(Role::Administrator);
+        $blocked = $this->activeUser(Role::Penerima);
+        $blocked->update(['status_akun' => AccountStatus::Diblokir]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.block', $blocked))
+            ->assertRedirect(route('admin.users.index'))
+            ->assertSessionHas('error', 'Akun ini sudah diblokir.');
+
+        $this->assertSame(AccountStatus::Diblokir, $blocked->fresh()->status_akun);
+    }
+
+    public function test_administrator_accounts_cannot_be_blocked(): void
+    {
+        $admin = $this->activeUser(Role::Administrator);
+        $otherAdmin = $this->activeUser(Role::Administrator);
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.block', $otherAdmin))
+            ->assertNotFound();
+
+        $this->assertSame(AccountStatus::Aktif, $otherAdmin->fresh()->status_akun);
+    }
+
+    public function test_non_administrator_cannot_block_an_account(): void
+    {
+        $donor = $this->activeUser(Role::Donor);
+        $otherDonor = $this->activeUser(Role::Donor);
+
+        $this->actingAs($donor)
+            ->post(route('admin.users.block', $otherDonor))
+            ->assertForbidden();
+
+        $this->assertSame(AccountStatus::Aktif, $otherDonor->fresh()->status_akun);
+    }
+
     public function test_non_administrator_cannot_view_user_management(): void
     {
         $donor = $this->activeUser(Role::Donor);
