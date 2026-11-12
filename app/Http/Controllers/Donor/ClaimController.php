@@ -5,21 +5,12 @@ namespace App\Http\Controllers\Donor;
 use App\Http\Controllers\Controller;
 use App\Models\Claim;
 use App\Models\InAppNotification;
+use App\Support\ClaimStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ClaimController extends Controller
 {
-    /**
-     * Kunci filter di URL dan nilai status yang dicakup (Inggris dan Indonesia).
-     */
-    private const STATUS_GROUPS = [
-        'menunggu' => ['pending', 'menunggu'],
-        'disetujui' => ['approved', 'disetujui'],
-        'selesai' => ['completed', 'selesai'],
-        'ditolak' => ['rejected', 'ditolak'],
-    ];
-
     /**
      * Menampilkan daftar klaim masuk pada postingan makanan milik donor yang sedang login.
      */
@@ -29,7 +20,7 @@ class ClaimController extends Controller
         $donor = $request->user()->donorProfile()->firstOrFail();
 
         $filter = $request->query('status');
-        $activeFilter = is_string($filter) && array_key_exists($filter, self::STATUS_GROUPS) ? $filter : null;
+        $activeFilter = is_string($filter) && array_key_exists($filter, ClaimStatus::GROUPS) ? $filter : null;
 
         $ownedByDonor = fn ($query) => $query->where('donor_id', $donor->id);
 
@@ -38,7 +29,7 @@ class ClaimController extends Controller
         $claims = Claim::query()
             ->with(['post.category', 'recipient'])
             ->whereHas('post', $ownedByDonor)
-            ->when($activeFilter, fn ($query) => $query->whereIn('status', self::STATUS_GROUPS[$activeFilter]))
+            ->when($activeFilter, fn ($query) => $query->whereIn('status', ClaimStatus::GROUPS[$activeFilter]))
             ->orderByRaw("CASE WHEN status IN ('pending', 'menunggu') THEN 0 ELSE 1 END")
             ->orderByDesc('tanggal_klaim')
             ->orderByDesc('id')
@@ -66,7 +57,7 @@ class ClaimController extends Controller
                 // Kunci baris klaim dan postingan agar tidak terjadi race condition / persetujuan ganda
                 $lockedClaim = Claim::lockForUpdate()->findOrFail($claim->id);
 
-                if (! in_array($lockedClaim->status, self::STATUS_GROUPS['menunggu'], true)) {
+                if (! in_array($lockedClaim->status, ClaimStatus::GROUPS['menunggu'], true)) {
                     throw new \DomainException('Klaim ini sudah diproses sebelumnya.');
                 }
 
@@ -109,7 +100,7 @@ class ClaimController extends Controller
             DB::transaction(function () use ($claim) {
                 $lockedClaim = Claim::lockForUpdate()->findOrFail($claim->id);
 
-                if (! in_array($lockedClaim->status, self::STATUS_GROUPS['menunggu'], true)) {
+                if (! in_array($lockedClaim->status, ClaimStatus::GROUPS['menunggu'], true)) {
                     throw new \DomainException('Klaim ini sudah diproses sebelumnya.');
                 }
 
