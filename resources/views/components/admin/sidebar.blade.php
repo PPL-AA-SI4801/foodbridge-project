@@ -31,7 +31,7 @@
     ];
 
     $dataItems = [
-        ['label' => 'Pengguna', 'route' => 'admin.users.index', 'active' => request()->routeIs('admin.users.*')],
+        ['label' => 'Pengguna', 'icon' => 'users', 'route' => 'admin.users.index', 'active' => request()->routeIs('admin.users.*')],
         ['label' => 'Postingan Makanan', 'route' => 'admin.food-posts.index', 'active' => request()->routeIs('admin.food-posts.*')],
         ['label' => 'Klaim', 'route' => 'admin.claims.index', 'active' => request()->routeIs('admin.claims.*')],
         ['label' => 'Kategori Gizi', 'route' => 'admin.categories.index', 'active' => request()->routeIs('admin.categories.*')],
