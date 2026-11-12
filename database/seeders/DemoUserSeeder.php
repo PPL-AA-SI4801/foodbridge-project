@@ -93,6 +93,19 @@ class DemoUserSeeder extends Seeder
                     'lng' => 106.8300000,
                 ],
             ],
+            [
+                'email' => 'donor-blocked@foodbridge.test',
+                'nama' => 'Donor Diblokir',
+                'no_hp' => '081200000010',
+                'status' => AccountStatus::Diblokir,
+                'profile' => [
+                    'nama_usaha' => 'Usaha Diblokir',
+                    'jenis_usaha' => 'Restoran',
+                    'alamat' => 'Jl. Diblokir No. 1, Jakarta',
+                    'lat' => -6.2700000,
+                    'lng' => 106.8700000,
+                ],
+            ],
         ];
 
         foreach ($donors as $data) {
@@ -167,6 +180,19 @@ class DemoUserSeeder extends Seeder
                     'alamat' => 'Jl. Pending No. 2, Jakarta',
                     'lat' => -6.2600000,
                     'lng' => 106.8600000,
+                ],
+            ],
+            [
+                'email' => 'penerima-blocked@foodbridge.test',
+                'nama' => 'Penerima Diblokir',
+                'no_hp' => '081200000011',
+                'status' => AccountStatus::Diblokir,
+                'profile' => [
+                    'nama_lembaga' => 'Lembaga Diblokir',
+                    'jenis_lembaga' => 'Panti asuhan',
+                    'alamat' => 'Jl. Diblokir No. 2, Jakarta',
+                    'lat' => -6.2800000,
+                    'lng' => 106.8800000,
                 ],
             ],
         ];

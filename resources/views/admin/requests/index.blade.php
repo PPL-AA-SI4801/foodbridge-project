@@ -16,6 +16,8 @@
 @endphp
 
 <x-app-layout padded title="Request Board" :pending-verifications="$pendingVerifications">
+    <x-flash />
+
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
             <h1 class="text-2xl font-semibold">Request Board</h1>

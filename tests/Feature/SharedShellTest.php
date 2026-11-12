@@ -184,7 +184,7 @@ class SharedShellTest extends TestCase
         $this->assertStringContainsString('Verifikasi Akun', $html);
         $this->assertStringContainsString('Postingan Makanan', $html);
         $this->assertStringNotContainsString('Laporan Makanan', $html);
-        $this->assertStringNotContainsString('Pengguna', $html);
+        $this->assertStringContainsString('Pengguna', $html);
         $this->assertStringNotContainsString('Kategori Gizi', $html);
         $this->assertStringNotContainsString('href="#"', $html);
     }

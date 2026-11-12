@@ -210,7 +210,16 @@ Administrator verification flow:
 4. Choose **Setujui Pendaftaran** to set the account to `aktif`; the applicant can then sign in and reach their role dashboard.
 5. Or choose **Tolak Pendaftaran** and enter a reason (required, up to 255 characters); the account becomes `ditolak` and the applicant cannot sign in.
 
-The administrator decision updates the account status and all pending legality documents together. `diblokir` remains a supported account status for the access gate, but blocking or unblocking active accounts is a later feature.
+The administrator decision updates the account status and all pending legality documents together.
+
+Administrator blocking flow:
+
+1. Sign in as the administrator and open **Pengguna** in the administrator menu, or `/admin/users`.
+2. Search for an active Donor or Penerima account and choose **Blokir**.
+3. Confirm the dialog. The account becomes `diblokir`, receives an in-app account notification, and any active browser session is ended immediately.
+4. The blocked account can no longer sign in and sees the blocked-account message on the sign-in page.
+
+Blocking is one-way for now; unblocking active accounts is not implemented. The demo data includes `donor-blocked@foodbridge.test` and `penerima-blocked@foodbridge.test` for checking the blocked-account state.
 
 **Upload rules:** one PDF, JPG, JPEG, or PNG file, at most **2 MB**. Legality documents are stored privately under `storage/app/private/verification-documents/{user_id}/` and are never served from `public/`. Email addresses and business/institution names must be unique, and passwords need at least 8 characters.
 
