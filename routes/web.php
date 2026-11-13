@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\ClaimController as AdminClaimController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\FoodPostController as AdminFoodPostController;
@@ -91,6 +92,11 @@ Route::middleware('auth')->group(function () {
             ->except(['show'])
             ->names('admin.claims')
             ->parameters(['claims' => 'claim']);
+
+        Route::resource('/admin/categories', AdminCategoryController::class)
+            ->except(['show'])
+            ->names('admin.categories')
+            ->parameters(['categories' => 'category']);
     });
 
     Route::middleware(['auth', 'verified', 'role:penerima'])->prefix('recipient')->name('recipient.')->group(function () {
