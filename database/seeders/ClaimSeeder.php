@@ -10,7 +10,6 @@ use App\Models\RecipientProfile;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 
 class ClaimSeeder extends Seeder
 {
@@ -77,6 +76,106 @@ class ClaimSeeder extends Seeder
                 'tanggal_klaim' => $today->copy()->subDay(),
                 'approved_at' => null,
                 'completed_at' => null,
+            ]);
+        }
+
+        // Additional historical claims so the admin table exercises pagination and every filter.
+        $extraClaims = [
+            [
+                'post' => 'Buah Pisang Kedaluwarsa',
+                'recipient' => $demoRecipient,
+                'jumlah_porsi' => 1,
+                'status' => 'rejected',
+                'metode_pengambilan' => null,
+                'tanggal_klaim' => $today->copy()->subDay(),
+            ],
+            [
+                'post' => 'Buah Pisang Kedaluwarsa',
+                'recipient' => $secondRecipient,
+                'jumlah_porsi' => 2,
+                'status' => 'pending',
+                'metode_pengambilan' => null,
+                'tanggal_klaim' => $today,
+            ],
+            [
+                'post' => 'Nasi Ayam Geprek Tersedia',
+                'recipient' => $secondRecipient,
+                'jumlah_porsi' => 1,
+                'status' => 'pending',
+                'metode_pengambilan' => null,
+                'tanggal_klaim' => $today,
+            ],
+            [
+                'post' => 'Nasi Ayam Geprek Tersedia',
+                'recipient' => $thirdRecipient,
+                'jumlah_porsi' => 2,
+                'status' => 'approved',
+                'metode_pengambilan' => 'ambil_sendiri',
+                'tanggal_klaim' => $today,
+            ],
+            [
+                'post' => 'Tempe Goreng Tersedia',
+                'recipient' => $secondRecipient,
+                'jumlah_porsi' => 1,
+                'status' => 'completed',
+                'metode_pengambilan' => 'ambil_sendiri',
+                'tanggal_klaim' => $today->copy()->subDays(3),
+            ],
+            [
+                'post' => 'Tempe Goreng Tersedia',
+                'recipient' => $thirdRecipient,
+                'jumlah_porsi' => 1,
+                'status' => 'rejected',
+                'metode_pengambilan' => null,
+                'tanggal_klaim' => $today->copy()->subDays(4),
+            ],
+            [
+                'post' => 'Roti Gandum Tersedia',
+                'recipient' => $secondRecipient,
+                'jumlah_porsi' => 1,
+                'status' => 'pending',
+                'metode_pengambilan' => null,
+                'tanggal_klaim' => $today,
+            ],
+            [
+                'post' => 'Roti Gandum Tersedia',
+                'recipient' => $thirdRecipient,
+                'jumlah_porsi' => 2,
+                'status' => 'approved',
+                'metode_pengambilan' => 'kurir_online',
+                'tanggal_klaim' => $today->copy()->subDay(),
+            ],
+            [
+                'post' => 'Sayur Asem Habis',
+                'recipient' => $demoRecipient,
+                'jumlah_porsi' => 1,
+                'status' => 'rejected',
+                'metode_pengambilan' => null,
+                'tanggal_klaim' => $today->copy()->subDays(5),
+            ],
+            [
+                'post' => 'Sayur Asem Habis',
+                'recipient' => $thirdRecipient,
+                'jumlah_porsi' => 1,
+                'status' => 'completed',
+                'metode_pengambilan' => 'ambil_sendiri',
+                'tanggal_klaim' => $today->copy()->subDays(6),
+            ],
+        ];
+
+        foreach ($extraClaims as $extraClaim) {
+            if ($extraClaim['recipient'] === null) {
+                continue;
+            }
+
+            $this->upsertClaim($posts->get($extraClaim['post']), $extraClaim['recipient'], [
+                'jumlah_porsi' => $extraClaim['jumlah_porsi'],
+                'status' => $extraClaim['status'],
+                'metode_pengambilan' => $extraClaim['metode_pengambilan'],
+                'kode_verifikasi' => null,
+                'tanggal_klaim' => $extraClaim['tanggal_klaim'],
+                'approved_at' => in_array($extraClaim['status'], ['approved', 'completed'], true) ? now() : null,
+                'completed_at' => $extraClaim['status'] === 'completed' ? now() : null,
             ]);
         }
 
