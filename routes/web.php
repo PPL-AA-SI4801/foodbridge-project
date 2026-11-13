@@ -65,7 +65,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard/admin', [AdminDashboardController::class, 'index'])
             ->name('dashboard.admin');
 
-        Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+        Route::resource('/admin/users', AdminUserController::class)
+            ->except(['show'])
+            ->names('admin.users')
+            ->parameters(['users' => 'user']);
         Route::post('/admin/users/{user}/block', [AdminUserController::class, 'block'])->name('admin.users.block');
 
         Route::get('/admin/verifications', [VerificationController::class, 'index'])->name('admin.verifications.index');

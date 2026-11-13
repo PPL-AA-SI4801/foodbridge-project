@@ -1,96 +1,115 @@
+@php
+    $inputClasses = 'block w-full rounded-lg border border-input bg-white px-3 py-2 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
+    $roleLabels = [
+        'donor' => 'Donor',
+        'penerima' => 'Penerima',
+        'administrator' => 'Administrator',
+    ];
+@endphp
+
 <x-app-layout padded title="Manajemen Pengguna" :pending-verifications="$pendingVerifications">
+    <x-flash />
+
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
             <h1 class="text-2xl font-semibold">Manajemen Pengguna</h1>
             <p class="mt-1 text-sm text-muted-foreground">
-                Kelola akun Donor dan Penerima yang terdaftar di FoodBridge.
+                Kelola akun Donor, Penerima, dan Administrator yang terdaftar di FoodBridge.
             </p>
         </div>
 
-        <div class="flex flex-wrap gap-2 text-sm">
-            <span class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-muted-foreground">
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground">
                 <span class="font-semibold text-foreground">{{ $totalUsers }}</span>
                 total akun
             </span>
-            <span class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-muted-foreground">
+            <span class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground">
                 <span class="font-semibold text-foreground">{{ $blockedUsers }}</span>
                 diblokir
             </span>
+            <a
+                href="{{ route('admin.users.create') }}"
+                class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/30"
+            >
+                <x-icon name="plus" class="h-4 w-4" />
+                Buat Akun
+            </a>
         </div>
     </div>
 
-    <x-flash />
+    <form method="GET" action="{{ route('admin.users.index') }}" class="mb-6 rounded-xl border border-border bg-card p-4">
+        <div class="grid gap-3 sm:grid-cols-4">
+            <div class="sm:col-span-2">
+                <label for="q" class="sr-only">Cari pengguna</label>
+                <input
+                    id="q"
+                    name="q"
+                    type="search"
+                    value="{{ $search }}"
+                    placeholder="Cari nama, email, no HP, usaha, atau lembaga..."
+                    class="{{ $inputClasses }}"
+                />
+            </div>
 
-    <div class="overflow-hidden rounded-lg border border-border bg-card">
-        <div class="border-b border-border p-4">
-            <form method="GET" action="{{ route('admin.users.index') }}" class="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div>
+                <label for="role" class="sr-only">Peran</label>
+                <select id="role" name="role" class="{{ $inputClasses }}">
+                    <option value="">Semua peran</option>
+                    @foreach ($roles as $roleOption)
+                        <option value="{{ $roleOption->value }}" @selected($activeRole === $roleOption->value)>
+                            {{ $roleLabels[$roleOption->value] ?? ucfirst($roleOption->value) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="flex gap-2">
                 <div class="flex-1">
-                    <label for="q" class="block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Cari pengguna
-                    </label>
-                    <input
-                        id="q"
-                        name="q"
-                        type="search"
-                        value="{{ $search }}"
-                        placeholder="Nama, email, atau nomor HP"
-                        class="mt-1.5 block w-full rounded-md border border-input bg-white px-3 py-2 text-sm text-foreground shadow-xs placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    >
-                </div>
-
-                <div class="sm:w-48">
-                    <label for="status" class="block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Status
-                    </label>
-                    <select
-                        id="status"
-                        name="status"
-                        class="mt-1.5 block w-full rounded-md border border-input bg-white px-3 py-2 text-sm text-foreground shadow-xs focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    >
+                    <label for="status" class="sr-only">Status akun</label>
+                    <select id="status" name="status" class="{{ $inputClasses }}">
                         <option value="">Semua status</option>
                         @foreach ($statuses as $statusOption)
-                            <option value="{{ $statusOption->value }}" @selected($status === $statusOption->value)>
+                            <option value="{{ $statusOption->value }}" @selected($activeStatus === $statusOption->value)>
                                 {{ ucfirst($statusOption->value) }}
                             </option>
                         @endforeach
                     </select>
                 </div>
 
-                <div class="flex gap-2">
-                    <button
-                        type="submit"
-                        class="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                    >
-                        <x-icon name="search" class="h-4 w-4" />
-                        Cari
-                    </button>
-
-                    @if ($search !== '' || $status !== null)
-                        <a
-                            href="{{ route('admin.users.index') }}"
-                            class="inline-flex items-center justify-center rounded-md border border-input bg-card px-4 py-2 text-sm font-medium transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                        >
-                            Reset
-                        </a>
-                    @endif
-                </div>
-            </form>
+                <button
+                    type="submit"
+                    class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+                >
+                    <x-icon name="search" class="h-4 w-4" />
+                    Filter
+                </button>
+            </div>
         </div>
 
-        @if ($users->isEmpty())
-            <div class="p-10 text-center">
-                <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                    <x-icon name="users" class="h-6 w-6" />
-                </div>
-                <h2 class="mt-4 text-base font-semibold">Tidak ada pengguna yang cocok</h2>
-                <p class="mt-1 text-sm text-muted-foreground">
-                    Coba ubah kata kunci pencarian atau filter status.
-                </p>
+        @if ($search !== '' || $activeRole !== null || $activeStatus !== null)
+            <div class="mt-3">
+                <a href="{{ route('admin.users.index') }}" class="text-sm font-medium text-primary hover:text-primary/80">
+                    Reset filter
+                </a>
             </div>
-        @else
+        @endif
+    </form>
+
+    @if ($users->isEmpty())
+        <div class="rounded-lg border border-border bg-card p-10 text-center">
+            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                <x-icon name="users" class="h-6 w-6" />
+            </div>
+            <h2 class="mt-4 text-base font-semibold">Tidak ada pengguna yang cocok</h2>
+            <p class="mt-1 text-sm text-muted-foreground">
+                Coba ubah kata kunci pencarian atau filter peran dan status.
+            </p>
+        </div>
+    @else
+        <div class="overflow-hidden rounded-lg border border-border bg-card">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-border text-sm">
-                    <caption class="sr-only">Daftar akun Donor dan Penerima</caption>
+                    <caption class="sr-only">Daftar akun Donor, Penerima, dan Administrator</caption>
 
                     <thead class="bg-muted text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                         <tr>
@@ -121,7 +140,7 @@
 
                                 <td class="whitespace-nowrap px-6 py-4">
                                     <span class="inline-flex items-center rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-medium">
-                                        {{ ucfirst($user->role->value) }}
+                                        {{ $roleLabels[$user->role->value] ?? ucfirst($user->role->value) }}
                                     </span>
                                 </td>
 
@@ -137,37 +156,52 @@
                                 </td>
 
                                 <td class="whitespace-nowrap px-6 py-4 text-right">
-                                    @if ($user->status_akun === \App\Enums\AccountStatus::Menunggu)
+                                    <div class="flex flex-wrap items-center justify-end gap-3">
+                                        @if ($user->hasRole(\App\Enums\Role::Donor, \App\Enums\Role::Penerima) && $user->status_akun === \App\Enums\AccountStatus::Menunggu)
+                                            <a
+                                                href="{{ route('admin.verifications.show', $user) }}"
+                                                class="font-medium text-primary hover:text-primary/80"
+                                            >
+                                                Tinjau
+                                            </a>
+                                        @endif
+
+                                        @if ($user->hasRole(\App\Enums\Role::Donor, \App\Enums\Role::Penerima) && $user->status_akun === \App\Enums\AccountStatus::Aktif)
+                                            <form
+                                                method="POST"
+                                                action="{{ route('admin.users.block', $user) }}"
+                                                onsubmit="return confirm('Blokir akun {{ $user->nama }}? Akun ini tidak akan bisa masuk lagi.');"
+                                            >
+                                                @csrf
+                                                <button type="submit" dusk="block-user-{{ $user->id }}" class="font-medium text-destructive hover:text-destructive/80">
+                                                    Blokir
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        @if ($user->status_akun === \App\Enums\AccountStatus::Diblokir)
+                                            <span class="text-xs font-medium text-muted-foreground">Sudah diblokir</span>
+                                        @endif
+
                                         <a
-                                            href="{{ route('admin.verifications.show', $user) }}"
-                                            class="inline-flex items-center gap-1 rounded-md border border-input bg-card px-3 py-2 text-sm font-medium transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                            href="{{ route('admin.users.edit', $user) }}"
+                                            class="font-medium text-primary hover:text-primary/80"
                                         >
-                                            Tinjau
-                                            <x-icon name="chevron-right" class="h-4 w-4" />
+                                            Ubah
                                         </a>
-                                    @elseif ($user->status_akun === \App\Enums\AccountStatus::Aktif)
+
                                         <form
                                             method="POST"
-                                            action="{{ route('admin.users.block', $user) }}"
-                                            class="inline"
-                                            onsubmit="return confirm('Blokir akun {{ $user->nama }}? Akun ini tidak akan bisa masuk lagi.');"
+                                            action="{{ route('admin.users.destroy', $user) }}"
+                                            onsubmit="return confirm('Hapus akun {{ $user->nama }}? Tindakan ini tidak dapat dibatalkan.');"
                                         >
                                             @csrf
-
-                                            <button
-                                                type="submit"
-                                                dusk="block-user-{{ $user->id }}"
-                                                class="inline-flex items-center gap-1 rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2"
-                                            >
-                                                <x-icon name="lock" class="h-4 w-4" />
-                                                Blokir
+                                            @method('DELETE')
+                                            <button type="submit" dusk="delete-user-{{ $user->id }}" class="font-medium text-destructive hover:text-destructive/80">
+                                                Hapus
                                             </button>
                                         </form>
-                                    @elseif ($user->status_akun === \App\Enums\AccountStatus::Diblokir)
-                                        <span class="text-xs font-medium text-muted-foreground">Sudah diblokir</span>
-                                    @else
-                                        <span class="text-muted-foreground">—</span>
-                                    @endif
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -175,9 +209,11 @@
                 </table>
             </div>
 
-            <div class="border-t border-border px-6 py-4">
-                {{ $users->links() }}
-            </div>
-        @endif
-    </div>
+            @if ($users->hasPages())
+                <div class="border-t border-border px-6 py-4">
+                    {{ $users->onEachSide(1)->links() }}
+                </div>
+            @endif
+        </div>
+    @endif
 </x-app-layout>
