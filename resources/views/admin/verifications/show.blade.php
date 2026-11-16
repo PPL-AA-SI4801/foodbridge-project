@@ -1,4 +1,16 @@
 <x-app-layout padded title="Detail Verifikasi" :pending-verifications="$pendingVerifications">
+    @if (session('status'))
+        <div class="mb-6 rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm font-medium text-green-800" dusk="verification-status">
+            {{ session('status') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-6 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-800" dusk="verification-error">
+            {{ session('error') }}
+        </div>
+    @endif
+
     @php
         $isPending = $user->status_akun === \App\Enums\AccountStatus::Menunggu;
         $hasDocument = $user->verificationDocuments->isNotEmpty();
@@ -150,11 +162,12 @@
                             </p>
                         </div>
                     @elseif ($hasDocument)
-                        <form method="POST" action="{{ route('admin.verifications.approve', $user) }}">
+                        <form method="POST" action="{{ route('admin.verifications.approve', $user) }}" dusk="verification-approve-form">
                             @csrf
 
                             <button
                                 type="submit"
+                                dusk="verification-approve"
                                 class="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                             >
                                 <x-icon name="user-check" class="h-4 w-4" />
@@ -168,7 +181,7 @@
                             <div class="h-px flex-1 bg-border"></div>
                         </div>
 
-                        <form method="POST" action="{{ route('admin.verifications.reject', $user) }}">
+                        <form method="POST" action="{{ route('admin.verifications.reject', $user) }}" dusk="verification-reject-form">
                             @csrf
 
                             <label for="catatan" class="block text-sm font-medium">
@@ -178,6 +191,7 @@
                             <textarea
                                 id="catatan"
                                 name="catatan"
+                                dusk="verification-catatan"
                                 rows="4"
                                 required
                                 maxlength="255"
@@ -200,6 +214,7 @@
 
                             <button
                                 type="submit"
+                                dusk="verification-reject"
                                 class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md bg-destructive px-4 py-2.5 text-sm font-medium text-destructive-foreground transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2"
                             >
                                 <x-icon name="x" class="h-4 w-4" />
