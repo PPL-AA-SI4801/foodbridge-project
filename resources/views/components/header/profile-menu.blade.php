@@ -13,13 +13,24 @@
         aria-haspopup="true"
         aria-controls="profile-menu-dropdown"
         aria-label="Menu profil {{ $menuName }}"
-        class="flex items-center gap-2 rounded-md px-1.5 py-1 text-sm transition-colors hover:bg-accent"
+        class="flex items-center gap-3 rounded-[8px] border border-[#e8e9e8] bg-white p-0 transition-colors hover:bg-sidebar-accent"
     >
-        <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-            {{ str($menuName)->substr(0, 1)->upper() }}
-        </span>
-        <span class="hidden max-w-44 truncate text-sm font-medium sm:block">{{ $menuName }}</span>
-        <x-icon name="chevron-down" class="h-4 w-4 text-muted-foreground" />
+        <img
+            src="{{ asset('icons/premium.svg') }}"
+            alt=""
+            class="h-[42px] w-[42px] shrink-0"
+        >
+
+        <div class="flex min-w-0 flex-col gap-[5px] pr-3">
+            <span class="truncate text-[14px] font-semibold leading-[normal] text-[#0d1c2e]">
+                {{ $menuName }}
+            </span>
+            <span class="truncate text-[12px] font-normal leading-[1.5] text-sidebar-muted">
+                {{ auth()->user()->email }}
+            </span>
+        </div>
+
+        <x-icon name="chevron-down" class="mr-3 h-4 w-4 shrink-0 text-sidebar-muted" />
     </button>
 
     <div id="profile-menu-dropdown" x-show="open" x-cloak @click.outside="open = false" class="absolute right-0 z-50 mt-2">

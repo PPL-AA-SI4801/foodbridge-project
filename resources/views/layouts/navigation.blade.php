@@ -20,12 +20,24 @@
                         <x-nav-link :href="route('donor.food-posts.index')" :active="request()->routeIs('donor.food-posts.*')">
                             {{ __('Posting Makanan') }}
                         </x-nav-link>
+
+                        @if (\Illuminate\Support\Facades\Route::has('donor.claims.index'))
+                            <x-nav-link :href="route('donor.claims.index')" :active="request()->routeIs('donor.claims.*')">
+                                {{ __('Klaim Masuk') }}
+                            </x-nav-link>
+                        @endif
                     @endif
 
                     @if (\Illuminate\Support\Facades\Route::has('recipient.catalog.index') && auth()->user()->hasRole(\App\Enums\Role::Penerima))
                         <x-nav-link :href="route('recipient.catalog.index')" :active="request()->routeIs('recipient.catalog.*')">
                             {{ __('Katalog Makanan') }}
                         </x-nav-link>
+
+                        @if (\Illuminate\Support\Facades\Route::has('recipient.claims.index'))
+                            <x-nav-link :href="route('recipient.claims.index')" :active="request()->routeIs('recipient.claims.*')">
+                                {{ __('Klaim Saya') }}
+                            </x-nav-link>
+                        @endif
                     @endif
                 </div>
             </div>
@@ -91,12 +103,24 @@
                 <x-responsive-nav-link :href="route('donor.food-posts.index')" :active="request()->routeIs('donor.food-posts.*')">
                     {{ __('Posting Makanan') }}
                 </x-responsive-nav-link>
+
+                @if (\Illuminate\Support\Facades\Route::has('donor.claims.index'))
+                    <x-responsive-nav-link :href="route('donor.claims.index')" :active="request()->routeIs('donor.claims.*')">
+                        {{ __('Klaim Masuk') }}
+                    </x-responsive-nav-link>
+                @endif
             @endif
 
             @if (\Illuminate\Support\Facades\Route::has('recipient.catalog.index') && auth()->user()->hasRole(\App\Enums\Role::Penerima))
                 <x-responsive-nav-link :href="route('recipient.catalog.index')" :active="request()->routeIs('recipient.catalog.*')">
                     {{ __('Katalog Makanan') }}
                 </x-responsive-nav-link>
+
+                @if (\Illuminate\Support\Facades\Route::has('recipient.claims.index'))
+                    <x-responsive-nav-link :href="route('recipient.claims.index')" :active="request()->routeIs('recipient.claims.*')">
+                        {{ __('Klaim Saya') }}
+                    </x-responsive-nav-link>
+                @endif
             @endif
         </div>
 
