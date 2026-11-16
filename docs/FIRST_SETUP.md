@@ -190,6 +190,39 @@ Sign in at <http://localhost:8000/login>; a successful sign-in lands on the dash
 
 Sign-in is refused while `status_akun` is `menunggu` (waiting for verification), `ditolak` (registration rejected), or `diblokir` (blocked after approval), each with its own message on the sign-in page. Only new registrations start as `menunggu` — the seeded accounts are already `aktif`.
 
+### Dusk test database (`foodbridge_dusk`)
+
+Browser tests (Laravel Dusk, `tests/Browser/`) never touch the dev `foodbridge` database. They load `.env.dusk.local` and run against a separate `foodbridge_dusk` database.
+
+1. Create the env file from the template (`.env.dusk.local` is gitignored — never commit it):
+
+   ```powershell
+   copy .env.dusk.local.example .env.dusk.local   # Windows (cmd)
+   cp .env.dusk.local.example .env.dusk.local     # Unix / macOS / Git Bash
+   ```
+
+   Then fill in `APP_KEY` (`php artisan key:generate --env=dusk.local`), `DB_PASSWORD`, and `DUSK_CHROME_BINARY` (absolute path to Chrome/Chromedriver on your machine).
+2. Create the empty database (same credentials as Step 3, database name `foodbridge_dusk`):
+
+   ```sql
+   CREATE DATABASE foodbridge_dusk CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   ```
+
+3. Build its schema — never point this at `foodbridge`:
+
+   ```powershell
+   php artisan migrate --env=dusk.local --force
+   ```
+
+4. Run the browser suite (needs `php artisan serve --env=dusk.local` on <http://localhost:8000> in another terminal):
+
+   ```powershell
+   php artisan dusk --env=dusk.local
+   php artisan dusk tests/Browser/AuthenticationTest.php --env=dusk.local   # single file
+   ```
+
+> Linux socket note: the example uses `DB_HOST=localhost` + `DB_SOCKET=/var/run/mysqld/mysqld.sock` (TCP is commonly disabled). On Laragon/XAMPP (Windows) use `DB_HOST=127.0.0.1`, port `3306`, and leave `DB_SOCKET` empty.
+
 ### Registration
 
 Open <http://localhost:8000/register> to create a donor or recipient account. Registration is a two-step form:
