@@ -31,12 +31,19 @@ abstract class DuskTestCase extends BaseTestCase
             $this->shouldStartMaximized() ? '--start-maximized' : '--window-size=1920,1080',
             '--disable-search-engine-choice-screen',
             '--disable-smooth-scrolling',
+            '--no-sandbox',
+            '--disable-dev-shm-usage',
         ])->unless($this->hasHeadlessDisabled(), function (Collection $items) {
             return $items->merge([
                 '--disable-gpu',
                 '--headless=new',
             ]);
         })->all());
+
+        $chromeBinary = env('DUSK_CHROME_BINARY') ?: getenv('DUSK_CHROME_BINARY') ?: null;
+        if (is_string($chromeBinary) && $chromeBinary !== '' && is_file($chromeBinary)) {
+            $options->setBinary($chromeBinary);
+        }
 
         return RemoteWebDriver::create(
             $_ENV['DUSK_DRIVER_URL'] ?? env('DUSK_DRIVER_URL') ?? 'http://localhost:9515',

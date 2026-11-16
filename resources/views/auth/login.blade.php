@@ -23,7 +23,7 @@
         <div>
             <label for="email" class="block text-sm font-medium text-foreground">{{ __('Alamat Email') }}</label>
             <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username"
-                    placeholder="nama@email.com" spellcheck="false"
+                    placeholder="nama@email.com" spellcheck="false" dusk="login-email"
                     class="mt-1.5 block w-full rounded-md border border-input bg-white px-3.5 py-2.5 text-sm text-foreground shadow-none transition-[border-color,box-shadow] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
@@ -33,13 +33,13 @@
             <label for="password" class="block text-sm font-medium text-foreground">{{ __('Kata Sandi') }}</label>
 
             <div class="mt-1.5">
-                <x-password-input id="password" name="password" autocomplete="current-password" required />
+                <x-password-input id="password" name="password" autocomplete="current-password" required dusk="login-password" />
             </div>
 
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
-        <x-button type="submit" size="md" class="btn-block">
+        <x-button type="submit" size="md" class="btn-block" dusk="login-submit">
             <x-slot:icon>
                 <x-icon name="log-in" />
             </x-slot:icon>

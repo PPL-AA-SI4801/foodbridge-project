@@ -108,7 +108,7 @@
                     <div class="mt-3 grid gap-3 sm:grid-cols-2">
                         <label class="relative flex cursor-pointer items-start gap-3 rounded-md border p-3.5 transition-[border-color,background-color,box-shadow] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary has-[:focus-visible]:ring-offset-2"
                                 :class="role === 'donor' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-input bg-white hover:border-primary/40'">
-                            <input type="radio" name="role" value="donor" x-model="role"
+                            <input type="radio" name="role" value="donor" x-model="role" dusk="register-role-donor"
                                     @checked($selectedRole === 'donor') required class="sr-only">
 
                             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors duration-150"
@@ -129,7 +129,7 @@
 
                         <label class="relative flex cursor-pointer items-start gap-3 rounded-md border p-3.5 transition-[border-color,background-color,box-shadow] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary has-[:focus-visible]:ring-offset-2"
                                 :class="role === 'penerima' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-input bg-white hover:border-primary/40'">
-                            <input type="radio" name="role" value="penerima" x-model="role"
+                            <input type="radio" name="role" value="penerima" x-model="role" dusk="register-role-penerima"
                                     @checked($selectedRole === 'penerima') required class="sr-only">
 
                             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors duration-150"
@@ -157,7 +157,7 @@
                     <div class="sm:col-span-2">
                         <label for="nama" class="{{ $labelClass }}">{{ __('Nama lengkap') }}</label>
                         <input id="nama" type="text" name="nama" value="{{ old('nama') }}" required
-                                @if ($startStep === 1) autofocus @endif autocomplete="name"
+                                @if ($startStep === 1) autofocus @endif autocomplete="name" dusk="register-nama"
                                 placeholder="{{ __('Nama Anda') }}" class="{{ $inputClass }}" />
                         <x-input-error :messages="$errors->get('nama')" class="mt-2" />
                     </div>
@@ -166,7 +166,7 @@
                     <div>
                         <label for="email" class="{{ $labelClass }}">{{ __('Alamat Email') }}</label>
                         <input id="email" type="email" name="email" value="{{ old('email') }}" required
-                                autocomplete="username" spellcheck="false" placeholder="nama@email.com"
+                                autocomplete="username" spellcheck="false" placeholder="nama@email.com" dusk="register-email"
                                 class="{{ $inputClass }}" />
                         <x-input-error :messages="$errors->get('email')" class="mt-2" />
                     </div>
@@ -175,7 +175,7 @@
                     <div>
                         <label for="no_hp" class="{{ $labelClass }}">{{ __('Nomor HP') }}</label>
                         <input id="no_hp" type="tel" name="no_hp" value="{{ old('no_hp') }}" required maxlength="20"
-                                autocomplete="tel" placeholder="08xx xxxx xxxx" class="{{ $inputClass }}" />
+                                autocomplete="tel" placeholder="08xx xxxx xxxx" class="{{ $inputClass }}" dusk="register-no-hp" />
                         <x-input-error :messages="$errors->get('no_hp')" class="mt-2" />
                     </div>
 
@@ -186,7 +186,7 @@
                             <span class="text-xs text-muted-foreground">{{ __('Minimal 8 karakter') }}</span>
                         </div>
                         <div class="mt-1.5">
-                            <x-password-input id="password" name="password" autocomplete="new-password" minlength="8" required />
+                            <x-password-input id="password" name="password" autocomplete="new-password" minlength="8" required dusk="register-password" />
                         </div>
                         <x-input-error :messages="$errors->get('password')" class="mt-2" />
                     </div>
@@ -195,7 +195,7 @@
                     <div>
                         <label for="password_confirmation" class="{{ $labelClass }}">{{ __('Konfirmasi Kata Sandi') }}</label>
                         <div class="mt-1.5">
-                            <x-password-input id="password_confirmation" name="password_confirmation" autocomplete="new-password" minlength="8" required />
+                            <x-password-input id="password_confirmation" name="password_confirmation" autocomplete="new-password" minlength="8" required dusk="register-password-confirmation" />
                         </div>
                         <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                     </div>
@@ -208,7 +208,7 @@
                         <span class="font-medium text-primary">{{ __('Masuk') }}</span>
                     </a>
 
-                    <x-button type="button" size="md" class="order-1 sm:order-2 self-start" @click="advance()">
+                    <x-button type="button" size="md" class="order-1 sm:order-2 self-start" @click="advance()" dusk="register-next">
                         {{ __('Lanjut') }}
                     </x-button>
                 </div>
@@ -223,7 +223,7 @@
                     <div x-show="role === 'donor'" x-cloak class="grid gap-4 sm:col-span-2 sm:grid-cols-2">
                         <div>
                             <label for="nama_usaha" class="{{ $labelClass }}">{{ __('Nama usaha') }}</label>
-                            <input id="nama_usaha" type="text" name="nama_usaha" value="{{ old('nama_usaha') }}"
+                            <input id="nama_usaha" type="text" name="nama_usaha" value="{{ old('nama_usaha') }}" dusk="register-nama-usaha"
                                     x-bind:disabled="role !== 'donor'" x-bind:required="role === 'donor'"
                                     placeholder="{{ __('Contoh: Dapur Berkah') }}" class="{{ $inputClass }}" />
                             <x-input-error :messages="$errors->get('nama_usaha')" class="mt-2" />
@@ -231,7 +231,7 @@
 
                         <div>
                             <label for="jenis_usaha" class="{{ $labelClass }}">{{ __('Jenis usaha') }}</label>
-                            <input id="jenis_usaha" type="text" name="jenis_usaha" value="{{ old('jenis_usaha') }}"
+                            <input id="jenis_usaha" type="text" name="jenis_usaha" value="{{ old('jenis_usaha') }}" dusk="register-jenis-usaha"
                                     x-bind:disabled="role !== 'donor'" x-bind:required="role === 'donor'"
                                     placeholder="{{ __('Contoh: Restoran') }}" class="{{ $inputClass }}" />
                             <x-input-error :messages="$errors->get('jenis_usaha')" class="mt-2" />
@@ -242,7 +242,7 @@
                     <div x-show="role === 'penerima'" x-cloak class="grid gap-4 sm:col-span-2 sm:grid-cols-2">
                         <div>
                             <label for="nama_lembaga" class="{{ $labelClass }}">{{ __('Nama lembaga') }}</label>
-                            <input id="nama_lembaga" type="text" name="nama_lembaga" value="{{ old('nama_lembaga') }}"
+                            <input id="nama_lembaga" type="text" name="nama_lembaga" value="{{ old('nama_lembaga') }}" dusk="register-nama-lembaga"
                                     x-bind:disabled="role !== 'penerima'" x-bind:required="role === 'penerima'"
                                     placeholder="{{ __('Contoh: Panti Asuhan Harapan') }}" class="{{ $inputClass }}" />
                             <x-input-error :messages="$errors->get('nama_lembaga')" class="mt-2" />
@@ -250,7 +250,7 @@
 
                         <div>
                             <label for="jenis_lembaga" class="{{ $labelClass }}">{{ __('Jenis lembaga') }}</label>
-                            <input id="jenis_lembaga" type="text" name="jenis_lembaga" value="{{ old('jenis_lembaga') }}"
+                            <input id="jenis_lembaga" type="text" name="jenis_lembaga" value="{{ old('jenis_lembaga') }}" dusk="register-jenis-lembaga"
                                     x-bind:disabled="role !== 'penerima'" x-bind:required="role === 'penerima'"
                                     placeholder="{{ __('Contoh: Yayasan') }}" class="{{ $inputClass }}" />
                             <x-input-error :messages="$errors->get('jenis_lembaga')" class="mt-2" />
@@ -261,7 +261,7 @@
                     <div class="sm:col-span-2">
                         <label for="alamat" class="{{ $labelClass }}">{{ __('Alamat') }}</label>
                         <input id="alamat" type="text" name="alamat" value="{{ old('alamat') }}" required
-                                autocomplete="street-address" placeholder="{{ __('Jl. Contoh No. 1, Kota') }}"
+                                autocomplete="street-address" placeholder="{{ __('Jl. Contoh No. 1, Kota') }}" dusk="register-alamat"
                                 class="{{ $inputClass }}" />
                         <x-input-error :messages="$errors->get('alamat')" class="mt-2" />
                     </div>
@@ -272,7 +272,7 @@
                     <div>
                         <label for="jenis_dokumen" class="{{ $labelClass }}">{{ __('Jenis dokumen') }}</label>
                         <div class="relative">
-                            <select id="jenis_dokumen" name="jenis_dokumen" required class="{{ $selectClass }}">
+                            <select id="jenis_dokumen" name="jenis_dokumen" required class="{{ $selectClass }}" dusk="register-jenis-dokumen">
                                 <option value="" disabled @selected(old('jenis_dokumen') === null)>{{ __('Pilih jenis dokumen') }}</option>
                                 @foreach ([
                                     'nib' => 'NIB',
@@ -291,7 +291,7 @@
                     <div>
                         <label for="dokumen" class="{{ $labelClass }}">{{ __('Berkas dokumen') }}</label>
                         <input id="dokumen" name="dokumen" type="file" accept=".pdf,.jpg,.jpeg,.png" required
-                                class="{{ $fileClass }}" />
+                                dusk="register-dokumen" class="{{ $fileClass }}" />
                         <p class="mt-1.5 text-xs text-muted-foreground">{{ __('PDF, JPG, atau PNG. Maks. 2 MB.') }}</p>
                         <x-input-error :messages="$errors->get('dokumen')" class="mt-2" />
                     </div>
@@ -303,11 +303,11 @@
                 </div>
 
                 <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
-                    <x-button type="button" size="md" class="btn-block sm:w-auto btn-secondary" @click="retreat()">
+                    <x-button type="button" size="md" class="btn-block sm:w-auto btn-secondary" @click="retreat()" dusk="register-back">
                         {{ __('Kembali') }}
                     </x-button>
 
-                    <x-button type="submit" size="md" class="btn-block sm:w-auto">
+                    <x-button type="submit" size="md" class="btn-block sm:w-auto" dusk="register-submit">
                         {{ __('Daftar') }}
                     </x-button>
                 </div>
