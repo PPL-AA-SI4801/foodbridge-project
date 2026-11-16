@@ -15,6 +15,7 @@
         "@types/node": "^26.6.5",
         "alpinejs": "^3.4.2",
         "concurrently": "^10.0.3",
+        "fontaine": "^0.8.2",
         "laravel-vite-plugin": "^3.1",
         "path": "^0.12.7",
         "tailwindcss": "^4.0.0",

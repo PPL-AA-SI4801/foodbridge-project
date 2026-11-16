@@ -1,18 +1,21 @@
 @props([
     'title' => null,
     'displayName' => null,
-    'maxWidth' => 'max-w-7xl',
+    'maxWidth' => null,
     'stickyHeader' => false,
     'sidebar' => null,
+    'padded' => false,
 ])
 
 @php
     $user = auth()->user();
-    $dashboardRoute = $user->dashboardRouteName();
     $displayName = $displayName ?? $user->profileName();
-    $roleLabel = $user->hasRole(\App\Enums\Role::Donor)
-        ? 'Donor Hub'
-        : ($user->hasRole(\App\Enums\Role::Penerima) ? 'Penerima / Yayasan' : null);
+    $isDonor = $user->hasRole(\App\Enums\Role::Donor);
+    $isRecipient = $user->hasRole(\App\Enums\Role::Penerima);
+    $roleLabel = $isDonor ? 'Donor Hub' : ($isRecipient ? 'Penerima / Yayasan' : null);
+    $greetingRole = $isDonor ? 'Donor' : ($isRecipient ? 'Penerima' : ($user->hasRole(\App\Enums\Role::Administrator) ? 'Admin' : null));
+    $title = $title ?: ($greetingRole ? 'Selamat Datang, '.$greetingRole.' 👋' : null);
+    $sidebarId = $user->hasRole(\App\Enums\Role::Administrator) ? 'admin-sidebar' : 'app-sidebar';
 @endphp
 
 <!DOCTYPE html>
@@ -26,7 +29,7 @@
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -34,9 +37,29 @@
     <body class="bg-background font-sans text-foreground antialiased">
         <div
             class="flex min-h-screen"
-            x-data="{ sidebarOpen: false }"
+            x-data="{
+                sidebarOpen: false,
+                navQuery: '',
+                navMatches(label) {
+                    const query = this.navQuery.trim().toLowerCase();
+
+                    return query === '' || label.toLowerCase().includes(query);
+                },
+                navSectionHasMatches(el) {
+                    return Array.from(el.querySelectorAll('[data-nav-label]'))
+                        .some((item) => this.navMatches(item.dataset.navLabel));
+                },
+                navHasMatches(el) {
+                    const nav = el.closest('nav');
+
+                    return Array.from((nav ?? document).querySelectorAll('[data-nav-label]'))
+                        .some((item) => this.navMatches(item.dataset.navLabel));
+                },
+            }"
             @close-sidebar.window="sidebarOpen = false"
             @keydown.escape.window="sidebarOpen = false"
+            @keydown.window.cmd.k.prevent="$refs.navSearch.focus()"
+            @keydown.window.ctrl.k.prevent="$refs.navSearch.focus()"
             @resize.window="if (window.innerWidth >= 1024) sidebarOpen = false"
         >
             {{-- Latar gelap untuk sidebar versi mobile --}}
@@ -48,96 +71,65 @@
                 aria-hidden="true"
             ></div>
 
-            <x-layout.sidebar id="app-sidebar">
-                @if (isset($sidebar))
-                    {{ $sidebar }}
-                @else
-                    <x-layout.sidebar-link
-                        :href="route($dashboardRoute)"
-                        :active="request()->routeIs($dashboardRoute)"
+            @if (isset($sidebar))
+                {{ $sidebar }}
+            @elseif ($isDonor || $isRecipient)
+                <x-layout.sidebar id="app-sidebar" :label="$isDonor ? 'Navigasi donor' : 'Navigasi penerima'">
+                    @if ($isDonor)
+                        <x-donor.sidebar />
+                    @else
+                        <x-recipient.sidebar />
+                    @endif
+                </x-layout.sidebar>
+            @else
+                <x-admin.sidebar />
+            @endif
+
+            <div class="flex min-w-0 flex-1 flex-col bg-background p-2 lg:p-4 lg:pl-0">
+                <div data-content-surface class="flex min-h-[calc(100vh-2rem)] flex-1 flex-col overflow-clip rounded-[10px] border border-[#e8e9e8] bg-white lg:min-h-[calc(100vh-2rem)]">
+                    <x-layout.header
+                        :title="$title"
+                        :role-label="$roleLabel"
+                        :display-name="$displayName"
+                        :max-width="$maxWidth"
+                        :sticky="$stickyHeader"
                     >
-                        <x-slot name="icon">
-                            <x-icon name="layout-dashboard" class="h-4 w-4" />
+                        <x-slot name="sidebarToggle">
+                            <button
+                                type="button"
+                                @click="sidebarOpen = true"
+                                x-bind:aria-expanded="sidebarOpen"
+                                class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
+                                aria-label="Buka menu"
+                                aria-controls="{{ $sidebarId }}"
+                            >
+                                <x-icon name="menu" class="h-5 w-5" />
+                            </button>
                         </x-slot>
-                        Dashboard
-                    </x-layout.sidebar-link>
 
-                    @if (\Illuminate\Support\Facades\Route::has('donor.food-posts.index') && $user->hasRole(\App\Enums\Role::Donor))
-                        <x-layout.sidebar-link
-                            :href="route('donor.food-posts.index')"
-                            :active="request()->routeIs('donor.food-posts.*')"
-                        >
-                            <x-slot name="icon">
-                                <x-icon name="utensils-crossed" class="h-4 w-4" />
+                        @isset($headerActions)
+                            <x-slot name="actions">
+                                {{ $headerActions }}
                             </x-slot>
-                            Posting Makanan
-                        </x-layout.sidebar-link>
-                    @endif
+                        @endisset
 
-                    @if (\Illuminate\Support\Facades\Route::has('recipient.catalog.index') && $user->hasRole(\App\Enums\Role::Penerima))
-                        <x-layout.sidebar-link
-                            :href="route('recipient.catalog.index')"
-                            :active="request()->routeIs('recipient.catalog.*')"
-                        >
-                            <x-slot name="icon">
-                                <x-icon name="package" class="h-4 w-4" />
+                        @isset($status)
+                            <x-slot name="status">
+                                {{ $status }}
                             </x-slot>
-                            Katalog Makanan
-                        </x-layout.sidebar-link>
-                    @endif
+                        @endisset
+                    </x-layout.header>
 
-                    @if (\Illuminate\Support\Facades\Route::has('profile.edit'))
-                        <x-layout.sidebar-link
-                            :href="route('profile.edit')"
-                            :active="request()->routeIs('profile.*')"
-                        >
-                            <x-slot name="icon">
-                                <x-icon name="user" class="h-4 w-4" />
-                            </x-slot>
-                            Profil Saya
-                        </x-layout.sidebar-link>
-                    @endif
-                @endif
-            </x-layout.sidebar>
-
-            <div class="flex min-w-0 flex-1 flex-col">
-                <x-layout.header
-                    :max-width="$maxWidth"
-                    :sticky="$stickyHeader"
-                    :hide-logo-on-desktop="true"
-                    :role-label="$roleLabel"
-                >
-                    <x-slot name="sidebarToggle">
-                        <button
-                            type="button"
-                            @click="sidebarOpen = true"
-                            x-bind:aria-expanded="sidebarOpen"
-                            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
-                            aria-label="Buka menu"
-                            aria-controls="app-sidebar"
-                        >
-                            <x-icon name="menu" class="h-5 w-5" />
-                        </button>
-                    </x-slot>
-
-                    @isset($headerActions)
-                        {{ $headerActions }}
+                    @isset($pageHeader)
+                        <x-layout.page-header :max-width="$maxWidth">
+                            {{ $pageHeader }}
+                        </x-layout.page-header>
                     @endisset
 
-                    <x-header.notifications />
-
-                    <x-header.profile-menu :display-name="$displayName" />
-                </x-layout.header>
-
-                @isset($pageHeader)
-                    <x-layout.page-header :max-width="$maxWidth">
-                        {{ $pageHeader }}
-                    </x-layout.page-header>
-                @endisset
-
-                <main class="flex-1">
-                    {{ $slot }}
-                </main>
+                    <main @class(['flex-1', 'p-4' => $padded])>
+                        {{ $slot }}
+                    </main>
+                </div>
             </div>
         </div>
     </body>

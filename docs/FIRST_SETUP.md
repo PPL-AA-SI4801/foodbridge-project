@@ -190,15 +190,15 @@ Sign in at <http://localhost:8000/login>; a successful sign-in lands on the dash
 
 Sign-in is refused while `status_akun` is `menunggu` (waiting for verification), `ditolak` (registration rejected), or `diblokir` (blocked after approval), each with its own message on the sign-in page. Only new registrations start as `menunggu` — the seeded accounts are already `aktif`.
 
-Forgot a password? **Forgot your password?** emails a reset link. In development `MAIL_MAILER=log`, so the link is written to `storage/logs/laravel.log` instead of being sent.
-
 ### Registration
 
-Open <http://localhost:8000/register> to create a donor or recipient account:
+Open <http://localhost:8000/register> to create a donor or recipient account. Registration is a two-step form:
 
-1. Choose **Donor** (business) or **Penerima** (institution); the form shows that role's profile fields.
-2. Fill in the account and profile details, choose a document type, and upload one legality document.
+1. **Akun** — choose **Donor** (business) or **Penerima** (institution), then enter your name, email, phone number, and password. **Lanjut** validates this step before continuing.
+2. **Profil** — fill in the profile fields for the chosen role, the address, choose a document type, and upload one legality document. **Kembali** returns to step 1 without losing input.
 3. Submit. You return to the sign-in page with a notice that the account is waiting for verification.
+
+If the server rejects a field, the form reopens on the step that contains the error.
 
 New accounts are always created with `status_akun = menunggu` and **cannot sign in until an administrator verifies them**. The sign-in page says the account is waiting for verification.
 
@@ -210,7 +210,16 @@ Administrator verification flow:
 4. Choose **Setujui Pendaftaran** to set the account to `aktif`; the applicant can then sign in and reach their role dashboard.
 5. Or choose **Tolak Pendaftaran** and enter a reason (required, up to 255 characters); the account becomes `ditolak` and the applicant cannot sign in.
 
-The administrator decision updates the account status and all pending legality documents together. `diblokir` remains a supported account status for the access gate, but blocking or unblocking active accounts is a later feature.
+The administrator decision updates the account status and all pending legality documents together.
+
+Administrator blocking flow:
+
+1. Sign in as the administrator and open **Pengguna** in the administrator menu, or `/admin/users`.
+2. Search for an active Donor or Penerima account and choose **Blokir**.
+3. Confirm the dialog. The account becomes `diblokir`, receives an in-app account notification, and any active browser session is ended immediately.
+4. The blocked account can no longer sign in and sees the blocked-account message on the sign-in page.
+
+Blocking is one-way for now; unblocking active accounts is not implemented. The demo data includes `donor-blocked@foodbridge.test` and `penerima-blocked@foodbridge.test` for checking the blocked-account state.
 
 **Upload rules:** one PDF, JPG, JPEG, or PNG file, at most **2 MB**. Legality documents are stored privately under `storage/app/private/verification-documents/{user_id}/` and are never served from `public/`. Email addresses and business/institution names must be unique, and passwords need at least 8 characters.
 

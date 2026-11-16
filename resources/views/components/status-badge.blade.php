@@ -16,6 +16,11 @@ $map = [
     'ditinjau' => ['label' => 'Ditinjau', 'class' => 'bg-[#FCE7F3] text-[#9D174D] border-[#F9A8D4]'],
     'aktif' => ['label' => 'Aktif', 'class' => 'bg-[#D97736] text-[#111816] border-[#D97736]'],
     'diblokir' => ['label' => 'Diblokir', 'class' => 'bg-[#111816] text-white border-[#111816]'],
+    'open' => ['label' => 'Terbuka', 'class' => 'bg-[#FEF9C3] text-[#854D0E] border-[#FDE047]'],
+    'in_progress' => ['label' => 'Sedang Diproses', 'class' => 'bg-[#DBEAFE] text-[#1E40AF] border-[#93C5FD]'],
+    'fulfilled' => ['label' => 'Terpenuhi', 'class' => 'bg-[#DCFCE7] text-[#166534] border-[#86EFAC]'],
+    'expired' => ['label' => 'Kedaluwarsa', 'class' => 'bg-[#E5E7EB] text-[#374151] border-[#D1D5DB]'],
+    'cancelled' => ['label' => 'Dibatalkan', 'class' => 'bg-[#F3E8FF] text-[#6B21A8] border-[#D8B4FE]'],
 ];
 
 $item = $map[$value] ?? ['label' => ucfirst($value), 'class' => 'bg-muted text-foreground border-border'];

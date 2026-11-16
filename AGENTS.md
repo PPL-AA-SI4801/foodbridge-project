@@ -45,3 +45,10 @@ php artisan boost:install
 
 Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
 </laravel-boost-guidelines>
+
+## PR Merge Rules (for agents)
+
+Before opening or merging a PR, ensure the merge criteria in `CONTRIBUTING.md` are met:
+idempotent hand-written data seeder present, Laravel Dusk/browser tests written and passing,
+Jira-keyed commit messages, `php artisan test` green, and no debug code.
+Declare the PR state (still in progress / ready for review / ready to merge) in the PR template.

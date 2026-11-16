@@ -35,7 +35,7 @@ class ProfileUpdateRequest extends FormRequest
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
             'no_hp' => ['required', 'string', 'max:20'],
             'password' => ['nullable', 'confirmed'],
-            'current_password' => ['required_with:password', 'current_password'],
+            'current_password' => ['nullable', 'required_with:password', 'current_password'],
             'alamat' => ['required', 'string', 'max:255'],
             'lat' => ['nullable', 'numeric', 'between:-90,90', 'required_with:lng'],
             'lng' => ['nullable', 'numeric', 'between:-180,180', 'required_with:lat'],

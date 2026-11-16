@@ -1,14 +1,15 @@
 @php
     $post = $foodPost ?? null;
+    $prefill = $prefillRequest ?? null;
     $isCreate = $post === null;
-    $currentJudul = old('judul', $post?->judul);
-    $currentDeskripsi = old('deskripsi', $post?->deskripsi ?? '');
-    $currentJumlahPorsi = old('jumlah_porsi', $post?->jumlah_porsi ?? 1);
+    $currentJudul = old('judul', $post?->judul ?? $prefill?->judul);
+    $currentDeskripsi = old('deskripsi', $post?->deskripsi ?? $prefill?->deskripsi ?? '');
+    $currentJumlahPorsi = old('jumlah_porsi', $post?->jumlah_porsi ?? $prefill?->jumlah_porsi ?? 1);
     $currentAlamat = old('alamat', $post?->alamat ?? $donor->alamat);
     $currentLat = old('lat', $post?->lat ?? $donor->lat);
     $currentLng = old('lng', $post?->lng ?? $donor->lng);
-    $currentBatasKonsumsi = old('batas_konsumsi', $post?->batas_konsumsi?->format('Y-m-d\TH:i'));
-    $currentCategoryId = old('category_id', $post?->category_id);
+    $currentBatasKonsumsi = old('batas_konsumsi', $post?->batas_konsumsi?->format('Y-m-d\TH:i') ?? $prefill?->batas_waktu?->format('Y-m-d\TH:i'));
+    $currentCategoryId = old('category_id', $post?->category_id ?? $prefill?->category_id);
     $currentCatatanKurir = (string) old('catatan_kurir', $post?->catatan_kurir ?? '');
 
     $selectedCategory = $categories->first(
@@ -42,6 +43,24 @@
     @csrf
     @if ($method !== 'POST')
         @method($method)
+    @endif
+
+    @if ($prefill)
+        <input type="hidden" name="fulfil_request_id" value="{{ $prefill->id }}" />
+        <div class="flex items-start gap-3 rounded-2xl border border-primary/20 bg-accent px-5 py-4 text-sm text-foreground">
+            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                <x-icon name="message-square" class="h-4 w-4" />
+            </span>
+            <div class="min-w-0 flex-1">
+                <p class="font-semibold text-foreground">
+                    Memenuhi Permintaan Kebutuhan: "{{ $prefill->judul }}" ({{ $prefill->jumlah_porsi }} porsi)
+                </p>
+                <p class="mt-0.5 text-xs leading-5 text-muted-foreground">
+                    Diajukan oleh <span class="font-medium text-foreground">{{ $prefill->recipient?->nama_lembaga }}</span>.
+                    Saat postingan diterbitkan, klaim otomatis disetujui untuk penerima ini.
+                </p>
+            </div>
+        </div>
     @endif
 
     @if ($categories->isEmpty())

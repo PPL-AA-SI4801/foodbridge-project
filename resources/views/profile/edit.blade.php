@@ -15,7 +15,7 @@
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    <form method="POST" action="{{ route('profile.update') }}" class="space-y-6">
+                    <form method="POST" action="{{ route('profile.update') }}" class="space-y-6" dusk="profile-form">
                         @csrf
                         @method('PUT')
 
@@ -24,19 +24,19 @@
                             <div class="mt-4 grid gap-4 sm:grid-cols-2">
                                 <div>
                                     <x-input-label for="nama" :value="__('Nama')" />
-                                    <x-text-input id="nama" name="nama" type="text" class="mt-1 block w-full" :value="old('nama', $user->nama)" required />
+                                    <x-text-input id="nama" name="nama" type="text" class="mt-1 block w-full" :value="old('nama', $user->nama)" required dusk="profile-nama" />
                                     <x-input-error :messages="$errors->get('nama')" class="mt-2" />
                                 </div>
 
                                 <div>
                                     <x-input-label for="email" :value="__('Email')" />
-                                    <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required />
+                                    <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required dusk="profile-email" />
                                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                                 </div>
 
                                 <div>
                                     <x-input-label for="no_hp" :value="__('Nomor HP')" />
-                                    <x-text-input id="no_hp" name="no_hp" type="tel" class="mt-1 block w-full" :value="old('no_hp', $user->no_hp)" required />
+                                    <x-text-input id="no_hp" name="no_hp" type="tel" class="mt-1 block w-full" :value="old('no_hp', $user->no_hp)" required dusk="profile-no-hp" />
                                     <x-input-error :messages="$errors->get('no_hp')" class="mt-2" />
                                 </div>
                             </div>
@@ -71,32 +71,32 @@
                                 @if ($user->role === \App\Enums\Role::Donor)
                                     <div>
                                         <x-input-label for="nama_usaha" :value="__('Nama usaha')" />
-                                        <x-text-input id="nama_usaha" name="nama_usaha" type="text" class="mt-1 block w-full" :value="old('nama_usaha', $profile->nama_usaha)" required />
+                                        <x-text-input id="nama_usaha" name="nama_usaha" type="text" class="mt-1 block w-full" :value="old('nama_usaha', $profile->nama_usaha)" required dusk="profile-nama-usaha" />
                                         <x-input-error :messages="$errors->get('nama_usaha')" class="mt-2" />
                                     </div>
 
                                     <div>
                                         <x-input-label for="jenis_usaha" :value="__('Jenis usaha')" />
-                                        <x-text-input id="jenis_usaha" name="jenis_usaha" type="text" class="mt-1 block w-full" :value="old('jenis_usaha', $profile->jenis_usaha)" required />
+                                        <x-text-input id="jenis_usaha" name="jenis_usaha" type="text" class="mt-1 block w-full" :value="old('jenis_usaha', $profile->jenis_usaha)" required dusk="profile-jenis-usaha" />
                                         <x-input-error :messages="$errors->get('jenis_usaha')" class="mt-2" />
                                     </div>
                                 @else
                                     <div>
                                         <x-input-label for="nama_lembaga" :value="__('Nama lembaga')" />
-                                        <x-text-input id="nama_lembaga" name="nama_lembaga" type="text" class="mt-1 block w-full" :value="old('nama_lembaga', $profile->nama_lembaga)" required />
+                                        <x-text-input id="nama_lembaga" name="nama_lembaga" type="text" class="mt-1 block w-full" :value="old('nama_lembaga', $profile->nama_lembaga)" required dusk="profile-nama-lembaga" />
                                         <x-input-error :messages="$errors->get('nama_lembaga')" class="mt-2" />
                                     </div>
 
                                     <div>
                                         <x-input-label for="jenis_lembaga" :value="__('Jenis lembaga')" />
-                                        <x-text-input id="jenis_lembaga" name="jenis_lembaga" type="text" class="mt-1 block w-full" :value="old('jenis_lembaga', $profile->jenis_lembaga)" required />
+                                        <x-text-input id="jenis_lembaga" name="jenis_lembaga" type="text" class="mt-1 block w-full" :value="old('jenis_lembaga', $profile->jenis_lembaga)" required dusk="profile-jenis-lembaga" />
                                         <x-input-error :messages="$errors->get('jenis_lembaga')" class="mt-2" />
                                     </div>
                                 @endif
 
                                 <div class="sm:col-span-2">
                                     <x-input-label for="alamat" :value="__('Alamat')" />
-                                    <x-text-input id="alamat" name="alamat" type="text" class="mt-1 block w-full" :value="old('alamat', $profile->alamat)" required />
+                                    <x-text-input id="alamat" name="alamat" type="text" class="mt-1 block w-full" :value="old('alamat', $profile->alamat)" required dusk="profile-alamat" />
                                     <x-input-error :messages="$errors->get('alamat')" class="mt-2" />
                                 </div>
                             </div>
@@ -114,15 +114,15 @@
 
                             <div id="profile-map" class="mt-4 h-72 w-full rounded-md border border-gray-300"></div>
 
-                            <input type="hidden" id="lat" name="lat" value="{{ old('lat', $profile->lat) }}" />
-                            <input type="hidden" id="lng" name="lng" value="{{ old('lng', $profile->lng) }}" />
+                            <input type="hidden" id="lat" name="lat" value="{{ old('lat', $profile->lat) }}" dusk="profile-lat" />
+                            <input type="hidden" id="lng" name="lng" value="{{ old('lng', $profile->lng) }}" dusk="profile-lng" />
 
                             <x-input-error :messages="$errors->get('lat')" class="mt-2" />
                             <x-input-error :messages="$errors->get('lng')" class="mt-2" />
                         </div>
 
                         <div class="flex items-center justify-end">
-                            <x-primary-button>
+                            <x-primary-button dusk="profile-submit">
                                 {{ __('Simpan') }}
                             </x-primary-button>
                         </div>

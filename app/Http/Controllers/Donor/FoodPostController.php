@@ -3,14 +3,20 @@
 namespace App\Http\Controllers\Donor;
 
 use App\Enums\FoodPostStatus;
+use App\Enums\FoodRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Donor\FoodPostRequest;
+use App\Models\Claim;
 use App\Models\DonorProfile;
 use App\Models\FoodCategory;
 use App\Models\FoodPost;
+use App\Models\FoodRequest;
+use App\Models\InAppNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use RuntimeException;
 use Throwable;
@@ -45,7 +51,15 @@ class FoodPostController extends Controller
             ->orderBy('nama_kategori')
             ->get();
 
-        return view('donor.food-posts.create', compact('categories', 'donor'));
+        $prefillRequest = null;
+        if ($request->filled('request_id')) {
+            $prefillRequest = FoodRequest::query()
+                ->with(['recipient', 'category'])
+                ->openBoard()
+                ->find($request->integer('request_id'));
+        }
+
+        return view('donor.food-posts.create', compact('categories', 'donor', 'prefillRequest'));
     }
 
     /**
@@ -62,26 +76,91 @@ class FoodPostController extends Controller
             throw new RuntimeException('Foto gagal diunggah.');
         }
 
+        $fulfilledRequest = null;
+
         try {
-            FoodPost::create([
-                'judul' => $validated['judul'],
-                'deskripsi' => $validated['deskripsi'],
-                'foto' => $foto,
-                'jumlah_porsi' => $validated['jumlah_porsi'],
-                'sisa_porsi' => $validated['jumlah_porsi'],
-                'alamat' => $validated['alamat'],
-                'catatan_kurir' => $validated['catatan_kurir'] ?? null,
-                'lat' => $validated['lat'],
-                'lng' => $validated['lng'],
-                'batas_konsumsi' => $validated['batas_konsumsi'],
-                'status' => FoodPostStatus::Tersedia,
-                'donor_id' => $donor->id,
-                'category_id' => $validated['category_id'],
-            ]);
+            DB::transaction(function () use ($donor, $validated, $foto, $request, &$fulfilledRequest): void {
+                $foodPost = FoodPost::create([
+                    'judul' => $validated['judul'],
+                    'deskripsi' => $validated['deskripsi'],
+                    'foto' => $foto,
+                    'jumlah_porsi' => $validated['jumlah_porsi'],
+                    'sisa_porsi' => $validated['jumlah_porsi'],
+                    'alamat' => $validated['alamat'],
+                    'catatan_kurir' => $validated['catatan_kurir'] ?? null,
+                    'lat' => $validated['lat'],
+                    'lng' => $validated['lng'],
+                    'batas_konsumsi' => $validated['batas_konsumsi'],
+                    'status' => FoodPostStatus::Tersedia,
+                    'donor_id' => $donor->id,
+                    'category_id' => $validated['category_id'],
+                ]);
+
+                if ($request->filled('fulfil_request_id')) {
+                    $lockedRequest = FoodRequest::query()
+                        ->with('recipient')
+                        ->lockForUpdate()
+                        ->find($request->integer('fulfil_request_id'));
+
+                    if ($lockedRequest !== null && $lockedRequest->status === FoodRequestStatus::Open && ! $lockedRequest->isPastDeadline()) {
+                        $portionsToAllocate = min($lockedRequest->jumlah_porsi, $foodPost->sisa_porsi);
+
+                        $foodPost->sisa_porsi -= $portionsToAllocate;
+                        if ($foodPost->sisa_porsi === 0) {
+                            $foodPost->status = FoodPostStatus::Habis;
+                        }
+                        $foodPost->save();
+
+                        $metode = $lockedRequest->metode_penerimaan === 'diantar_kurir'
+                            ? 'kurir_online'
+                            : 'ambil_sendiri';
+
+                        $claim = Claim::create([
+                            'post_id' => $foodPost->id,
+                            'recipient_id' => $lockedRequest->recipient_id,
+                            'jumlah_porsi' => $portionsToAllocate,
+                            'status' => 'approved',
+                            'metode_pengambilan' => $metode,
+                            'kode_verifikasi' => Str::upper(Str::random(6)),
+                            'tanggal_klaim' => today(),
+                            'approved_at' => now(),
+                        ]);
+
+                        $lockedRequest->donor_id = $donor->id;
+                        $lockedRequest->claim_id = $claim->id;
+                        $lockedRequest->status = FoodRequestStatus::InProgress;
+                        $lockedRequest->save();
+
+                        if ($lockedRequest->recipient?->user_id) {
+                            InAppNotification::create([
+                                'user_id' => $lockedRequest->recipient->user_id,
+                                'judul' => 'Permintaan Makanan Anda Direspons Donatur',
+                                'pesan' => sprintf(
+                                    'Donatur %s membuat postingan "%s" (%d porsi) untuk memenuhi kebutuhan "%s" Anda. Klaim otomatis disetujui (Kode: %s).',
+                                    $donor->nama_usaha,
+                                    $foodPost->judul,
+                                    $claim->jumlah_porsi,
+                                    $lockedRequest->judul,
+                                    $claim->kode_verifikasi,
+                                ),
+                                'tipe' => 'request',
+                            ]);
+                        }
+
+                        $fulfilledRequest = $lockedRequest;
+                    }
+                }
+            });
         } catch (Throwable $exception) {
             Storage::disk('public')->delete($foto);
 
             throw $exception;
+        }
+
+        if ($fulfilledRequest !== null) {
+            return redirect()
+                ->route('donor.requests.index', ['view' => 'mine'])
+                ->with('status', 'Postingan makanan berhasil dibuat dan langsung dialokasikan untuk memenuhi permintaan penerima.');
         }
 
         return redirect()

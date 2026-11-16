@@ -8,6 +8,14 @@ use Illuminate\View\View;
 class GuestLayout extends Component
 {
     /**
+     * Create a new component instance.
+     */
+    public function __construct(public string $width = 'md')
+    {
+        //
+    }
+
+    /**
      * Get the view / contents that represents the component.
      */
     public function render(): View

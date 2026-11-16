@@ -5,6 +5,22 @@
 <!-- Jira PBI key so the PR links to the board, e.g. FB-12 -->
 Closes: PBI-
 
+## PR State
+<!-- Declare the current state. -->
+- [ ] Still in progress (draft)
+- [ ] Ready for review
+- [ ] Ready to merge (all merge criteria below are met)
+
+## Merge Criteria (must all be checked to merge)
+- [ ] Idempotent, hand-written data seeder present for touched features
+- [ ] Laravel Dusk (or affected browser) tests written and passing
+- [ ] Commit messages use the Jira key format (e.g. `PBI-12: ...`)
+- [ ] `php artisan test` passes locally
+- [ ] No debug code or commented-out code
+
+> If you mark "Ready to merge" without the criteria above, reviewers will block
+> the PR and move it back to draft.
+
 ## Type of Change
 - [ ] Feature
 - [ ] Bug fix
