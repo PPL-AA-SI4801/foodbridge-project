@@ -72,6 +72,10 @@ class ClaimController extends Controller
 
                 $foodPost = $lockedClaim->post()->lockForUpdate()->firstOrFail();
 
+                if ($foodPost->batas_konsumsi && $foodPost->batas_konsumsi->isPast()) {
+                    throw new \DomainException('Makanan sudah kedaluwarsa.');
+                }
+
                 if ($foodPost->sisa_porsi < $lockedClaim->jumlah_porsi) {
                     throw new \DomainException('Sisa porsi makanan tidak mencukupi untuk klaim ini.');
                 }
