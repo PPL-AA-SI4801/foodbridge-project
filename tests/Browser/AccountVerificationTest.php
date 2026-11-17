@@ -5,30 +5,53 @@ namespace Tests\Browser;
 use App\Enums\Role;
 use App\Models\User;
 use App\Models\VerificationDocument;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
 class AccountVerificationTest extends DuskTestCase
 {
-    use DatabaseMigrations;
+    private static int $emailSeq = 0;
+
+    /**
+     * Generate a unique email per run so tests can run repeatedly
+     * against the persistent Dusk database without duplicates.
+     */
+    private function uniqueEmail(string $prefix): string
+    {
+        self::$emailSeq++;
+
+        return sprintf('%s-%d-%d-%s@example.com', strtolower($prefix), time(), self::$emailSeq, strtolower(Str::random(4)));
+    }
+
+    /**
+     * Generate a unique business/organization name per run, since
+     * nama_usaha is unique at the database level and both names are
+     * validated unique on register and profile update.
+     */
+    private function uniqueName(string $base): string
+    {
+        return sprintf('%s %d-%s', $base, time(), strtolower(Str::random(4)));
+    }
 
     /**
      * TC-3-01: Administrator can view pending registrations.
      */
     public function test_administrator_can_view_pending_registrations(): void
     {
-        $this->createAdmin();
-        $donor = $this->createPendingDonor('donor-pending@example.com', 'Resto Donor Satu');
-        $recipient = $this->createPendingRecipient('penerima-pending@example.com', 'Panti Penerima Satu');
+        $admin = $this->createAdmin();
+        $namaDonor = $this->uniqueName('Resto Donor Satu');
+        $namaPenerima = $this->uniqueName('Panti Penerima Satu');
+        $donor = $this->createPendingDonor($this->uniqueEmail('donor-pending'), $namaDonor);
+        $recipient = $this->createPendingRecipient($this->uniqueEmail('penerima-pending'), $namaPenerima);
 
-        $this->browse(function (Browser $browser) use ($donor, $recipient) {
-            $browser->loginAs(User::where('email', 'admin@example.com')->firstOrFail())
+        $this->browse(function (Browser $browser) use ($admin, $donor, $recipient, $namaDonor, $namaPenerima) {
+            $browser->loginAs($admin)
                 ->visit('/admin/verifications')
                 ->assertSee('Verifikasi Akun')
-                ->assertSee('Resto Donor Satu')
-                ->assertSee('Panti Penerima Satu')
+                ->assertSee($namaDonor)
+                ->assertSee($namaPenerima)
                 ->assertSee($donor->email)
                 ->assertSee($recipient->email)
                 ->assertSee('Donor')
@@ -46,18 +69,20 @@ class AccountVerificationTest extends DuskTestCase
      */
     public function test_administrator_can_filter_registrations_by_role_and_status(): void
     {
-        $this->createAdmin();
-        $pendingDonor = $this->createPendingDonor('pending-donor@example.com', 'Donor Pending Filter');
-        $pendingRecipient = $this->createPendingRecipient('pending-penerima@example.com', 'Penerima Pending Filter');
-        $this->createActiveDonor('active-donor@example.com', 'Donor Aktif Filter');
+        $admin = $this->createAdmin();
+        $tag = time().'-'.strtolower(Str::random(4));
+        $pendingDonor = $this->createPendingDonor($this->uniqueEmail('pending-donor'), 'Donor Pending Filter '.$tag);
+        $pendingRecipient = $this->createPendingRecipient($this->uniqueEmail('pending-penerima'), 'Penerima Pending Filter '.$tag);
+        $activeDonorName = 'Donor Aktif Filter '.$tag;
+        $this->createActiveDonor($this->uniqueEmail('active-donor'), $activeDonorName);
 
-        $this->browse(function (Browser $browser) {
-            $browser->loginAs(User::where('email', 'admin@example.com')->firstOrFail())
+        $this->browse(function (Browser $browser) use ($admin, $tag, $activeDonorName) {
+            $browser->loginAs($admin)
                 ->visit('/admin/verifications')
                 ->assertSee('Verifikasi Akun')
-                ->assertSee('Penerima Pending Filter')
-                ->assertSee('Donor Pending Filter')
-                ->assertDontSee('Donor Aktif Filter');
+                ->assertSee('Penerima Pending Filter '.$tag)
+                ->assertSee('Donor Pending Filter '.$tag)
+                ->assertDontSee($activeDonorName);
         });
     }
 
@@ -69,14 +94,16 @@ class AccountVerificationTest extends DuskTestCase
      */
     public function test_administrator_can_approve_a_registration(): void
     {
-        $this->createAdmin();
-        $donor = $this->createPendingDonor('approve-me@example.com', 'Resto Setuju');
+        $admin = $this->createAdmin();
+        $email = $this->uniqueEmail('approve-me');
+        $namaUsaha = $this->uniqueName('Resto Setuju');
+        $donor = $this->createPendingDonor($email, $namaUsaha);
 
-        $this->browse(function (Browser $browser) use ($donor) {
-            $browser->loginAs(User::where('email', 'admin@example.com')->firstOrFail())
+        $this->browse(function (Browser $browser) use ($admin, $donor, $namaUsaha) {
+            $browser->loginAs($admin)
                 ->visit('/admin/verifications/'.$donor->id)
                 ->assertSee('Detail Verifikasi')
-                ->assertSee('Resto Setuju')
+                ->assertSee($namaUsaha)
                 ->press('@verification-approve')
                 ->waitForText('Pendaftaran berhasil disetujui. Akun sekarang aktif.')
                 ->assertPathIs('/admin/verifications/'.$donor->id)
@@ -93,7 +120,7 @@ class AccountVerificationTest extends DuskTestCase
         });
 
         $this->assertDatabaseHas('users', [
-            'email' => 'approve-me@example.com',
+            'email' => $email,
             'status_akun' => 'aktif',
         ]);
     }
@@ -103,11 +130,12 @@ class AccountVerificationTest extends DuskTestCase
      */
     public function test_administrator_can_reject_a_registration(): void
     {
-        $this->createAdmin();
-        $recipient = $this->createPendingRecipient('reject-me@example.com', 'Panti Tolak');
+        $admin = $this->createAdmin();
+        $email = $this->uniqueEmail('reject-me');
+        $recipient = $this->createPendingRecipient($email, $this->uniqueName('Panti Tolak'));
 
-        $this->browse(function (Browser $browser) use ($recipient) {
-            $browser->loginAs(User::where('email', 'admin@example.com')->firstOrFail())
+        $this->browse(function (Browser $browser) use ($admin, $recipient) {
+            $browser->loginAs($admin)
                 ->visit('/admin/verifications/'.$recipient->id)
                 ->assertSee('Detail Verifikasi')
                 ->type('@verification-catatan', 'Dokumen tidak jelas, mohon unggah ulang.')
@@ -118,15 +146,15 @@ class AccountVerificationTest extends DuskTestCase
         });
 
         $this->assertDatabaseHas('users', [
-            'email' => 'reject-me@example.com',
+            'email' => $email,
             'status_akun' => 'ditolak',
         ]);
-        $user = User::where('email', 'reject-me@example.com')->firstOrFail();
+        $user = User::where('email', $email)->firstOrFail();
         $this->assertDatabaseHas('verification_documents', [
             'user_id' => $user->id,
             'status' => 'ditolak',
         ]);
-        $this->assertNotNull(User::where('email', 'reject-me@example.com')->first());
+        $this->assertNotNull(User::where('email', $email)->first());
         $this->assertTrue(VerificationDocument::where('user_id', $user->id)->exists());
     }
 
@@ -135,13 +163,13 @@ class AccountVerificationTest extends DuskTestCase
      */
     public function test_administrator_can_request_document_completeness_and_applicant_can_reupload(): void
     {
-        $this->createAdmin();
-        $donor = $this->createPendingDonor('lengkapi@example.com', 'Resto Lengkapi');
+        $admin = $this->createAdmin();
+        $donor = $this->createPendingDonor($this->uniqueEmail('lengkapi'), $this->uniqueName('Resto Lengkapi'));
         $document = $donor->verificationDocuments()->firstOrFail();
         $fixture = base_path('tests/Browser/fixtures/legalitas.pdf');
 
-        $this->browse(function (Browser $browser) use ($donor, $document, $fixture) {
-            $browser->loginAs(User::where('email', 'admin@example.com')->firstOrFail())
+        $this->browse(function (Browser $browser) use ($admin, $donor, $document, $fixture) {
+            $browser->loginAs($admin)
                 ->visit('/admin/verifications/'.$donor->id)
                 ->type('@verification-request-documents-catatan', 'NIB kurang jelas, mohon unggah ulang.')
                 ->press('@verification-request-documents')
@@ -191,11 +219,12 @@ class AccountVerificationTest extends DuskTestCase
      */
     public function test_administrator_cannot_decide_an_already_decided_registration(): void
     {
-        $this->createAdmin();
-        $donor = $this->createPendingDonor('race@example.com', 'Resto Race');
+        $admin = $this->createAdmin();
+        $email = $this->uniqueEmail('race');
+        $donor = $this->createPendingDonor($email, $this->uniqueName('Resto Race'));
 
-        $this->browse(function (Browser $browser) use ($donor) {
-            $browser->loginAs(User::where('email', 'admin@example.com')->firstOrFail())
+        $this->browse(function (Browser $browser) use ($admin, $donor) {
+            $browser->loginAs($admin)
                 ->visit('/admin/verifications/'.$donor->id)
                 ->assertSee('Detail Verifikasi');
 
@@ -209,7 +238,7 @@ class AccountVerificationTest extends DuskTestCase
         });
 
         $this->assertDatabaseHas('users', [
-            'email' => 'race@example.com',
+            'email' => $email,
             'status_akun' => 'aktif',
         ]);
     }
@@ -223,8 +252,8 @@ class AccountVerificationTest extends DuskTestCase
      */
     public function test_unverified_or_rejected_accounts_cannot_access_features(): void
     {
-        $pendingDonor = $this->createPendingDonor('pending-fitur@example.com', 'Resto Pending Fitur');
-        $rejectedRecipient = $this->createPendingRecipient('rejected-fitur@example.com', 'Panti Ditolak Fitur');
+        $pendingDonor = $this->createPendingDonor($this->uniqueEmail('pending-fitur'), $this->uniqueName('Resto Pending Fitur'));
+        $rejectedRecipient = $this->createPendingRecipient($this->uniqueEmail('rejected-fitur'), $this->uniqueName('Panti Ditolak Fitur'));
         $rejectedRecipient->update(['status_akun' => 'ditolak']);
 
         $this->browse(function (Browser $browser) use ($pendingDonor, $rejectedRecipient) {
@@ -245,7 +274,7 @@ class AccountVerificationTest extends DuskTestCase
      */
     public function test_non_administrators_cannot_access_account_verification(): void
     {
-        $donor = $this->createActiveDonor('donor-biasa@example.com', 'Resto Biasa');
+        $donor = $this->createActiveDonor($this->uniqueEmail('donor-biasa'), $this->uniqueName('Resto Biasa'));
 
         $this->browse(function (Browser $browser) use ($donor) {
             $browser->loginAs($donor)
@@ -257,7 +286,7 @@ class AccountVerificationTest extends DuskTestCase
     private function createAdmin(): User
     {
         return User::factory()->create([
-            'email' => 'admin@example.com',
+            'email' => $this->uniqueEmail('admin'),
             'role' => Role::Administrator,
             'status_akun' => 'aktif',
         ]);
