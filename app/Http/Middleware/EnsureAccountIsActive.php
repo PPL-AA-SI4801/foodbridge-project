@@ -20,6 +20,14 @@ class EnsureAccountIsActive
             return $next($request);
         }
 
+        if ($user->mayAccessDocumentCompleteness()) {
+            if ($request->routeIs('documents.completeness.*', 'logout')) {
+                return $next($request);
+            }
+
+            return redirect()->route('documents.completeness.edit');
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

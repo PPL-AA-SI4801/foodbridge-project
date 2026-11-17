@@ -6,6 +6,7 @@ use App\Enums\Role;
 use App\Models\User;
 use App\Models\VerificationDocument;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
@@ -127,6 +128,62 @@ class AccountVerificationTest extends DuskTestCase
         ]);
         $this->assertNotNull(User::where('email', 'reject-me@example.com')->first());
         $this->assertTrue(VerificationDocument::where('user_id', $user->id)->exists());
+    }
+
+    /**
+     * TC-3-04b: Administrator can request document completeness and the applicant can re-upload.
+     */
+    public function test_administrator_can_request_document_completeness_and_applicant_can_reupload(): void
+    {
+        $this->createAdmin();
+        $donor = $this->createPendingDonor('lengkapi@example.com', 'Resto Lengkapi');
+        $document = $donor->verificationDocuments()->firstOrFail();
+        $fixture = base_path('tests/Browser/fixtures/legalitas.pdf');
+
+        $this->browse(function (Browser $browser) use ($donor, $document, $fixture) {
+            $browser->loginAs(User::where('email', 'admin@example.com')->firstOrFail())
+                ->visit('/admin/verifications/'.$donor->id)
+                ->type('@verification-request-documents-catatan', 'NIB kurang jelas, mohon unggah ulang.')
+                ->press('@verification-request-documents')
+                ->waitForText('Permintaan kelengkapan dokumen berhasil dikirim.')
+                ->assertSee('Menunggu kelengkapan dokumen');
+
+            $browser->logout()
+                ->visit('/login')
+                ->type('@login-email', $donor->email)
+                ->type('@login-password', 'password')
+                ->press('@login-submit')
+                ->waitForText('Lengkapi Dokumen')
+                ->assertPathIs('/lengkapi-dokumen')
+                ->assertSee('NIB kurang jelas, mohon unggah ulang.')
+                ->attach('#dokumen-'.$document->id, $fixture)
+                ->press('@completeness-submit-'.$document->id)
+                ->waitForText('Dokumen perbaikan berhasil diunggah. Akun Anda kembali menunggu verifikasi administrator.')
+                ->assertPathIs('/login');
+        });
+
+        $this->assertDatabaseHas('users', [
+            'id' => $donor->id,
+            'status_akun' => 'menunggu',
+        ]);
+        $this->assertDatabaseHas('verification_documents', [
+            'id' => $document->id,
+            'status' => 'ditolak',
+        ]);
+        $this->assertDatabaseHas('verification_documents', [
+            'user_id' => $donor->id,
+            'jenis_dokumen' => 'nib',
+            'status' => 'menunggu',
+        ]);
+
+        $replacement = $donor->verificationDocuments()
+            ->where('status', 'menunggu')
+            ->latest('id')
+            ->first();
+
+        if ($replacement) {
+            Storage::disk('local')->delete($replacement->file_path);
+        }
     }
 
     /**

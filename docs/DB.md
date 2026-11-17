@@ -117,8 +117,8 @@ ERD → Laravel type conversion: `integer(10)` → integer/`id()`, `varchar(n)` 
 | id | integer(10) | No | PK | |
 | jenis_dokumen | varchar(255) | No | | Document type |
 | file_path | varchar(255) | No | | File path in storage (private disk recommended) |
-| status | varchar(255) | No | | Admin review status |
-| catatan | varchar(255) | Yes | | Rejection reason / Admin notes |
+| status | varchar(255) | No | | Review status: menunggu, perlu_kelengkapan, disetujui, ditolak |
+| catatan | varchar(255) | Yes | | Rejection reason / admin completeness request notes |
 | verified_at | timestamp | No ⚠ | | Time of review; should be nullable |
 | user_id | integer(10) | No | FK → users.id | |
 
