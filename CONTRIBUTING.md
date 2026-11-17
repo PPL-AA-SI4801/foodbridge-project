@@ -25,10 +25,14 @@ A PR may be marked **Ready to merge** only when ALL of the following hold:
 1. **Data seeder present** — any feature touched has an idempotent, hand-written
    seeder (see `database/seeders/` and `database/seeders/README.md`) so a fresh
    `php artisan migrate:fresh --seed` exercises the feature. Idempotent means
-   re-running `php artisan db:seed` does not duplicate rows.
+   re-running `php artisan db:seed` does not duplicate rows. Browser-test data
+   itself follows `docs/TEST_RULE.md`: Dusk runs against the separate,
+   persistent `foodbridge_dusk` database and data may remain for inspection.
 2. **Laravel Dusk coverage** — the feature has Dusk (or affected browser) tests
    written and passing. Run them locally with `php artisan dusk` (or the targeted
-   filter) before requesting review.
+   filter) before requesting review, always served and migrated with
+   `--env=dusk.local` and reset only manually, as described in
+   `docs/TEST_RULE.md`.
 3. **Commit messages** use the Jira key format above.
 4. **PHPUnit passes** — `php artisan test` is green locally.
 5. **No debug code** (`dd()`, `console.log`, commented-out blocks).
