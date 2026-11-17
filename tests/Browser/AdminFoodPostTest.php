@@ -2,26 +2,35 @@
 
 namespace Tests\Browser;
 
-use App\Enums\FoodPostStatus;
 use App\Enums\Role;
 use App\Models\DonorProfile;
 use App\Models\FoodCategory;
 use App\Models\FoodPost;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTruncation;
-use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
 class AdminFoodPostTest extends DuskTestCase
 {
-    use DatabaseTruncation;
+    private static int $seq = 0;
+
+    private function uniqueEmail(string $prefix): string
+    {
+        self::$seq++;
+
+        return sprintf('%s-%d-%d-%s@example.com', strtolower($prefix), time(), self::$seq, strtolower(Str::random(4)));
+    }
 
     /**
-     * Administrator dapat melihat daftar postingan makanan dan membuat postingan baru untuk donatur.
+     * Administrator login melalui GUI, membuat postingan makanan baru untuk donatur, dan melihatnya di daftar.
      */
     public function test_administrator_can_view_and_create_food_post(): void
     {
+        Artisan::call('migrate:fresh');
+
         $admin = $this->createAdmin();
         [, $donorProfile] = $this->createDonor();
         $category = FoodCategory::create(['nama_kategori' => 'Nasi & Lauk']);
@@ -30,7 +39,12 @@ class AdminFoodPostTest extends DuskTestCase
 
         try {
             $this->browse(function (Browser $browser) use ($admin, $donorProfile, $category, $sampleImage) {
-                $browser->loginAs($admin)
+                $browser->logout()
+                    ->visit('/login')
+                    ->type('@login-email', $admin->email)
+                    ->type('@login-password', 'Password123!')
+                    ->press('@login-submit')
+                    ->waitForLocation('/dashboard/admin')
                     ->visit('/admin/food-posts')
                     ->assertSee('Manajemen Postingan Makanan')
                     ->clickLink('Buat Postingan Makanan')
@@ -48,7 +62,8 @@ class AdminFoodPostTest extends DuskTestCase
                     ->press('Simpan Postingan')
                     ->waitForLocation('/admin/food-posts')
                     ->assertSee('Postingan makanan berhasil dibuat oleh Administrator')
-                    ->assertSee('Nasi Kotak Donasi Admin');
+                    ->assertSee('Nasi Kotak Donasi Admin')
+                    ->logout();
             });
         } finally {
             @unlink($sampleImage);
@@ -56,51 +71,46 @@ class AdminFoodPostTest extends DuskTestCase
     }
 
     /**
-     * Administrator dapat mengubah dan menghapus postingan makanan milik donatur.
+     * Administrator login melalui GUI dengan akun dari test pertama, lalu mengubah dan menghapus postingan makanan dari test pertama.
      */
     public function test_administrator_can_edit_and_delete_food_post(): void
     {
-        $admin = $this->createAdmin();
-        [, $donorProfile] = $this->createDonor();
-        $category = FoodCategory::create(['nama_kategori' => 'Roti & Kue']);
-
-        $foodPost = FoodPost::create([
-            'judul' => 'Roti Manis Awal',
-            'deskripsi' => 'Roti siap bagikan',
-            'foto' => 'food-posts/sample.jpg',
-            'jumlah_porsi' => 15,
-            'sisa_porsi' => 15,
-            'alamat' => 'Jl. Roti No. 3',
-            'lat' => -6.2,
-            'lng' => 106.8,
-            'batas_konsumsi' => now()->addHours(6),
-            'status' => FoodPostStatus::Tersedia,
-            'donor_id' => $donorProfile->id,
-            'category_id' => $category->id,
-        ]);
+        $admin = User::where('role', Role::Administrator)->firstOrFail();
+        $foodPost = FoodPost::where('judul', 'Nasi Kotak Donasi Admin')->firstOrFail();
 
         $this->browse(function (Browser $browser) use ($admin, $foodPost) {
-            $browser->loginAs($admin)
-                ->visit("/admin/food-posts/{$foodPost->id}/edit")
+            $browser->logout()
+                ->visit('/login')
+                ->type('@login-email', $admin->email)
+                ->type('@login-password', 'Password123!')
+                ->press('@login-submit')
+                ->waitForLocation('/dashboard/admin')
+                ->visit('/admin/food-posts')
+                ->assertSee('Nasi Kotak Donasi Admin')
+                ->clickLink('Ubah')
+                ->waitForLocation("/admin/food-posts/{$foodPost->id}/edit")
                 ->assertSee('Ubah Postingan Makanan')
                 ->clear('judul')
-                ->type('judul', 'Roti Manis Diperbarui Admin')
+                ->type('judul', 'Nasi Kotak Donasi Admin Diperbarui')
                 ->clear('sisa_porsi')
                 ->type('sisa_porsi', '5')
                 ->press('Simpan Perubahan')
                 ->waitForLocation('/admin/food-posts')
-                ->waitForText('Roti Manis Diperbarui Admin')
+                ->waitForText('Nasi Kotak Donasi Admin Diperbarui')
                 ->assertSee('Postingan makanan berhasil diperbarui oleh Administrator')
                 ->press('Hapus')
                 ->acceptDialog()
                 ->waitForText('Postingan makanan berhasil dihapus')
-                ->assertDontSee('Roti Manis Diperbarui Admin');
+                ->assertDontSee('Nasi Kotak Donasi Admin Diperbarui')
+                ->logout();
         });
     }
 
     private function createAdmin(): User
     {
         return User::factory()->create([
+            'email' => $this->uniqueEmail('admin'),
+            'password' => Hash::make('Password123!'),
             'role' => Role::Administrator,
             'status_akun' => 'aktif',
         ]);
@@ -112,6 +122,8 @@ class AdminFoodPostTest extends DuskTestCase
     private function createDonor(): array
     {
         $user = User::factory()->create([
+            'email' => $this->uniqueEmail('donor'),
+            'password' => Hash::make('Password123!'),
             'role' => Role::Donor,
             'status_akun' => 'aktif',
         ]);
@@ -141,3 +153,4 @@ class AdminFoodPostTest extends DuskTestCase
         return $path;
     }
 }
+
