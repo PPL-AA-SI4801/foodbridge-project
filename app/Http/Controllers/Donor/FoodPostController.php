@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Donor;
 
 use App\Enums\FoodPostStatus;
 use App\Enums\FoodRequestStatus;
+use App\Enums\NotificationType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Donor\FoodPostRequest;
 use App\Models\Claim;
@@ -143,7 +144,8 @@ class FoodPostController extends Controller
                                     $lockedRequest->judul,
                                     $claim->kode_verifikasi,
                                 ),
-                                'tipe' => 'request',
+                                'tipe' => NotificationType::FoodRequest->value,
+                                'action_url' => route('recipient.requests.index', ['status' => 'in_progress'], false),
                             ]);
                         }
 

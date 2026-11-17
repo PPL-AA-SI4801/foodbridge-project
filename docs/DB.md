@@ -117,8 +117,8 @@ ERD → Laravel type conversion: `integer(10)` → integer/`id()`, `varchar(n)` 
 | id | integer(10) | No | PK | |
 | jenis_dokumen | varchar(255) | No | | Document type |
 | file_path | varchar(255) | No | | File path in storage (private disk recommended) |
-| status | varchar(255) | No | | Admin review status |
-| catatan | varchar(255) | Yes | | Rejection reason / Admin notes |
+| status | varchar(255) | No | | Review status: menunggu, perlu_kelengkapan, disetujui, ditolak |
+| catatan | varchar(255) | Yes | | Rejection reason / admin completeness request notes |
 | verified_at | timestamp | No ⚠ | | Time of review; should be nullable |
 | user_id | integer(10) | No | FK → users.id | |
 
@@ -214,6 +214,7 @@ One table for two purposes: quality reviews and reports of unfit food, distingui
 | judul | varchar(255) | No | | Title |
 | pesan | varchar(255) | No | | Message |
 | tipe | varchar(255) | No | | Event type |
+| action_url | varchar(2048) | Yes | | Related page opened when the notification is clicked; null means the notification opens in a reading popup |
 | is_read | binary(1) | No | | Boolean, default `false` (proposed) |
 | created_at | timestamp | No | | No `updated_at` |
 | user_id | integer(10) | No | FK → users.id | Notification recipient |

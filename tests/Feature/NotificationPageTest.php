@@ -29,13 +29,13 @@ class NotificationPageTest extends TestCase
         $this->notificationFor($donor, [
             'judul' => 'Klaim baru menunggu persetujuan',
             'pesan' => 'Ada penerima yang mengajukan klaim untuk postingan Anda.',
-            'tipe' => 'claim',
+            'tipe' => 'klaim',
         ]);
 
         $this->notificationFor($otherUser, [
             'judul' => 'Notifikasi rahasia pengguna lain',
             'pesan' => 'Notifikasi ini bukan milik akun yang sedang masuk.',
-            'tipe' => 'claim',
+            'tipe' => 'klaim',
         ]);
 
         $this->actingAs($donor)
@@ -54,14 +54,14 @@ class NotificationPageTest extends TestCase
         $this->notificationFor($user, [
             'judul' => 'Notifikasi yang belum dibaca',
             'pesan' => 'Notifikasi ini masih baru.',
-            'tipe' => 'claim',
+            'tipe' => 'klaim',
             'is_read' => false,
         ]);
 
         $this->notificationFor($user, [
             'judul' => 'Notifikasi yang sudah dibaca',
             'pesan' => 'Notifikasi ini sudah dibuka sebelumnya.',
-            'tipe' => 'claim',
+            'tipe' => 'klaim',
             'is_read' => true,
         ]);
 
@@ -143,6 +143,62 @@ class NotificationPageTest extends TestCase
         $this->assertTrue($notification->fresh()->is_read);
     }
 
+    public function test_opening_a_notification_with_an_action_url_redirects_to_the_related_page(): void
+    {
+        $user = $this->activeUser(Role::Donor);
+        $notification = $this->notificationFor($user, [
+            'judul' => 'Profil perlu diperbarui',
+            'pesan' => 'Buka halaman profil untuk meninjau data akun Anda.',
+            'action_url' => '/profile',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('notifications.open', $notification))
+            ->assertRedirect('/profile');
+
+        $this->assertTrue($notification->fresh()->is_read);
+    }
+
+    public function test_opening_a_notification_without_an_action_url_shows_a_reading_popup(): void
+    {
+        $user = $this->activeUser(Role::Donor);
+        $notification = $this->notificationFor($user, [
+            'judul' => 'Informasi akun',
+            'pesan' => 'Pesan lengkap yang perlu dibaca tanpa membuka halaman lain.',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('notifications.open', $notification))
+            ->assertRedirect(route('notifications.index', ['open' => $notification->id]))
+            ->assertSessionHas('status', 'Notifikasi ditandai sudah dibaca.');
+
+        $this->actingAs($user)
+            ->get(route('notifications.index', ['open' => $notification->id]))
+            ->assertOk()
+            ->assertSee('notification-popup')
+            ->assertSee('Informasi akun')
+            ->assertSee('Pesan lengkap yang perlu dibaca tanpa membuka halaman lain.');
+
+        $this->assertTrue($notification->fresh()->is_read);
+    }
+
+    public function test_the_reading_popup_does_not_expose_another_users_notification(): void
+    {
+        $user = $this->activeUser(Role::Donor);
+        $otherUser = $this->activeUser(Role::Penerima);
+        $notification = $this->notificationFor($otherUser, [
+            'judul' => 'Notifikasi pengguna lain',
+            'pesan' => 'Isi ini tidak boleh terlihat.',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('notifications.index', ['open' => $notification->id]))
+            ->assertOk()
+            ->assertDontSee('notification-popup')
+            ->assertDontSee('Notifikasi pengguna lain')
+            ->assertDontSee('Isi ini tidak boleh terlihat.');
+    }
+
     public function test_a_user_cannot_mark_another_users_notification_as_read(): void
     {
         $user = $this->activeUser(Role::Donor);
@@ -186,7 +242,7 @@ class NotificationPageTest extends TestCase
         $this->notificationFor($user, [
             'judul' => 'Klaim baru menunggu persetujuan',
             'pesan' => 'Ada penerima yang mengajukan klaim untuk postingan Anda.',
-            'tipe' => 'claim',
+            'tipe' => 'klaim',
         ]);
 
         $this->actingAs($user)
@@ -232,7 +288,7 @@ class NotificationPageTest extends TestCase
             'user_id' => $user->id,
             'judul' => 'Judul notifikasi',
             'pesan' => 'Pesan notifikasi',
-            'tipe' => 'claim',
+            'tipe' => 'klaim',
         ], $attributes));
     }
 

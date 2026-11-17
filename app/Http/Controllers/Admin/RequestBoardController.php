@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\FoodRequestStatus;
+use App\Enums\NotificationType;
 use App\Http\Controllers\Controller;
 use App\Models\FoodCategory;
 use App\Models\FoodRequest;
@@ -102,7 +103,8 @@ class RequestBoardController extends Controller
                     'Permintaan kebutuhan "%s" pada Request Board telah ditutup oleh Administrator.',
                     $foodRequest->judul,
                 ),
-                'tipe' => 'request',
+                'tipe' => NotificationType::FoodRequest->value,
+                'action_url' => route('recipient.requests.index', ['status' => 'cancelled'], false),
             ]);
         }
 
@@ -129,7 +131,8 @@ class RequestBoardController extends Controller
                     'Permintaan kebutuhan "%s" telah dihapus dari Request Board oleh Administrator.',
                     $judul,
                 ),
-                'tipe' => 'request',
+                'tipe' => NotificationType::FoodRequest->value,
+                'action_url' => route('recipient.requests.index', [], false),
             ]);
         }
 

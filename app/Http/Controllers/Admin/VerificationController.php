@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\AccountStatus;
+use App\Enums\NotificationType;
 use App\Enums\Role;
 use App\Enums\VerificationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\RejectVerificationRequest;
+use App\Http\Requests\Admin\RequestVerificationDocumentsRequest;
 use App\Models\InAppNotification;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -76,6 +78,10 @@ class VerificationController extends Controller
                 return 'document_required';
             }
 
+            if ($user->hasUnresolvedVerificationDocuments()) {
+                return 'document_incomplete';
+            }
+
             $reviewedAt = now();
 
             $user->update(['status_akun' => AccountStatus::Aktif]);
@@ -92,7 +98,8 @@ class VerificationController extends Controller
                 'user_id' => $user->id,
                 'judul' => 'Akun Anda Telah Diverifikasi',
                 'pesan' => 'Selamat! Pendaftaran akun Anda telah disetujui. Anda sekarang dapat masuk dan menggunakan seluruh fitur FoodBridge.',
-                'tipe' => 'akun',
+                'tipe' => NotificationType::Account->value,
+                'action_url' => route('profile.edit', [], false),
             ]);
 
             return 'approved';
@@ -114,9 +121,82 @@ class VerificationController extends Controller
                 ->with('error', 'Dokumen legalitas belum diunggah, sehingga akun tidak dapat disetujui.');
         }
 
+        if ($result === 'document_incomplete') {
+            return redirect()
+                ->route('admin.verifications.show', $user)
+                ->with('error', 'Pendaftar masih memiliki dokumen yang ditolak atau perlu dilengkapi sebelum akun dapat disetujui.');
+        }
+
         return redirect()
             ->route('admin.verifications.show', $user)
             ->with('status', 'Pendaftaran berhasil disetujui. Akun sekarang aktif.');
+    }
+
+    /**
+     * Ask a pending registration to complete or replace its legal documents.
+     */
+    public function requestDocuments(RequestVerificationDocumentsRequest $request, User $user): RedirectResponse
+    {
+        $catatan = $request->validated('completeness_catatan');
+
+        $result = DB::transaction(function () use ($user, $catatan): string {
+            $user->refresh();
+
+            if (! $user->hasRole(Role::Donor, Role::Penerima)) {
+                return 'not_verifiable';
+            }
+
+            if ($user->status_akun !== AccountStatus::Menunggu) {
+                return 'already_processed';
+            }
+
+            $documents = $user->verificationDocuments()
+                ->whereIn('id', $user->latestVerificationDocumentIds())
+                ->whereIn('status', [
+                    VerificationStatus::Menunggu->value,
+                    VerificationStatus::PerluKelengkapan->value,
+                    VerificationStatus::Ditolak->value,
+                ]);
+
+            if (! (clone $documents)->exists()) {
+                return 'document_required';
+            }
+
+            $documents->update([
+                'status' => VerificationStatus::PerluKelengkapan->value,
+                'catatan' => $catatan,
+                'verified_at' => null,
+            ]);
+
+            InAppNotification::create([
+                'user_id' => $user->id,
+                'judul' => 'Dokumen Akun Perlu Dilengkapi',
+                'pesan' => sprintf('Administrator meminta Anda melengkapi dokumen akun. Catatan: %s', $catatan),
+                'tipe' => NotificationType::Account->value,
+            ]);
+
+            return 'requested';
+        });
+
+        if ($result === 'not_verifiable') {
+            abort(404);
+        }
+
+        if ($result === 'already_processed') {
+            return redirect()
+                ->route('admin.verifications.show', $user)
+                ->with('error', 'Pendaftaran ini sudah diproses.');
+        }
+
+        if ($result === 'document_required') {
+            return redirect()
+                ->route('admin.verifications.show', $user)
+                ->with('error', 'Belum ada dokumen yang dapat diminta kelengkapannya.');
+        }
+
+        return redirect()
+            ->route('admin.verifications.show', $user)
+            ->with('status', 'Permintaan kelengkapan dokumen berhasil dikirim.');
     }
 
     /**
@@ -146,7 +226,10 @@ class VerificationController extends Controller
             $user->update(['status_akun' => AccountStatus::Ditolak]);
 
             $user->verificationDocuments()
-                ->where('status', VerificationStatus::Menunggu->value)
+                ->whereIn('status', [
+                    VerificationStatus::Menunggu->value,
+                    VerificationStatus::PerluKelengkapan->value,
+                ])
                 ->update([
                     'status' => VerificationStatus::Ditolak->value,
                     'catatan' => $catatan,
@@ -157,7 +240,7 @@ class VerificationController extends Controller
                 'user_id' => $user->id,
                 'judul' => 'Pendaftaran Akun Ditolak',
                 'pesan' => sprintf('Pendaftaran akun Anda ditolak. Alasan: %s', $catatan),
-                'tipe' => 'akun',
+                'tipe' => NotificationType::Account->value,
             ]);
 
             return 'rejected';

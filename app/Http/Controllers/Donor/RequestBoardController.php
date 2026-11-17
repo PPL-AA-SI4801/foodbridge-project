@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Donor;
 
 use App\Enums\FoodPostStatus;
 use App\Enums\FoodRequestStatus;
+use App\Enums\NotificationType;
 use App\Enums\UrgencyLevel;
 use App\Http\Controllers\Controller;
 use App\Models\Claim;
@@ -222,7 +223,8 @@ class RequestBoardController extends Controller
                         'user_id' => $lockedRequest->recipient->user_id,
                         'judul' => 'Permintaan Makanan Anda Direspons Donatur',
                         'pesan' => $message,
-                        'tipe' => 'request',
+                        'tipe' => NotificationType::FoodRequest->value,
+                        'action_url' => route('recipient.requests.index', ['status' => 'in_progress'], false),
                     ]);
                 }
             });
@@ -275,7 +277,8 @@ class RequestBoardController extends Controller
                         $donor->nama_usaha,
                         $locked->judul,
                     ),
-                    'tipe' => 'request',
+                    'tipe' => NotificationType::FoodRequest->value,
+                    'action_url' => route('recipient.requests.index', ['status' => 'fulfilled'], false),
                 ]);
             }
         });

@@ -34,12 +34,19 @@ class NotificationController extends Controller
 
         $isAdmin = $user->hasRole(Role::Administrator);
 
+        $openedNotification = $request->filled('open')
+            ? InAppNotification::query()
+                ->where('user_id', $user->id)
+                ->find($request->integer('open'))
+            : null;
+
         return view('notifications.index', [
             'notifications' => $notifications,
             'filter' => $filter,
             'totalCount' => $totalCount,
             'unreadCount' => $unreadCount,
             'isAdmin' => $isAdmin,
+            'openedNotification' => $openedNotification,
             'pendingVerifications' => $isAdmin
                 ? User::query()->pendingVerification()->count()
                 : 0,
@@ -55,8 +62,12 @@ class NotificationController extends Controller
 
         $notification->markAsRead();
 
+        if (filled($notification->action_url)) {
+            return redirect()->to($notification->action_url);
+        }
+
         return redirect()
-            ->route('notifications.index')
+            ->route('notifications.index', ['open' => $notification->id])
             ->with('status', 'Notifikasi ditandai sudah dibaca.');
     }
 

@@ -198,7 +198,7 @@
                                         <a
                                             href="{{ route('notifications.open', $notification) }}"
                                             dusk="open-notification-{{ $notification->id }}"
-                                            title="Buka notifikasi"
+                                            title="{{ $notification->action_url ? 'Buka halaman terkait' : 'Baca notifikasi' }}"
                                             class="mt-1 block break-words text-sm font-semibold leading-5 text-foreground transition-colors hover:text-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                         >
                                             {{ $notification->judul }}
@@ -246,3 +246,54 @@
         @endif
     </section>
 </div>
+
+@if ($openedNotification ?? null)
+    @php
+        $openedMeta = \App\Support\NotificationPresenter::for($openedNotification->tipe);
+    @endphp
+
+    <div
+        x-data="{ show: true }"
+        x-show="show"
+        x-cloak
+        @keydown.escape.window="show = false"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="notification-popup-title"
+        dusk="notification-popup"
+    >
+        <div class="absolute inset-0 bg-black/40" @click="show = false" aria-hidden="true"></div>
+
+        <div class="relative w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl">
+            <div class="flex items-start gap-3">
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $openedMeta['iconClass'] }}">
+                    <x-icon :name="$openedMeta['icon']" class="h-5 w-5" />
+                </span>
+
+                <div class="min-w-0 flex-1">
+                    <p class="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                        {{ $openedMeta['label'] }}
+                    </p>
+                    <h2 id="notification-popup-title" class="mt-1 text-base font-semibold leading-6 text-foreground">
+                        {{ $openedNotification->judul }}
+                    </h2>
+                </div>
+            </div>
+
+            <p class="mt-3 break-words text-sm leading-6 text-muted-foreground">
+                {{ $openedNotification->pesan }}
+            </p>
+
+            <div class="mt-5 flex justify-end">
+                <a
+                    href="{{ route('notifications.index') }}"
+                    dusk="close-notification-popup"
+                    class="inline-flex items-center justify-center rounded-md border border-border bg-background px-3.5 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                    Tutup
+                </a>
+            </div>
+        </div>
+    </div>
+@endif

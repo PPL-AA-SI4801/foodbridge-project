@@ -64,7 +64,7 @@ class LoginRequest extends FormRequest
     {
         $user = Auth::user();
 
-        if ($user->isActive()) {
+        if ($user->isActive() || $user->mayAccessDocumentCompleteness()) {
             return;
         }
 

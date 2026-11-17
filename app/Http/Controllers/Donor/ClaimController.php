@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Donor;
 
+use App\Enums\NotificationType;
 use App\Http\Controllers\Controller;
 use App\Models\Claim;
 use App\Models\InAppNotification;
@@ -92,7 +93,8 @@ class ClaimController extends Controller
                     'user_id' => $lockedClaim->recipient->user_id,
                     'judul' => 'Klaim Disetujui',
                     'pesan' => 'Klaim Anda untuk makanan "'.$foodPost->judul.'" telah disetujui oleh donor.',
-                    'tipe' => 'claim',
+                    'tipe' => NotificationType::Claim->value,
+                    'action_url' => route('recipient.claims.index', [], false),
                 ]);
             });
         } catch (\DomainException $e) {
@@ -124,7 +126,8 @@ class ClaimController extends Controller
                     'user_id' => $lockedClaim->recipient->user_id,
                     'judul' => 'Klaim Ditolak',
                     'pesan' => 'Mohon maaf, klaim Anda untuk makanan "'.$lockedClaim->post->judul.'" ditolak oleh donor.',
-                    'tipe' => 'claim',
+                    'tipe' => NotificationType::Claim->value,
+                    'action_url' => route('recipient.claims.index', [], false),
                 ]);
             });
         } catch (\DomainException $e) {
