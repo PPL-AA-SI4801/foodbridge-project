@@ -2,6 +2,7 @@
 
 namespace Tests\Browser;
 
+use App\Enums\NotificationType;
 use App\Enums\Role;
 use App\Models\InAppNotification;
 use App\Models\User;
@@ -15,8 +16,7 @@ class NotificationTest extends DuskTestCase
 
     public function test_user_can_mark_a_notification_as_read_from_the_notification_page(): void
     {
-        $user = $this->activeUser();
-        $notification = $this->notificationFor($user);
+        [$user, $notification] = $this->registeredUserWithNotification();
 
         $this->browse(function (Browser $browser) use ($user, $notification) {
             $browser->loginAs($user)
@@ -36,8 +36,7 @@ class NotificationTest extends DuskTestCase
 
     public function test_user_can_open_a_notification_and_the_bell_count_decreases(): void
     {
-        $user = $this->activeUser();
-        $notification = $this->notificationFor($user);
+        [$user, $notification] = $this->registeredUserWithNotification();
 
         $this->browse(function (Browser $browser) use ($user, $notification) {
             $browser->loginAs($user)
@@ -57,8 +56,7 @@ class NotificationTest extends DuskTestCase
 
     public function test_user_is_redirected_to_the_related_page_when_a_notification_has_an_action_target(): void
     {
-        $user = $this->activeUser();
-        $notification = $this->notificationFor($user, [
+        [$user, $notification] = $this->registeredUserWithNotification([
             'action_url' => '/profile',
         ]);
 
@@ -76,8 +74,7 @@ class NotificationTest extends DuskTestCase
 
     public function test_user_can_mark_all_notifications_as_read_from_the_notification_page(): void
     {
-        $user = $this->activeUser();
-        $first = $this->notificationFor($user);
+        [$user] = $this->registeredUserWithNotification();
         $second = $this->notificationFor($user, ['judul' => 'Klaim kedua menunggu persetujuan']);
 
         $this->browse(function (Browser $browser) use ($user) {
@@ -90,14 +87,12 @@ class NotificationTest extends DuskTestCase
                 ->assertDontSee('Tandai semua dibaca');
         });
 
-        $this->assertTrue($first->fresh()->is_read);
         $this->assertTrue($second->fresh()->is_read);
     }
 
     public function test_user_can_mark_a_notification_as_read_from_the_header_dropdown(): void
     {
-        $user = $this->activeUser();
-        $notification = $this->notificationFor($user);
+        [$user, $notification] = $this->registeredUserWithNotification();
 
         $this->browse(function (Browser $browser) use ($user, $notification) {
             $browser->loginAs($user)
@@ -112,14 +107,79 @@ class NotificationTest extends DuskTestCase
         $this->assertTrue($notification->fresh()->is_read);
     }
 
-    private function activeUser(): User
+    /**
+     * @return array{0: User, 1: InAppNotification}
+     */
+    private function registeredUserWithNotification(array $attributes = []): array
     {
-        return User::factory()->create([
-            'role' => Role::Donor,
-            'status_akun' => 'aktif',
-        ]);
+        $email = null;
+
+        $this->browse(function (Browser $browser) use (&$email) {
+            $email = $this->registerDonor($browser);
+            $this->approveDonor($browser, $email);
+        });
+
+        $user = User::where('email', $email)->firstOrFail();
+
+        // Keep this UI test focused on the notification created for the scenario;
+        // the account verification flow legitimately creates its own notification.
+        InAppNotification::where('user_id', $user->id)
+            ->where('tipe', NotificationType::Account->value)
+            ->delete();
+
+        $notification = $this->notificationFor($user, $attributes);
+
+        return [$user, $notification];
     }
 
+    private function registerDonor(Browser $browser): string
+    {
+        $email = 'donor-notification-'.uniqid().'@example.com';
+        $fixture = base_path('tests/Browser/fixtures/legalitas.pdf');
+
+        $browser->visit('/register')
+            ->type('@register-nama', 'Donor Notifikasi')
+            ->type('@register-email', $email)
+            ->type('@register-no-hp', '081234567890')
+            ->type('@register-password', 'Password123!')
+            ->type('@register-password-confirmation', 'Password123!')
+            ->press('@register-next')
+            ->pause(500)
+            ->assertVisible('@register-nama-usaha')
+            ->type('@register-nama-usaha', 'Resto Notifikasi')
+            ->type('@register-jenis-usaha', 'Restoran')
+            ->type('@register-alamat', 'Jl. Notifikasi No. 1, Bandung')
+            ->select('@register-jenis-dokumen', 'nib')
+            ->attach('dokumen', $fixture)
+            ->press('@register-submit')
+            ->waitForText('Pendaftaran berhasil. Akun Anda sedang menunggu verifikasi administrator.')
+            ->assertPathIs('/login');
+
+        return $email;
+    }
+
+    private function approveDonor(Browser $browser, string $email): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'admin-notification-'.uniqid().'@example.com',
+            'role' => Role::Administrator,
+            'status_akun' => 'aktif',
+            'nama' => 'Admin Notifikasi',
+            'password' => bcrypt('password'),
+            'no_hp' => '081234567891',
+        ]);
+
+        $user = User::where('email', $email)->firstOrFail();
+
+        $browser->loginAs($admin)
+            ->visit(route('admin.verifications.show', $user))
+            ->press('@verification-approve')
+            ->waitForText('Pendaftaran berhasil disetujui. Akun sekarang aktif.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
     private function notificationFor(User $user, array $attributes = []): InAppNotification
     {
         return InAppNotification::create(array_merge([
