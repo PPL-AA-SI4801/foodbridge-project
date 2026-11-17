@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Recipient;
 
+use App\Enums\NotificationType;
 use App\Http\Controllers\Controller;
 use App\Models\Claim;
 use App\Models\FoodPost;
@@ -92,7 +93,8 @@ class ClaimController extends Controller
                 'user_id' => $foodPost->donor->user_id,
                 'judul' => 'Pengajuan Klaim Baru',
                 'pesan' => 'Penerima mengajukan klaim sebanyak '.$request->jumlah_porsi.' porsi pada postingan '.$foodPost->judul,
-                'tipe' => 'claim',
+                'tipe' => NotificationType::Claim->value,
+                'action_url' => route('donor.claims.index', ['status' => 'menunggu'], false),
             ]);
         });
 

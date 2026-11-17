@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Recipient;
 
 use App\Enums\AccountStatus;
 use App\Enums\FoodRequestStatus;
+use App\Enums\NotificationType;
 use App\Enums\Role;
 use App\Enums\UrgencyLevel;
 use App\Http\Controllers\Controller;
@@ -129,7 +130,8 @@ class FoodRequestController extends Controller
                         $foodRequest->jumlah_porsi,
                         $foodRequest->batas_waktu->format('d/m/Y H:i'),
                     ),
-                    'tipe' => 'request',
+                    'tipe' => NotificationType::FoodRequest->value,
+                    'action_url' => route('donor.requests.index', ['view' => 'open'], false),
                 ]);
             }
         });
@@ -176,7 +178,8 @@ class FoodRequestController extends Controller
                         $locked->recipient->nama_lembaga,
                         $locked->judul,
                     ),
-                    'tipe' => 'request',
+                    'tipe' => NotificationType::FoodRequest->value,
+                    'action_url' => route('donor.requests.index', ['view' => 'mine'], false),
                 ]);
             }
         });

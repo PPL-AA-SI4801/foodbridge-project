@@ -214,6 +214,7 @@ One table for two purposes: quality reviews and reports of unfit food, distingui
 | judul | varchar(255) | No | | Title |
 | pesan | varchar(255) | No | | Message |
 | tipe | varchar(255) | No | | Event type |
+| action_url | varchar(2048) | Yes | | Related page opened when the notification is clicked; null means the notification opens in a reading popup |
 | is_read | binary(1) | No | | Boolean, default `false` (proposed) |
 | created_at | timestamp | No | | No `updated_at` |
 | user_id | integer(10) | No | FK → users.id | Notification recipient |

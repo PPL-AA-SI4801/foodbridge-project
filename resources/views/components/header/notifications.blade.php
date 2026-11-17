@@ -67,7 +67,7 @@ $unreadCount = \App\Models\InAppNotification::query()
                                 <div class="flex items-start justify-between gap-2">
                                     <a
                                         href="{{ route('notifications.open', $notification) }}"
-                                        title="Buka notifikasi"
+                                        title="{{ $notification->action_url ? 'Buka halaman terkait' : 'Baca notifikasi' }}"
                                         class="min-w-0 flex-1 truncate text-sm font-medium transition-colors hover:text-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                     >
                                         {{ $notification->judul }}

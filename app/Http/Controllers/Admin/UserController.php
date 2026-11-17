@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\AccountStatus;
+use App\Enums\NotificationType;
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\InAppNotification;
@@ -82,7 +83,7 @@ class UserController extends Controller
                 'user_id' => $user->id,
                 'judul' => 'Akun Anda Diblokir',
                 'pesan' => 'Akun Anda telah diblokir oleh administrator. Anda tidak dapat mengakses FoodBridge.',
-                'tipe' => 'akun',
+                'tipe' => NotificationType::Account->value,
             ]);
 
             // End any browser session that belongs to the blocked account immediately.

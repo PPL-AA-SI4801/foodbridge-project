@@ -44,8 +44,31 @@ class NotificationTest extends DuskTestCase
                 ->visit('/notifikasi')
                 ->assertAttribute('@notification-bell', 'data-unread-count', '1')
                 ->click("@open-notification-{$notification->id}")
+                ->waitFor('@notification-popup')
+                ->assertSeeIn('@notification-popup', 'Klaim baru menunggu persetujuan')
+                ->assertSeeIn('@notification-popup', 'Ada penerima yang mengajukan klaim untuk postingan Anda.')
                 ->waitForText('Notifikasi ditandai sudah dibaca.')
-                ->assertAttribute('@notification-bell', 'data-unread-count', '0');
+                ->assertAttribute('@notification-bell', 'data-unread-count', '0')
+                ->click('@close-notification-popup');
+        });
+
+        $this->assertTrue($notification->fresh()->is_read);
+    }
+
+    public function test_user_is_redirected_to_the_related_page_when_a_notification_has_an_action_target(): void
+    {
+        $user = $this->activeUser();
+        $notification = $this->notificationFor($user, [
+            'action_url' => '/profile',
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user, $notification) {
+            $browser->loginAs($user)
+                ->visit('/notifikasi')
+                ->click("@open-notification-{$notification->id}")
+                ->waitForLocation('/profile')
+                ->assertPathIs('/profile')
+                ->assertSee('Profil');
         });
 
         $this->assertTrue($notification->fresh()->is_read);
@@ -103,7 +126,7 @@ class NotificationTest extends DuskTestCase
             'user_id' => $user->id,
             'judul' => 'Klaim baru menunggu persetujuan',
             'pesan' => 'Ada penerima yang mengajukan klaim untuk postingan Anda.',
-            'tipe' => 'claim',
+            'tipe' => 'klaim',
         ], $attributes));
     }
 }

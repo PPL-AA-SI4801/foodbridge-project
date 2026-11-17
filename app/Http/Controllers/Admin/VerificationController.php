@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\AccountStatus;
+use App\Enums\NotificationType;
 use App\Enums\Role;
 use App\Enums\VerificationStatus;
 use App\Http\Controllers\Controller;
@@ -97,7 +98,8 @@ class VerificationController extends Controller
                 'user_id' => $user->id,
                 'judul' => 'Akun Anda Telah Diverifikasi',
                 'pesan' => 'Selamat! Pendaftaran akun Anda telah disetujui. Anda sekarang dapat masuk dan menggunakan seluruh fitur FoodBridge.',
-                'tipe' => 'akun',
+                'tipe' => NotificationType::Account->value,
+                'action_url' => route('profile.edit', [], false),
             ]);
 
             return 'approved';
@@ -170,7 +172,7 @@ class VerificationController extends Controller
                 'user_id' => $user->id,
                 'judul' => 'Dokumen Akun Perlu Dilengkapi',
                 'pesan' => sprintf('Administrator meminta Anda melengkapi dokumen akun. Catatan: %s', $catatan),
-                'tipe' => 'akun',
+                'tipe' => NotificationType::Account->value,
             ]);
 
             return 'requested';
@@ -238,7 +240,7 @@ class VerificationController extends Controller
                 'user_id' => $user->id,
                 'judul' => 'Pendaftaran Akun Ditolak',
                 'pesan' => sprintf('Pendaftaran akun Anda ditolak. Alasan: %s', $catatan),
-                'tipe' => 'akun',
+                'tipe' => NotificationType::Account->value,
             ]);
 
             return 'rejected';
