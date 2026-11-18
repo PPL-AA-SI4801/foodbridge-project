@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\AccountStatus;
 use App\Enums\VerificationStatus;
 use App\Models\User;
 use App\Models\VerificationDocument;
@@ -70,6 +69,16 @@ class VerificationDocumentSeeder extends Seeder
                     ]
                 );
             }
+
+            VerificationDocument::updateOrCreate(
+                ['user_id' => $pendingRecipient->id, 'jenis_dokumen' => 'nib'],
+                [
+                    'file_path' => "verification-documents/{$pendingRecipient->id}/nib.pdf",
+                    'status' => VerificationStatus::PerluKelengkapan,
+                    'catatan' => 'NIB kurang jelas, mohon unggah ulang.',
+                    'verified_at' => null,
+                ]
+            );
         }
     }
 }

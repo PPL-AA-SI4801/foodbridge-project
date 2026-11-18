@@ -292,6 +292,7 @@
 
                                                 <button
                                                     type="button"
+                                                    dusk="claim-toggle-{{ $foodPost->id }}"
                                                     x-on:click="open = ! open"
                                                     x-bind:aria-expanded="open"
                                                     aria-controls="claim-form-{{ $foodPost->id }}"
@@ -360,6 +361,7 @@
 
                                             <button
                                                 type="submit"
+                                                dusk="claim-submit-{{ $foodPost->id }}"
                                                 x-bind:disabled="submitting"
                                                 class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                             >

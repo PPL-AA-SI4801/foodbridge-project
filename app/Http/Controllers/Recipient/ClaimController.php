@@ -2,47 +2,69 @@
 
 namespace App\Http\Controllers\Recipient;
 
+use App\Enums\NotificationType;
 use App\Http\Controllers\Controller;
 use App\Models\Claim;
 use App\Models\FoodPost;
 use App\Models\InAppNotification;
+use App\Services\RecipientClaimService;
+use App\Support\ClaimStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class ClaimController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, RecipientClaimService $claimService): View
     {
         $recipient = $request->user()->recipientProfile()->firstOrFail();
-        $today = Carbon::today();
 
-        $claims = Claim::where('recipient_id', $recipient->id)
-            ->with(['post.donor', 'post.category'])
-            ->orderByDesc('tanggal_klaim')
-            ->orderByDesc('id')
-            ->paginate(10);
+        $search = mb_substr(trim((string) $request->query('q', '')), 0, 100);
+        $status = $request->query('status');
 
-        $dailyClaimsCount = Claim::where('recipient_id', $recipient->id)
-            ->whereDate('tanggal_klaim', $today)
-            ->where('status', '!=', 'rejected')
-            ->count();
+        $focusedClaimId = $request->integer('claim') ?: null;
+        $focusedClaim = $focusedClaimId !== null
+            ? Claim::query()
+                ->where('recipient_id', $recipient->id)
+                ->find($focusedClaimId)
+            : null;
 
-        $dailyQuotaLimit = 3;
-        $remainingQuota = max(0, $dailyQuotaLimit - $dailyClaimsCount);
+        $filters = [
+            'q' => $focusedClaim !== null ? '' : $search,
+            'status' => $focusedClaim === null && is_string($status) && array_key_exists($status, ClaimStatus::GROUPS)
+                ? $status
+                : null,
+        ];
 
-        $statusCounts = Claim::where('recipient_id', $recipient->id)
-            ->selectRaw('status, COUNT(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
+        $claims = $claimService->paginateForRecipient($recipient->id, $filters, $focusedClaim?->id);
+        $focusedClaimId = $focusedClaim?->id;
+        $quota = $claimService->quotaSummary($recipient->id);
+        $statusCounts = $claimService->statusCounts($recipient->id);
+        $statusOptions = ClaimStatus::LABELS;
 
-        return view('recipient.claims.index', compact('claims', 'remainingQuota', 'dailyClaimsCount', 'statusCounts'));
+        return view('recipient.claims.index', compact(
+            'claims',
+            'quota',
+            'statusCounts',
+            'statusOptions',
+            'filters',
+            'focusedClaimId',
+        ));
     }
 
-    public function store(Request $request, FoodPost $foodPost)
+    public function store(Request $request, FoodPost $foodPost, RecipientClaimService $claimService)
     {
         $recipientId = $request->user()->recipientProfile()->firstOrFail()->id;
         $today = Carbon::today();
+
+        if ($foodPost->sisa_porsi <= 0) {
+            return back()->withErrors(['jumlah_porsi' => 'Makanan sudah habis.']);
+        }
+
+        if ($foodPost->batas_konsumsi && Carbon::parse($foodPost->batas_konsumsi)->isPast()) {
+            return back()->withErrors(['jumlah_porsi' => 'Makanan sudah kedaluwarsa dan tidak dapat diklaim.']);
+        }
 
         $request->validate([
             'jumlah_porsi' => ['required', 'integer', 'min:1', "max:{$foodPost->sisa_porsi}"],
@@ -53,21 +75,10 @@ class ClaimController extends Controller
             'jumlah_porsi.max' => 'Jumlah porsi yang diklaim tidak boleh melebihi sisa porsi makanan.',
         ]);
 
-        $dailyClaimsCount = Claim::where('recipient_id', $recipientId)
-            ->whereDate('tanggal_klaim', $today)
-            ->where('status', '!=', 'rejected')
-            ->count();
+        if ($claimService->quotaSummary($recipientId)['exhausted']) {
+            $limit = RecipientClaimService::DAILY_CLAIM_LIMIT;
 
-        if ($dailyClaimsCount >= 3) {
-            return back()->withErrors(['jumlah_porsi' => 'Kuota klaim harian Anda sudah habis (3/3).']);
-        }
-
-        if ($foodPost->batas_konsumsi && Carbon::parse($foodPost->batas_konsumsi)->isPast()) {
-            return back()->withErrors(['jumlah_porsi' => 'Makanan sudah kedaluwarsa dan tidak dapat diklaim.']);
-        }
-
-        if ($foodPost->sisa_porsi <= 0) {
-            return back()->withErrors(['jumlah_porsi' => 'Makanan sudah habis.']);
+            return back()->withErrors(['jumlah_porsi' => "Kuota klaim harian Anda sudah habis ({$limit}/{$limit})."]);
         }
 
         $existingClaim = Claim::where('recipient_id', $recipientId)
@@ -80,7 +91,7 @@ class ClaimController extends Controller
         }
 
         DB::transaction(function () use ($request, $foodPost, $recipientId, $today) {
-            Claim::create([
+            $claim = Claim::create([
                 'post_id' => $foodPost->id,
                 'recipient_id' => $recipientId,
                 'jumlah_porsi' => $request->jumlah_porsi,
@@ -92,7 +103,7 @@ class ClaimController extends Controller
                 'user_id' => $foodPost->donor->user_id,
                 'judul' => 'Pengajuan Klaim Baru',
                 'pesan' => 'Penerima mengajukan klaim sebanyak '.$request->jumlah_porsi.' porsi pada postingan '.$foodPost->judul,
-                'tipe' => 'claim',
+                'tipe' => NotificationType::Claim->value,
             ]);
         });
 

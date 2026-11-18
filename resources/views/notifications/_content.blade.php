@@ -24,7 +24,11 @@
         ->groupBy(fn ($notification) => $notification->created_at?->toDateString() ?? 'tanpa-tanggal');
 @endphp
 
-<div class="mx-auto max-w-4xl">
+<div
+    class="mx-auto max-w-4xl"
+    x-data="{ unreadCount: {{ $unreadCount }} }"
+    @notification-read.window="unreadCount = $event.detail.unreadCount"
+>
     {{-- Judul halaman --}}
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -40,11 +44,11 @@
                     'bg-secondary' => $unreadCount > 0,
                     'bg-muted-foreground/40' => $unreadCount === 0,
                 ]) aria-hidden="true"></span>
-                {{ $unreadCount > 0 ? $unreadCount.' belum dibaca' : 'Semua sudah dibaca' }}
+                <span x-text="unreadCount > 0 ? `${unreadCount} belum dibaca` : 'Semua sudah dibaca'">{{ $unreadCount > 0 ? $unreadCount.' belum dibaca' : 'Semua sudah dibaca' }}</span>
             </span>
 
             @if ($unreadCount > 0)
-                <form method="POST" action="{{ route('notifications.read-all') }}">
+                <form method="POST" action="{{ route('notifications.read-all') }}" x-show="unreadCount > 0">
                     @csrf
                     @method('PATCH')
 
@@ -106,7 +110,7 @@
                         'inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold',
                         'bg-white/15 text-primary-foreground' => $filter === 'unread',
                         'bg-muted text-muted-foreground' => $filter !== 'unread',
-                    ])>{{ $unreadCount }}</span>
+                    ])><span x-text="unreadCount">{{ $unreadCount }}</span></span>
                 </a>
             </nav>
         </div>
@@ -166,13 +170,13 @@
                                     $meta = \App\Support\NotificationPresenter::for($notification->tipe);
                                 @endphp
 
-                                <li @class([
-                                    'relative flex gap-3 px-4 py-4 sm:gap-4 sm:px-6',
-                                    'bg-accent/30' => ! $notification->is_read,
-                                ])>
-                                    @if (! $notification->is_read)
-                                        <span class="absolute inset-y-0 left-0 w-0.5 bg-secondary" aria-hidden="true"></span>
-                                    @endif
+                                <li
+                                    x-data="{ read: {{ $notification->is_read ? 'true' : 'false' }} }"
+                                    @notification-read.window="if ($event.detail.id === {{ $notification->id }}) read = true"
+                                    @class(['relative flex gap-3 px-4 py-4 sm:gap-4 sm:px-6'])
+                                    x-bind:class="{ 'bg-accent/30': ! read }"
+                                >
+                                    <span x-show="! read" x-cloak class="absolute inset-y-0 left-0 w-0.5 bg-secondary" aria-hidden="true"></span>
 
                                     <span class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $meta['iconClass'] }}">
                                         <x-icon :name="$meta['icon']" class="h-5 w-5" />
@@ -198,7 +202,7 @@
                                         <a
                                             href="{{ route('notifications.open', $notification) }}"
                                             dusk="open-notification-{{ $notification->id }}"
-                                            title="Buka notifikasi"
+                                            title="Buka halaman terkait"
                                             class="mt-1 block break-words text-sm font-semibold leading-5 text-foreground transition-colors hover:text-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                         >
                                             {{ $notification->judul }}
@@ -208,28 +212,26 @@
                                             {{ $notification->pesan }}
                                         </p>
 
-                                        @if (! $notification->is_read)
-                                            <div class="mt-2 flex flex-wrap items-center gap-3">
-                                                <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-secondary">
-                                                    <span class="h-1.5 w-1.5 rounded-full bg-secondary" aria-hidden="true"></span>
-                                                    Belum dibaca
-                                                </span>
+                                        <div x-show="! read" x-cloak class="mt-2 flex flex-wrap items-center gap-3">
+                                            <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-secondary">
+                                                <span class="h-1.5 w-1.5 rounded-full bg-secondary" aria-hidden="true"></span>
+                                                Belum dibaca
+                                            </span>
 
-                                                <form method="POST" action="{{ route('notifications.read', $notification) }}">
-                                                    @csrf
-                                                    @method('PATCH')
+                                            <form method="POST" action="{{ route('notifications.read', $notification) }}">
+                                                @csrf
+                                                @method('PATCH')
 
-                                                    <button
-                                                        type="submit"
-                                                        dusk="mark-read-{{ $notification->id }}"
-                                                        class="inline-flex items-center gap-1 text-[11px] font-semibold text-primary transition-colors hover:text-primary/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                                    >
-                                                        <x-icon name="check" class="h-3 w-3" />
-                                                        Tandai dibaca
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        @endif
+                                                <button
+                                                    type="submit"
+                                                    dusk="mark-read-{{ $notification->id }}"
+                                                    class="inline-flex items-center gap-1 text-[11px] font-semibold text-primary transition-colors hover:text-primary/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                                >
+                                                    <x-icon name="check" class="h-3 w-3" />
+                                                    Tandai dibaca
+                                                </button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </li>
                             @endforeach

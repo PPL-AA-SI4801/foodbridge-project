@@ -18,14 +18,12 @@
 
     if ($isRecipient) {
         $recipientProfile = $user->recipientProfile;
-        $dailyClaimsCount = $recipientProfile
-            ? \App\Models\Claim::query()
-                ->where('recipient_id', $recipientProfile->id)
-                ->whereDate('tanggal_klaim', today())
-                ->count()
-            : 0;
-        $dailyQuotaLimit = 3;
-        $dailyQuotaStatus = $dailyClaimsCount.'/'.$dailyQuotaLimit;
+        $quota = $recipientProfile
+            ? app(\App\Services\RecipientClaimService::class)->quotaSummary($recipientProfile->id)
+            : null;
+        $dailyQuotaStatus = $quota
+            ? $quota['remaining'].'/'.$quota['limit']
+            : null;
     }
 @endphp
 

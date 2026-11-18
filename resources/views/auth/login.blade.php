@@ -7,7 +7,11 @@
     </div>
 
     <!-- Session Status -->
-    <x-auth-session-status class="mb-5" :status="session('status')" />
+    @if (! empty($pendingVerificationUser))
+        @include('auth.partials.verification-status-card', ['needsCompleteness' => ! empty($needsCompleteness), 'isReverification' => ! empty($isReverification), 'statusAkun' => $pendingVerificationUser->status_akun->value, 'completenessNote' => $completenessNote ?? null])
+    @else
+        <x-auth-session-status class="mb-5" :status="session('status')" />
+    @endif
 
     @if ($errors->has('account_status'))
         <div role="alert" class="mb-5 flex items-start gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -15,6 +19,7 @@
             <p class="font-medium">{{ $errors->first('account_status') }}</p>
         </div>
     @endif
+
 
     <form method="POST" action="{{ route('login') }}" class="space-y-5">
         @csrf

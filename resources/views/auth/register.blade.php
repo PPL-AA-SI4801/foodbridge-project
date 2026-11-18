@@ -216,8 +216,6 @@
 
             <!-- Step 2: Profile -->
             <div x-show="step === 2" x-ref="stepTwo" x-cloak>
-                <p class="text-sm text-muted-foreground">{{ __('Lengkapi profil dan unggah satu dokumen legalitas.') }}</p>
-
                 <div class="mt-4 grid gap-4 sm:grid-cols-2">
                     <!-- Donor profile -->
                     <div x-show="role === 'donor'" x-cloak class="grid gap-4 sm:col-span-2 sm:grid-cols-2">

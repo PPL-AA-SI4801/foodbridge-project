@@ -6,6 +6,7 @@ $value = $status instanceof \BackedEnum ? $status->value : (string) $status;
 
 $map = [
     'menunggu' => ['label' => 'Menunggu', 'class' => 'bg-[#FEF9C3] text-[#854D0E] border-[#FDE047]'],
+    'perlu_kelengkapan' => ['label' => 'Perlu Kelengkapan', 'class' => 'bg-[#FFEDD5] text-[#9A3412] border-[#FDBA74]'],
     'disetujui' => ['label' => 'Disetujui', 'class' => 'bg-[#DBEAFE] text-[#1E40AF] border-[#93C5FD]'],
     'ditolak' => ['label' => 'Ditolak', 'class' => 'bg-[#FEE2E2] text-[#B91C1C] border-[#FCA5A5]'],
     'selesai' => ['label' => 'Selesai', 'class' => 'bg-[#DCFCE7] text-[#166534] border-[#86EFAC]'],

@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\AccountStatus;
+use App\Enums\VerificationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +19,36 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
-        return view('auth.login');
+        $pendingVerificationUser = null;
+        $needsCompleteness = false;
+        $isReverification = false;
+        $completenessNote = null;
+        $email = session('pending_verification_email');
+
+        if (is_string($email) && $email !== '') {
+            $user = User::where('email', $email)->first();
+
+            if ($user !== null && $user->status_akun === AccountStatus::Menunggu) {
+                $pendingVerificationUser = $user;
+                $needsCompleteness = $user->verificationDocuments()
+                    ->where('status', VerificationStatus::PerluKelengkapan)
+                    ->exists();
+                $isReverification = $user->verificationDocuments()
+                    ->where('status', VerificationStatus::Ditolak)
+                    ->exists();
+                $completenessNote = $user->verificationDocuments()
+                    ->where('status', VerificationStatus::PerluKelengkapan)
+                    ->latest('id')
+                    ->value('catatan');
+            }
+        }
+
+        return view('auth.login', [
+            'pendingVerificationUser' => $pendingVerificationUser,
+            'needsCompleteness' => $needsCompleteness,
+            'isReverification' => $isReverification,
+            'completenessNote' => $completenessNote,
+        ]);
     }
 
     /**
@@ -27,6 +59,7 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+        $request->session()->forget('pending_verification_email');
 
         $redirect = $request->user()->dashboardRouteName();
 

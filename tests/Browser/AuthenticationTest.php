@@ -4,14 +4,34 @@ namespace Tests\Browser;
 
 use App\Enums\Role;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
 class AuthenticationTest extends DuskTestCase
 {
-    use DatabaseMigrations;
+    private static int $emailSeq = 0;
+
+    /**
+     * Generate a unique business/organization name per run, since
+     * nama_usaha and nama_lembaga are validated unique on register
+     * and profile update.
+     */
+    private function uniqueName(string $base): string
+    {
+        return sprintf('%s %d-%s', $base, time(), strtolower(Str::random(4)));
+    }
+    /**
+     * Generate a unique email per run so tests can run repeatedly
+     * against the persistent Dusk database without duplicates.
+     */
+    private function uniqueEmail(string $prefix): string
+    {
+        self::$emailSeq++;
+
+        return sprintf('%s-%d-%d-%s@example.com', strtolower($prefix), time(), self::$emailSeq, strtolower(Str::random(4)));
+    }
 
     /**
      * TC-2-01: Donor can register with a legal document.
@@ -22,38 +42,40 @@ class AuthenticationTest extends DuskTestCase
     public function test_donor_can_register_with_legal_document(): void
     {
         $fixture = base_path('tests/Browser/fixtures/legalitas.pdf');
+        $email = $this->uniqueEmail('donor');
+        $namaUsaha = $this->uniqueName('Resto Donor Satu');
 
-        $this->browse(function (Browser $browser) use ($fixture) {
+        $this->browse(function (Browser $browser) use ($fixture, $email, $namaUsaha) {
             $browser->visit('/register')
                 ->assertSee('Buat akun')
                 ->type('@register-nama', 'Donor Test Satu')
-                ->type('@register-email', 'donor@example.com')
+                ->type('@register-email', $email)
                 ->type('@register-no-hp', '081234567890')
                 ->type('@register-password', 'Password123!')
                 ->type('@register-password-confirmation', 'Password123!')
                 ->press('@register-next')
                 ->pause(500)
                 ->assertVisible('@register-nama-usaha')
-                ->type('@register-nama-usaha', 'Resto Donor Satu')
+                ->type('@register-nama-usaha', $namaUsaha)
                 ->type('@register-jenis-usaha', 'Restoran')
                 ->type('@register-alamat', 'Jl. Merdeka No. 1, Bandung')
                 ->select('@register-jenis-dokumen', 'nib')
                 ->attach('dokumen', $fixture)
                 ->press('@register-submit')
-                ->waitForText('Pendaftaran berhasil. Akun Anda sedang menunggu verifikasi administrator.')
+                ->waitForText('Pendaftaran berhasil. Lengkapi dokumen Anda agar proses verifikasi bisa dilanjutkan.')
                 ->assertPathIs('/login')
-                ->assertSee('Pendaftaran berhasil. Akun Anda sedang menunggu verifikasi administrator.');
+                ->assertSee('Pendaftaran berhasil. Lengkapi dokumen Anda agar proses verifikasi bisa dilanjutkan.');
         });
 
         $this->assertDatabaseHas('users', [
-            'email' => 'donor@example.com',
+            'email' => $email,
             'role' => 'donor',
             'status_akun' => 'menunggu',
         ]);
         $this->assertDatabaseHas('donor_profiles', [
-            'nama_usaha' => 'Resto Donor Satu',
+            'nama_usaha' => $namaUsaha,
         ]);
-        $user = User::where('email', 'donor@example.com')->firstOrFail();
+        $user = User::where('email', $email)->firstOrFail();
         $this->assertTrue(Hash::check('Password123!', $user->password));
         $this->assertNotEquals('Password123!', $user->password);
         $this->assertDatabaseHas('verification_documents', [
@@ -69,38 +91,40 @@ class AuthenticationTest extends DuskTestCase
     public function test_recipient_can_register_with_legal_document(): void
     {
         $fixture = base_path('tests/Browser/fixtures/legalitas.pdf');
+        $email = $this->uniqueEmail('panti');
+        $namaLembaga = $this->uniqueName('Panti Asuhan Harapan');
 
-        $this->browse(function (Browser $browser) use ($fixture) {
+        $this->browse(function (Browser $browser) use ($fixture, $email, $namaLembaga) {
             $browser->visit('/register')
                 ->assertSee('Buat akun');
             $browser->script("document.querySelector('input[name=\"role\"][value=\"penerima\"]').click();");
             $browser->type('@register-nama', 'Panti Test Satu')
-                ->type('@register-email', 'panti@example.com')
+                ->type('@register-email', $email)
                 ->type('@register-no-hp', '081234567891')
                 ->type('@register-password', 'Password123!')
                 ->type('@register-password-confirmation', 'Password123!')
                 ->press('@register-next')
                 ->pause(500)
                 ->assertVisible('@register-nama-lembaga')
-                ->type('@register-nama-lembaga', 'Panti Asuhan Harapan')
+                ->type('@register-nama-lembaga', $namaLembaga)
                 ->type('@register-jenis-lembaga', 'Panti Asuhan')
                 ->type('@register-alamat', 'Jl. Harapan No. 2, Bandung')
                 ->select('@register-jenis-dokumen', 'nib')
                 ->attach('dokumen', $fixture)
                 ->press('@register-submit')
-                ->waitForText('Pendaftaran berhasil. Akun Anda sedang menunggu verifikasi administrator.')
+                ->waitForText('Pendaftaran berhasil. Lengkapi dokumen Anda agar proses verifikasi bisa dilanjutkan.')
                 ->assertPathIs('/login');
         });
 
         $this->assertDatabaseHas('users', [
-            'email' => 'panti@example.com',
+            'email' => $email,
             'role' => 'penerima',
             'status_akun' => 'menunggu',
         ]);
         $this->assertDatabaseHas('recipient_profiles', [
-            'nama_lembaga' => 'Panti Asuhan Harapan',
+            'nama_lembaga' => $namaLembaga,
         ]);
-        $user = User::where('email', 'panti@example.com')->firstOrFail();
+        $user = User::where('email', $email)->firstOrFail();
         $this->assertTrue(Hash::check('Password123!', $user->password));
         $this->assertDatabaseHas('verification_documents', [
             'user_id' => $user->id,
@@ -116,8 +140,8 @@ class AuthenticationTest extends DuskTestCase
      */
     public function test_active_user_can_login_and_is_redirected_by_role(): void
     {
-        [$donor] = $this->createDonor('donor-aktif@example.com', 'aktif');
-        [$recipient] = $this->createRecipient('penerima-aktif@example.com', 'aktif');
+        [$donor] = $this->createDonor($this->uniqueEmail('donor-aktif'), 'aktif');
+        [$recipient] = $this->createRecipient($this->uniqueEmail('penerima-aktif'), 'aktif');
 
         $this->browse(function (Browser $browser) use ($donor, $recipient) {
             $browser->visit('/login')
@@ -147,10 +171,10 @@ class AuthenticationTest extends DuskTestCase
      */
     public function test_user_can_logout(): void
     {
-        [$donor] = $this->createDonor('donor-logout@example.com', 'aktif');
+        [$donor] = $this->createDonor($this->uniqueEmail('donor-logout'), 'aktif');
 
-        $this->browse(function (Browser $browser) {
-            $browser->loginAs(User::where('email', 'donor-logout@example.com')->firstOrFail())
+        $this->browse(function (Browser $browser) use ($donor) {
+            $browser->loginAs($donor)
                 ->visit('/dashboard/donor')
                 ->assertSee('Donor Hub')
                 ->click('@logout-button')
@@ -165,13 +189,14 @@ class AuthenticationTest extends DuskTestCase
      */
     public function test_registration_is_rejected_for_invalid_input(): void
     {
-        $this->createDonor('donor@example.com', 'aktif');
+        $existingEmail = $this->uniqueEmail('donor');
+        $this->createDonor($existingEmail, 'aktif');
 
-        $this->browse(function (Browser $browser) {
+        $this->browse(function (Browser $browser) use ($existingEmail) {
             $browser->visit('/register');
             $browser->script("document.querySelector('input[name=\"role\"][value=\"donor\"]').click();");
             $browser->type('@register-nama', 'Donor Duplikat')
-                ->type('@register-email', 'donor@example.com')
+                ->type('@register-email', $existingEmail)
                 ->type('@register-no-hp', '081234567890')
                 ->type('@register-password', 'Password123!')
                 ->type('@register-password-confirmation', 'Password123!')
@@ -194,7 +219,11 @@ class AuthenticationTest extends DuskTestCase
                 ->assertSee('required');
         });
 
-        $this->assertEquals(1, User::where('email', 'donor@example.com')->count());
+        $this->assertDatabaseHas('users', [
+            'email' => $existingEmail,
+            'role' => 'donor',
+            'status_akun' => 'aktif',
+        ]);
     }
 
     /**
@@ -202,11 +231,12 @@ class AuthenticationTest extends DuskTestCase
      */
     public function test_login_is_rejected_for_wrong_credentials(): void
     {
-        $this->createDonor('donor-salah@example.com', 'aktif');
+        $email = $this->uniqueEmail('donor-salah');
+        $this->createDonor($email, 'aktif');
 
-        $this->browse(function (Browser $browser) {
+        $this->browse(function (Browser $browser) use ($email) {
             $browser->visit('/login')
-                ->type('@login-email', 'donor-salah@example.com')
+                ->type('@login-email', $email)
                 ->type('@login-password', 'wrong-password')
                 ->press('@login-submit')
                 ->waitForText('Email atau kata sandi yang Anda masukkan tidak cocok.')
@@ -226,8 +256,8 @@ class AuthenticationTest extends DuskTestCase
      */
     public function test_unverified_or_rejected_account_cannot_access_features(): void
     {
-        [$pendingDonor] = $this->createDonor('pending@example.com', 'menunggu');
-        [, , $rejectedRecipient] = $this->createRecipientWithStatus('ditolak@example.com', 'ditolak');
+        [$pendingDonor] = $this->createDonor($this->uniqueEmail('pending'), 'menunggu');
+        [, , $rejectedRecipient] = $this->createRecipientWithStatus($this->uniqueEmail('ditolak'), 'ditolak');
 
         $this->browse(function (Browser $browser) use ($pendingDonor, $rejectedRecipient) {
             $browser->loginAs($pendingDonor)
@@ -260,7 +290,7 @@ class AuthenticationTest extends DuskTestCase
      */
     public function test_user_cannot_access_other_roles_pages(): void
     {
-        [$donor] = $this->createDonor('donor-batas@example.com', 'aktif');
+        [$donor] = $this->createDonor($this->uniqueEmail('donor-batas'), 'aktif');
 
         $this->browse(function (Browser $browser) use ($donor) {
             $browser->loginAs($donor)

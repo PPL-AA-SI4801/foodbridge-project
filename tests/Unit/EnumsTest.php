@@ -30,7 +30,7 @@ class EnumsTest extends TestCase
     public function test_verification_status_values_match_the_documented_erd_vocabulary(): void
     {
         $this->assertSame(
-            ['menunggu', 'disetujui', 'ditolak'],
+            ['menunggu', 'perlu_kelengkapan', 'disetujui', 'ditolak'],
             array_column(VerificationStatus::cases(), 'value'),
         );
     }

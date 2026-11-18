@@ -7,7 +7,6 @@ use App\Enums\FoodPostStatus;
 use App\Models\DonorProfile;
 use App\Models\FoodCategory;
 use App\Models\FoodPost;
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -100,6 +99,23 @@ class FoodPostSeeder extends Seeder
                 'days' => 2,
             ],
         ];
+
+        // Historical posts used by ClaimSeeder to demonstrate a long claim history
+        // (more than ten rows) without adding stock to the recipient catalog.
+        $historyCategories = ['Karbohidrat', 'Protein', 'Sayuran'];
+
+        foreach (range(1, 9) as $index) {
+            $posts[] = [
+                'donor' => $index % 2 === 0 ? 'donor2@foodbridge.test' : 'donor@foodbridge.test',
+                'judul' => sprintf('Nasi Kotak Riwayat %02d', $index),
+                'kategori' => $historyCategories[($index - 1) % count($historyCategories)],
+                'deskripsi' => 'Postingan riwayat untuk data demo halaman Klaim Saya.',
+                'jumlah_porsi' => 6,
+                'sisa_porsi' => 0,
+                'status' => FoodPostStatus::Habis,
+                'days' => 1,
+            ];
+        }
 
         foreach ($posts as $data) {
             $donor = $activeDonors->get($data['donor']);
