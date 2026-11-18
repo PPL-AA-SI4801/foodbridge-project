@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Enums\AccountStatus;
 use App\Enums\FoodPostStatus;
+use App\Enums\NotificationType;
 use App\Enums\Role;
 use App\Models\Claim;
 use App\Models\CourierDetail;
@@ -125,7 +126,7 @@ class ClaimManagementTest extends TestCase
 
         $notification = InAppNotification::query()->where('user_id', $donorProfile->user_id)->sole();
         $this->assertSame('Pengajuan Klaim Baru', $notification->judul);
-        $this->assertSame('claim', $notification->tipe);
+        $this->assertSame(NotificationType::Claim->value, $notification->tipe);
     }
 
     public function test_create_claim_rejects_expired_posts_and_excess_portions(): void
