@@ -2,34 +2,78 @@
 
 namespace Tests\Browser;
 
-use App\Enums\FoodPostStatus;
 use App\Enums\FoodRequestStatus;
 use App\Enums\Role;
 use App\Enums\UrgencyLevel;
-use App\Models\DonorProfile;
 use App\Models\FoodCategory;
-use App\Models\FoodPost;
 use App\Models\FoodRequest;
-use App\Models\RecipientProfile;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTruncation;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
 class RequestBoardTest extends DuskTestCase
 {
-    use DatabaseTruncation;
+    private static int $seq = 0;
+
+    private function uniqueEmail(string $prefix): string
+    {
+        self::$seq++;
+
+        return sprintf('%s-%d-%d-%s@example.com', strtolower($prefix), time(), self::$seq, strtolower(Str::random(4)));
+    }
+
+    private function uniqueName(string $base): string
+    {
+        self::$seq++;
+
+        return sprintf('%s %d-%d-%s', $base, time(), self::$seq, strtolower(Str::random(4)));
+    }
 
     /**
-     * Penerima dapat membuka Request Board dan menyiarkan kebutuhan makanan baru.
+     * Penerima mendaftar dan login melalui GUI, akun diaktifkan via DB, lalu membuat 2 permintaan kebutuhan makanan.
      */
     public function test_penerima_can_create_food_request_from_request_board(): void
     {
-        [$recipientUser] = $this->createRecipient();
-        $category = FoodCategory::create(['nama_kategori' => 'Nasi & Lauk']);
+        Artisan::call('migrate:fresh');
 
-        $this->browse(function (Browser $browser) use ($recipientUser, $category) {
-            $browser->loginAs($recipientUser)
+        $category = FoodCategory::create(['nama_kategori' => 'Nasi & Lauk']);
+        $fixture = base_path('tests/Browser/fixtures/legalitas.pdf');
+        $email = $this->uniqueEmail('penerima');
+        $namaLembaga = $this->uniqueName('Panti Asuhan Harapan');
+
+        $this->browse(function (Browser $browser) use ($category, $fixture, $email, $namaLembaga) {
+            $browser->logout()
+                ->visit('/register')
+                ->assertSee('Buat akun');
+
+            $browser->script("document.querySelector('input[name=\"role\"][value=\"penerima\"]').click();");
+
+            $browser->type('@register-nama', 'Pengurus Panti Harapan')
+                ->type('@register-email', $email)
+                ->type('@register-no-hp', '081234567891')
+                ->type('@register-password', 'Password123!')
+                ->type('@register-password-confirmation', 'Password123!')
+                ->press('@register-next')
+                ->pause(500)
+                ->assertVisible('@register-nama-lembaga')
+                ->type('@register-nama-lembaga', $namaLembaga)
+                ->type('@register-jenis-lembaga', 'Panti Asuhan')
+                ->type('@register-alamat', 'Jl. Penerima No. 2, Jakarta')
+                ->select('@register-jenis-dokumen', 'nib')
+                ->attach('dokumen', $fixture)
+                ->press('@register-submit')
+                ->waitForText('Pendaftaran berhasil. Akun Anda sedang menunggu verifikasi administrator.')
+                ->assertPathIs('/login');
+
+            User::where('email', $email)->update(['status_akun' => 'aktif']);
+
+            $browser->type('@login-email', $email)
+                ->type('@login-password', 'Password123!')
+                ->press('@login-submit')
+                ->waitForLocation('/dashboard/penerima')
                 ->visit('/recipient/requests')
                 ->assertSee('Siarkan Kebutuhan Pangan')
                 ->press('Buat Permintaan Kebutuhan')
@@ -46,85 +90,96 @@ class RequestBoardTest extends DuskTestCase
                 ->assertPathIs('/recipient/requests')
                 ->assertSee('Nasi Kotak untuk Anak Panti')
                 ->assertSee('30 porsi dibutuhkan');
+
+            $browser->press('Buat Permintaan Kebutuhan')
+                ->waitFor('#judul')
+                ->type('judul', 'Permintaan Bantuan Pangan Mendesak')
+                ->select('category_id', (string) $category->id)
+                ->clear('jumlah_porsi')
+                ->type('jumlah_porsi', '20')
+                ->select('urgency_level', UrgencyLevel::Mendesak->value)
+                ->select('metode_penerimaan', 'fleksibel')
+                ->type('deskripsi', 'Kebutuhan pangan tambahan untuk panti.')
+                ->press('Siarkan ke Request Board')
+                ->waitForText('Permintaan kebutuhan makanan berhasil disiarkan ke Request Board')
+                ->assertPathIs('/recipient/requests')
+                ->assertSee('Permintaan Bantuan Pangan Mendesak')
+                ->assertSee('20 porsi dibutuhkan')
+                ->logout();
         });
     }
 
     /**
-     * Donor dapat melihat permintaan terbuka di Request Board dan memenuhinya dengan postingan makanan.
+     * Donor mendaftar dan login melalui GUI, akun diaktifkan via DB, lalu memenuhi permintaan pertama dari test sebelumnya.
      */
     public function test_donor_can_fulfil_open_request_on_request_board(): void
     {
-        [$donorUser, $donorProfile] = $this->createDonor();
-        [, $recipientProfile] = $this->createRecipient();
-        $category = FoodCategory::create(['nama_kategori' => 'Makanan Siap Saji']);
+        $fixture = base_path('tests/Browser/fixtures/legalitas.pdf');
+        $email = $this->uniqueEmail('donor');
+        $namaUsaha = $this->uniqueName('Resto Berkah');
+        $foodRequest = FoodRequest::where('judul', 'Nasi Kotak untuk Anak Panti')->firstOrFail();
 
-        $foodPost = FoodPost::create([
-            'judul' => 'Nasi Box Ayam Bakar',
-            'deskripsi' => 'Siap santap',
-            'foto' => 'food-posts/sample.jpg',
-            'jumlah_porsi' => 40,
-            'sisa_porsi' => 40,
-            'alamat' => 'Jl. Donor No. 1',
-            'lat' => -6.2,
-            'lng' => 106.8,
-            'batas_konsumsi' => now()->addHours(8),
-            'status' => FoodPostStatus::Tersedia,
-            'donor_id' => $donorProfile->id,
-            'category_id' => $category->id,
-        ]);
+        $this->browse(function (Browser $browser) use ($fixture, $email, $namaUsaha, $foodRequest) {
+            $browser->logout()
+                ->visit('/register')
+                ->assertSee('Buat akun')
+                ->type('@register-nama', 'Pemilik Resto Berkah')
+                ->type('@register-email', $email)
+                ->type('@register-no-hp', '081234567890')
+                ->type('@register-password', 'Password123!')
+                ->type('@register-password-confirmation', 'Password123!')
+                ->press('@register-next')
+                ->pause(500)
+                ->assertVisible('@register-nama-usaha')
+                ->type('@register-nama-usaha', $namaUsaha)
+                ->type('@register-jenis-usaha', 'Restoran')
+                ->type('@register-alamat', 'Jl. Donor No. 1, Jakarta')
+                ->select('@register-jenis-dokumen', 'nib')
+                ->attach('dokumen', $fixture)
+                ->press('@register-submit')
+                ->waitForText('Pendaftaran berhasil. Akun Anda sedang menunggu verifikasi administrator.')
+                ->assertPathIs('/login');
 
-        $foodRequest = FoodRequest::create([
-            'recipient_id' => $recipientProfile->id,
-            'category_id' => $category->id,
-            'judul' => 'Kebutuhan Makan Malam Panti',
-            'deskripsi' => 'Untuk 25 anak panti.',
-            'jumlah_porsi' => 25,
-            'urgency_level' => UrgencyLevel::Darurat,
-            'metode_penerimaan' => 'ambil_sendiri',
-            'batas_waktu' => now()->addHours(5),
-            'status' => FoodRequestStatus::Open,
-        ]);
+            User::where('email', $email)->update(['status_akun' => 'aktif']);
 
-        $this->browse(function (Browser $browser) use ($donorUser, $foodRequest, $foodPost) {
-            $browser->loginAs($donorUser)
+            $browser->type('@login-email', $email)
+                ->type('@login-password', 'Password123!')
+                ->press('@login-submit')
+                ->waitForLocation('/dashboard/donor')
                 ->visit('/donor/requests')
                 ->assertSee('Papan Kebutuhan Pangan Penerima')
-                ->assertSee('Kebutuhan Makan Malam Panti')
+                ->assertSee('Nasi Kotak untuk Anak Panti')
                 ->press('Penuhi Kebutuhan Ini')
                 ->waitFor("#post_id_{$foodRequest->id}")
-                ->select("#post_id_{$foodRequest->id}", (string) $foodPost->id)
                 ->press('Konfirmasi Pemenuhan')
                 ->waitForText('Terima kasih! Anda berhasil merespons kebutuhan makanan ini')
                 ->assertPathIs('/donor/requests')
-                ->assertSee('Sedang Diproses');
+                ->assertSee('Sedang Diproses')
+                ->logout();
         });
     }
 
     /**
-     * Administrator dapat memantau dan menutup permintaan kebutuhan di Request Board.
+     * Administrator diinjeksi ke DB, login melalui GUI, dan menutup permintaan kedua yang dibuat pada test pertama.
      */
     public function test_administrator_can_view_and_moderate_request_board(): void
     {
-        $admin = User::factory()->create([
+        $adminEmail = $this->uniqueEmail('admin');
+
+        User::factory()->create([
+            'email' => $adminEmail,
+            'password' => Hash::make('Password123!'),
             'role' => Role::Administrator,
             'status_akun' => 'aktif',
         ]);
-        [, $recipientProfile] = $this->createRecipient();
-        $category = FoodCategory::create(['nama_kategori' => 'Sembako']);
 
-        FoodRequest::create([
-            'recipient_id' => $recipientProfile->id,
-            'category_id' => $category->id,
-            'judul' => 'Permintaan Bantuan Pangan Mendesak',
-            'jumlah_porsi' => 20,
-            'urgency_level' => UrgencyLevel::Mendesak,
-            'metode_penerimaan' => 'fleksibel',
-            'batas_waktu' => now()->addHours(6),
-            'status' => FoodRequestStatus::Open,
-        ]);
-
-        $this->browse(function (Browser $browser) use ($admin) {
-            $browser->loginAs($admin)
+        $this->browse(function (Browser $browser) use ($adminEmail) {
+            $browser->logout()
+                ->visit('/login')
+                ->type('@login-email', $adminEmail)
+                ->type('@login-password', 'Password123!')
+                ->press('@login-submit')
+                ->waitForLocation('/dashboard/admin')
                 ->visit('/admin/requests')
                 ->assertSee('Request Board')
                 ->assertSee('Permintaan Bantuan Pangan Mendesak')
@@ -132,49 +187,14 @@ class RequestBoardTest extends DuskTestCase
                 ->acceptDialog()
                 ->waitForText('Permintaan kebutuhan makanan berhasil ditutup oleh Administrator')
                 ->assertPathIs('/admin/requests')
-                ->assertSee('Dibatalkan');
+                ->assertSee('Dibatalkan')
+                ->logout();
         });
-    }
 
-    /**
-     * @return array{0: User, 1: DonorProfile}
-     */
-    private function createDonor(): array
-    {
-        $user = User::factory()->create([
-            'role' => Role::Donor,
-            'status_akun' => 'aktif',
+        $this->assertDatabaseHas('food_requests', [
+            'judul' => 'Permintaan Bantuan Pangan Mendesak',
+            'status' => FoodRequestStatus::Cancelled->value,
         ]);
-
-        $profile = $user->donorProfile()->create([
-            'nama_usaha' => 'Resto Berkah '.fake()->unique()->numerify('###'),
-            'jenis_usaha' => 'Restoran',
-            'alamat' => 'Jl. Donor No. 1, Jakarta',
-            'lat' => -6.2,
-            'lng' => 106.8,
-        ]);
-
-        return [$user, $profile];
-    }
-
-    /**
-     * @return array{0: User, 1: RecipientProfile}
-     */
-    private function createRecipient(): array
-    {
-        $user = User::factory()->create([
-            'role' => Role::Penerima,
-            'status_akun' => 'aktif',
-        ]);
-
-        $profile = $user->recipientProfile()->create([
-            'nama_lembaga' => 'Panti Harapan '.fake()->unique()->numerify('###'),
-            'jenis_lembaga' => 'Panti Asuhan',
-            'alamat' => 'Jl. Penerima No. 2, Jakarta',
-            'lat' => -6.21,
-            'lng' => 106.81,
-        ]);
-
-        return [$user, $profile];
     }
 }
+

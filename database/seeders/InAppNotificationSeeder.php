@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\NotificationType;
 use App\Models\InAppNotification;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -27,14 +28,15 @@ class InAppNotificationSeeder extends Seeder
                 'user_id' => $admin->id,
                 'judul' => 'Akun Menunggu Verifikasi',
                 'pesan' => 'Terdapat pendaftar baru yang menunggu verifikasi.',
-                'tipe' => 'akun',
+                'tipe' => NotificationType::Account->value,
+                'action_url' => route('admin.verifications.index', [], false),
                 'is_read' => false,
             ];
             $notifications[] = [
                 'user_id' => $admin->id,
                 'judul' => 'Postingan Makanan Dihapus',
                 'pesan' => 'Sebuah postingan makanan telah dihapus oleh administrator.',
-                'tipe' => 'post',
+                'tipe' => NotificationType::FoodPost->value,
                 'is_read' => true,
             ];
         }
@@ -44,21 +46,23 @@ class InAppNotificationSeeder extends Seeder
                 'user_id' => $donor->id,
                 'judul' => 'Pengajuan Klaim Baru',
                 'pesan' => 'Penerima mengajukan klaim sebanyak 2 porsi pada postingan Nasi Ayam Geprek Tersedia.',
-                'tipe' => 'klaim',
+                'tipe' => NotificationType::Claim->value,
+                'action_url' => route('donor.claims.index', ['status' => 'menunggu'], false),
                 'is_read' => false,
             ];
             $notifications[] = [
                 'user_id' => $donor->id,
                 'judul' => 'Permintaan Makanan Baru di Request Board',
                 'pesan' => 'Panti Penerima Demo membutuhkan "Kebutuhan Beras Mendesak" (5 porsi) sebelum besok.',
-                'tipe' => 'request',
+                'tipe' => NotificationType::FoodRequest->value,
+                'action_url' => route('donor.requests.index', ['view' => 'open'], false),
                 'is_read' => false,
             ];
             $notifications[] = [
                 'user_id' => $donor->id,
                 'judul' => 'Laporan Makanan',
                 'pesan' => 'Terdapat laporan terkait postingan makanan Anda.',
-                'tipe' => 'laporan',
+                'tipe' => NotificationType::Report->value,
                 'is_read' => true,
             ];
         }
@@ -68,21 +72,24 @@ class InAppNotificationSeeder extends Seeder
                 'user_id' => $recipient->id,
                 'judul' => 'Klaim Disetujui',
                 'pesan' => 'Klaim Anda untuk makanan "Tempe Goreng Tersedia" telah disetujui oleh donor.',
-                'tipe' => 'claim',
+                'tipe' => NotificationType::Claim->value,
+                'action_url' => route('recipient.claims.index', [], false),
                 'is_read' => false,
             ];
             $notifications[] = [
                 'user_id' => $recipient->id,
                 'judul' => 'Klaim Ditolak',
                 'pesan' => 'Mohon maaf, klaim Anda untuk makanan "Sayur Asem Habis" ditolak oleh donor.',
-                'tipe' => 'klaim',
+                'tipe' => NotificationType::Claim->value,
+                'action_url' => route('recipient.claims.index', [], false),
                 'is_read' => true,
             ];
             $notifications[] = [
                 'user_id' => $recipient->id,
                 'judul' => 'Permintaan Makanan Anda Direspons Donatur',
                 'pesan' => 'Donatur Toko Donor Demo memenuhi permintaan "Kebutuhan Beras Mendesak".',
-                'tipe' => 'request',
+                'tipe' => NotificationType::FoodRequest->value,
+                'action_url' => route('recipient.requests.index', ['status' => 'in_progress'], false),
                 'is_read' => false,
             ];
         }

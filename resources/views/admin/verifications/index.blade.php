@@ -1,4 +1,16 @@
 <x-app-layout padded title="Verifikasi Akun" :pending-verifications="$pendingVerifications">
+    @if (session('status'))
+        <div class="mb-6 rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm font-medium text-green-800" dusk="verification-status">
+            {{ session('status') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-6 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-800" dusk="verification-error">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
             <h1 class="text-2xl font-semibold">Verifikasi Akun</h1>
@@ -24,7 +36,7 @@
             </p>
         </div>
     @else
-        <div class="overflow-hidden rounded-lg border border-border bg-card">
+        <div class="overflow-hidden rounded-lg border border-border bg-card" dusk="verification-list">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-border text-sm">
                     <caption class="sr-only">Daftar pendaftaran yang menunggu verifikasi</caption>
@@ -84,6 +96,7 @@
                                 <td class="whitespace-nowrap px-6 py-4 text-right">
                                     <a
                                         href="{{ route('admin.verifications.show', $applicant) }}"
+                                        dusk="verification-review-{{ $applicant->id }}"
                                         class="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                     >
                                         Tinjau

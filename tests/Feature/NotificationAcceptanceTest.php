@@ -36,7 +36,8 @@ class NotificationAcceptanceTest extends TestCase
             ->where('user_id', $donorUser->id)
             ->sole();
 
-        $this->assertSame('claim', $notification->tipe);
+        $this->assertSame('klaim', $notification->tipe);
+        $this->assertSame(route('donor.claims.index', ['status' => 'menunggu'], false), $notification->action_url);
         $this->assertSame('Pengajuan Klaim Baru', $notification->judul);
         $this->assertStringContainsString('2 porsi', $notification->pesan);
         $this->assertFalse($notification->is_read);
@@ -67,7 +68,8 @@ class NotificationAcceptanceTest extends TestCase
             ->where('judul', 'Klaim Disetujui')
             ->sole();
 
-        $this->assertSame('claim', $approvedNotification->tipe);
+        $this->assertSame('klaim', $approvedNotification->tipe);
+        $this->assertSame(route('recipient.claims.index', [], false), $approvedNotification->action_url);
         $this->assertStringContainsString($foodPost->judul, $approvedNotification->pesan);
 
         $this->actingAs($donorUser)
@@ -79,7 +81,8 @@ class NotificationAcceptanceTest extends TestCase
             ->where('judul', 'Klaim Ditolak')
             ->sole();
 
-        $this->assertSame('claim', $rejectedNotification->tipe);
+        $this->assertSame('klaim', $rejectedNotification->tipe);
+        $this->assertSame(route('recipient.claims.index', [], false), $rejectedNotification->action_url);
         $this->assertStringContainsString($foodPost->judul, $rejectedNotification->pesan);
     }
 
@@ -104,6 +107,7 @@ class NotificationAcceptanceTest extends TestCase
             ->sole();
 
         $this->assertSame('akun', $notification->tipe);
+        $this->assertSame(route('profile.edit', [], false), $notification->action_url);
         $this->assertSame('Akun Anda Telah Diverifikasi', $notification->judul);
         $this->assertFalse($notification->is_read);
 
@@ -127,7 +131,7 @@ class NotificationAcceptanceTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('notifications.open', $first))
-            ->assertRedirect(route('notifications.index'))
+            ->assertRedirect(route('notifications.index', ['open' => $first->id]))
             ->assertSessionHas('status', 'Notifikasi ditandai sudah dibaca.');
 
         $this->assertTrue($first->fresh()->is_read);
@@ -262,7 +266,7 @@ class NotificationAcceptanceTest extends TestCase
             'user_id' => $user->id,
             'judul' => 'Judul notifikasi',
             'pesan' => 'Pesan notifikasi',
-            'tipe' => 'claim',
+            'tipe' => 'klaim',
         ], $attributes));
     }
 }

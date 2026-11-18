@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Enums\FoodPostStatus;
+use App\Enums\NotificationType;
 use App\Models\Claim;
 use App\Models\FoodPost;
 use App\Models\InAppNotification;
@@ -108,7 +109,8 @@ class ClaimManagementService
                 'user_id' => $post->donor->user_id,
                 'judul' => 'Pengajuan Klaim Baru',
                 'pesan' => 'Administrator mengajukan klaim sebanyak '.$claim->jumlah_porsi.' porsi pada postingan '.$post->judul.'.',
-                'tipe' => 'claim',
+                'tipe' => NotificationType::Claim->value,
+                'action_url' => route('donor.claims.index', ['status' => 'menunggu'], false),
             ]);
 
             return $claim;
@@ -195,7 +197,8 @@ class ClaimManagementService
                     'user_id' => $recipientUserId,
                     'judul' => 'Klaim Dihapus oleh Administrator',
                     'pesan' => 'Klaim Anda untuk makanan "'.$judul.'" telah dihapus oleh administrator.',
-                    'tipe' => 'claim',
+                    'tipe' => NotificationType::Claim->value,
+                    'action_url' => route('recipient.claims.index', [], false),
                 ]);
             }
         });

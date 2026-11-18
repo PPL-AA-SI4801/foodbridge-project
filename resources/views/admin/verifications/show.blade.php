@@ -1,7 +1,29 @@
 <x-app-layout padded title="Detail Verifikasi" :pending-verifications="$pendingVerifications">
+    @if (session('status'))
+        <div class="mb-6 rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm font-medium text-green-800" dusk="verification-status">
+            {{ session('status') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-6 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-800" dusk="verification-error">
+            {{ session('error') }}
+        </div>
+    @endif
+
     @php
         $isPending = $user->status_akun === \App\Enums\AccountStatus::Menunggu;
         $hasDocument = $user->verificationDocuments->isNotEmpty();
+        $hasCompletenessRequest = $user->verificationDocuments->contains(
+            fn ($document) => $document->status === \App\Enums\VerificationStatus::PerluKelengkapan
+        );
+        $hasUnresolvedDocuments = $user->verificationDocuments
+            ->groupBy('jenis_dokumen')
+            ->map(fn ($documents) => $documents->first())
+            ->contains(fn ($document) => in_array($document->status, [
+                \App\Enums\VerificationStatus::PerluKelengkapan,
+                \App\Enums\VerificationStatus::Ditolak,
+            ], true));
         $profile = $user->role === \App\Enums\Role::Donor
             ? $user->donorProfile
             : $user->recipientProfile;
@@ -135,7 +157,7 @@
                 <div class="border-b border-border px-6 py-4">
                     <h2 class="text-base font-semibold">Keputusan Verifikasi</h2>
                     <p class="mt-1 text-sm text-muted-foreground">
-                        Setujui atau tolak pendaftaran ini.
+                        Setujui, minta kelengkapan, atau tolak pendaftaran ini.
                     </p>
                 </div>
 
@@ -150,11 +172,27 @@
                             </p>
                         </div>
                     @elseif ($hasDocument)
-                        <form method="POST" action="{{ route('admin.verifications.approve', $user) }}">
+                        @if ($hasUnresolvedDocuments)
+                            <div class="mb-5 rounded-md border border-[#FDBA74] bg-[#FFEDD5] p-4 text-sm text-[#9A3412]">
+                                <p class="font-medium">
+                                    {{ $hasCompletenessRequest ? 'Menunggu kelengkapan dokumen' : 'Dokumen belum lengkap' }}
+                                </p>
+                                <p class="mt-1">
+                                    @if ($hasCompletenessRequest)
+                                        Pendaftar masih diminta mengunggah dokumen pengganti. Persetujuan akan ditolak sampai permintaan ini diselesaikan.
+                                    @else
+                                        Ada dokumen yang ditolak. Minta kelengkapan dokumen agar pendaftar dapat mengunggah dokumen pengganti, atau tolak pendaftaran.
+                                    @endif
+                                </p>
+                            </div>
+                        @endif
+
+                        <form method="POST" action="{{ route('admin.verifications.approve', $user) }}" dusk="verification-approve-form">
                             @csrf
 
                             <button
                                 type="submit"
+                                dusk="verification-approve"
                                 class="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                             >
                                 <x-icon name="user-check" class="h-4 w-4" />
@@ -162,13 +200,59 @@
                             </button>
                         </form>
 
+                        <div class="mt-6 border-t border-border pt-5">
+                            <form method="POST" action="{{ route('admin.verifications.request-documents', $user) }}" dusk="verification-request-documents-form">
+                                @csrf
+
+                                <label for="completeness_catatan" class="block text-sm font-medium">
+                                    Minta kelengkapan dokumen <span class="text-destructive">*</span>
+                                </label>
+                                <p class="mt-1 text-xs text-muted-foreground">
+                                    Akun tetap berstatus menunggu. Pendaftar dapat masuk untuk mengunggah dokumen pengganti.
+                                </p>
+
+                                <textarea
+                                    id="completeness_catatan"
+                                    name="completeness_catatan"
+                                    dusk="verification-request-documents-catatan"
+                                    rows="3"
+                                    required
+                                    maxlength="255"
+                                    aria-describedby="completeness-catatan-help{{ $errors->has('completeness_catatan') ? ' completeness-catatan-error' : '' }}"
+                                    aria-invalid="{{ $errors->has('completeness_catatan') ? 'true' : 'false' }}"
+                                    @class([
+                                        'mt-2 block w-full rounded-md border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring',
+                                        'border-input' => ! $errors->has('completeness_catatan'),
+                                        'border-destructive' => $errors->has('completeness_catatan'),
+                                    ])
+                                >{{ old('completeness_catatan') }}</textarea>
+
+                                <p id="completeness-catatan-help" class="mt-1 text-xs text-muted-foreground">
+                                    Jelaskan dokumen yang kurang atau perlu diganti. Maksimal 255 karakter.
+                                </p>
+
+                                @error('completeness_catatan')
+                                    <p id="completeness-catatan-error" class="mt-2 text-sm text-destructive">{{ $message }}</p>
+                                @enderror
+
+                                <button
+                                    type="submit"
+                                    dusk="verification-request-documents"
+                                    class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md border border-input bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                >
+                                    <x-icon name="upload" class="h-4 w-4" />
+                                    Minta Kelengkapan
+                                </button>
+                            </form>
+                        </div>
+
                         <div class="my-6 flex items-center gap-3">
                             <div class="h-px flex-1 bg-border"></div>
                             <span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">atau</span>
                             <div class="h-px flex-1 bg-border"></div>
                         </div>
 
-                        <form method="POST" action="{{ route('admin.verifications.reject', $user) }}">
+                        <form method="POST" action="{{ route('admin.verifications.reject', $user) }}" dusk="verification-reject-form">
                             @csrf
 
                             <label for="catatan" class="block text-sm font-medium">
@@ -178,6 +262,7 @@
                             <textarea
                                 id="catatan"
                                 name="catatan"
+                                dusk="verification-catatan"
                                 rows="4"
                                 required
                                 maxlength="255"
@@ -200,6 +285,7 @@
 
                             <button
                                 type="submit"
+                                dusk="verification-reject"
                                 class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md bg-destructive px-4 py-2.5 text-sm font-medium text-destructive-foreground transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2"
                             >
                                 <x-icon name="x" class="h-4 w-4" />

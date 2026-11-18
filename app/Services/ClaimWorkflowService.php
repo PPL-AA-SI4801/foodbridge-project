@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\NotificationType;
 use App\Models\Claim;
 use App\Models\InAppNotification;
 use App\Support\ClaimStatus;
@@ -33,6 +34,10 @@ class ClaimWorkflowService
 
             $foodPost = $lockedClaim->post()->lockForUpdate()->firstOrFail();
 
+            if ($foodPost->batas_konsumsi && $foodPost->batas_konsumsi->isPast()) {
+                throw new DomainException('Makanan sudah kedaluwarsa.');
+            }
+
             if ($foodPost->sisa_porsi < $lockedClaim->jumlah_porsi) {
                 throw new DomainException('Sisa porsi makanan tidak mencukupi untuk klaim ini.');
             }
@@ -48,7 +53,8 @@ class ClaimWorkflowService
                 'user_id' => $lockedClaim->recipient->user_id,
                 'judul' => 'Klaim Disetujui',
                 'pesan' => 'Klaim Anda untuk makanan "'.$foodPost->judul.'" telah disetujui oleh '.$actorLabel.'.',
-                'tipe' => 'claim',
+                'tipe' => NotificationType::Claim->value,
+                'action_url' => route('recipient.claims.index', [], false),
             ]);
 
             return $lockedClaim;
@@ -76,7 +82,8 @@ class ClaimWorkflowService
                 'user_id' => $lockedClaim->recipient->user_id,
                 'judul' => 'Klaim Ditolak',
                 'pesan' => 'Mohon maaf, klaim Anda untuk makanan "'.$lockedClaim->post->judul.'" ditolak oleh '.$actorLabel.'.',
-                'tipe' => 'claim',
+                'tipe' => NotificationType::Claim->value,
+                'action_url' => route('recipient.claims.index', [], false),
             ]);
 
             return $lockedClaim;

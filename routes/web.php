@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VerificationController;
 use App\Http\Controllers\Admin\VerificationDocumentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocumentCompletenessController;
 use App\Http\Controllers\Donor\ClaimController as DonorClaimController;
 use App\Http\Controllers\Donor\FoodPostController;
 use App\Http\Controllers\Donor\RequestBoardController as DonorRequestBoardController;
@@ -51,6 +52,12 @@ Route::middleware('auth')->group(function () {
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     });
 
+    Route::get('/lengkapi-dokumen', [DocumentCompletenessController::class, 'edit'])
+        ->name('documents.completeness.edit');
+
+    Route::post('/lengkapi-dokumen/{verificationDocument}', [DocumentCompletenessController::class, 'update'])
+        ->name('documents.completeness.update');
+
     Route::get('/notifikasi', [NotificationController::class, 'index'])
         ->name('notifications.index');
 
@@ -76,6 +83,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/verifications', [VerificationController::class, 'index'])->name('admin.verifications.index');
         Route::get('/admin/verifications/{user}', [VerificationController::class, 'show'])->name('admin.verifications.show');
         Route::post('/admin/verifications/{user}/approve', [VerificationController::class, 'approve'])->name('admin.verifications.approve');
+        Route::post('/admin/verifications/{user}/request-documents', [VerificationController::class, 'requestDocuments'])->name('admin.verifications.request-documents');
         Route::post('/admin/verifications/{user}/reject', [VerificationController::class, 'reject'])->name('admin.verifications.reject');
         Route::get('/admin/documents/{verificationDocument}', [VerificationDocumentController::class, 'show'])->name('admin.documents.show');
 

@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\AccountStatus;
 use App\Enums\Role;
+use App\Enums\VerificationStatus;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -44,6 +45,53 @@ class User extends Authenticatable
     public function isActive(): bool
     {
         return $this->status_akun?->isActive() ?? false;
+    }
+
+    /**
+     * Determine whether the administrator has requested document completeness.
+     */
+    public function hasDocumentCompletenessRequest(): bool
+    {
+        return $this->verificationDocuments()
+            ->where('status', VerificationStatus::PerluKelengkapan->value)
+            ->exists();
+    }
+
+    /**
+     * Determine whether the latest document for any type is rejected or incomplete.
+     */
+    public function hasUnresolvedVerificationDocuments(): bool
+    {
+        return $this->verificationDocuments()
+            ->whereIn('id', $this->latestVerificationDocumentIds())
+            ->whereIn('status', [
+                VerificationStatus::PerluKelengkapan->value,
+                VerificationStatus::Ditolak->value,
+            ])
+            ->exists();
+    }
+
+    /**
+     * Get the newest document id for each document type.
+     *
+     * @return array<int, int>
+     */
+    public function latestVerificationDocumentIds(): array
+    {
+        return $this->verificationDocuments()
+            ->selectRaw('MAX(id) as latest_id')
+            ->groupBy('jenis_dokumen')
+            ->pluck('latest_id')
+            ->all();
+    }
+
+    /**
+     * Determine whether this pending account may sign in to complete documents.
+     */
+    public function mayAccessDocumentCompleteness(): bool
+    {
+        return $this->status_akun === AccountStatus::Menunggu
+            && $this->hasDocumentCompletenessRequest();
     }
 
     /**
