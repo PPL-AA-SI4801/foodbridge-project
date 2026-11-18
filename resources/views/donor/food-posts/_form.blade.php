@@ -35,7 +35,7 @@
         }
     }
 
-    $inputClasses = 'mt-2 block w-full rounded-xl border border-input bg-white px-3.5 py-2.5 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
+    $inputClasses = 'mt-2 block w-full rounded-xl border border-input bg-white px-3.5 py-2.5 text-sm text-foreground transition placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
     $inlineInputClasses = str_replace('mt-2 ', '', $inputClasses);
 @endphp
 
@@ -87,8 +87,8 @@
     @endif
 
     <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_25rem] xl:grid-cols-[minmax(0,1fr)_27rem]">
-        <div class="space-y-6">
-            <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <div class="min-w-0 space-y-6">
+            <section class="rounded-2xl border border-border bg-card p-5 sm:p-6">
                 <div class="flex items-start justify-between gap-4">
                     <div class="flex items-start gap-3">
                         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
@@ -136,7 +136,7 @@
                 </div>
             </section>
 
-            <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+            <section class="rounded-2xl border border-border bg-card p-5 sm:p-6">
                 <div class="flex items-start gap-3">
                     <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
                         <x-icon name="camera" class="h-5 w-5" />
@@ -191,7 +191,7 @@
                 <x-input-error :messages="$errors->get('foto')" class="mt-2" />
             </section>
 
-            <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+            <section class="rounded-2xl border border-border bg-card p-5 sm:p-6">
                 <div class="flex items-start justify-between gap-4">
                     <div class="flex items-start gap-3">
                         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
@@ -244,7 +244,7 @@
                 <x-input-error :messages="$errors->get('category_id')" class="mt-2" />
             </section>
 
-            <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+            <section class="rounded-2xl border border-border bg-card p-5 sm:p-6">
                 <div class="flex items-start gap-3">
                     <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
                         <x-icon name="package" class="h-5 w-5" />
@@ -323,8 +323,8 @@
             </section>
         </div>
 
-        <aside class="space-y-6">
-            <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <aside class="min-w-0 space-y-6">
+            <section class="rounded-2xl border border-border bg-card p-5 sm:p-6">
                 <div class="flex items-start gap-3">
                     <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
                         <x-icon name="clock" class="h-5 w-5" />
@@ -378,7 +378,7 @@
                 </p>
             </section>
 
-            <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+            <section class="rounded-2xl border border-border bg-card p-5 sm:p-6">
                 <div class="flex items-start gap-3">
                     <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
                         <x-icon name="map-pin" class="h-5 w-5" />
@@ -484,7 +484,7 @@
                         maxlength="500"
                         x-on:input="count = $event.target.value.length"
                         placeholder="Contoh: Gunakan pintu samping, hubungi resepsionis sebelum tiba, atau simpan makanan di meja penerimaan."
-                        class="mt-2 block w-full rounded-xl border border-border bg-background px-3.5 py-3 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 @error('catatan_kurir') border-destructive focus:border-destructive focus:ring-destructive/20 @enderror"
+                        class="mt-2 block w-full rounded-xl border border-border bg-background px-3.5 py-3 text-sm text-foreground transition placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 @error('catatan_kurir') border-destructive focus:border-destructive focus:ring-destructive/20 @enderror"
                     >{{ $currentCatatanKurir }}</textarea>
                     <div class="mt-2 flex items-start justify-between gap-4 text-xs leading-5 text-muted-foreground">
                         <p class="flex items-start gap-2">
@@ -499,7 +499,7 @@
         </aside>
     </div>
 
-    <div class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+    <div class="rounded-2xl border border-border bg-card p-5 sm:p-6">
         <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <a href="{{ route('donor.food-posts.index') }}" class="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition hover:text-foreground">

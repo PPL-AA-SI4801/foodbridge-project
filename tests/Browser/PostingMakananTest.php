@@ -27,6 +27,8 @@ class PostingMakananTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($donorUser) {
             $browser->loginAs($donorUser)
                 ->visit('/donor/food-posts/create')
+                ->pause(3000)
+                ->pause(3000)
                 ->assertPathIs('/donor/food-posts/create')
                 ->assertSee('Posting Surplus Makanan')
                 ->assertPresent('#judul')
@@ -37,7 +39,8 @@ class PostingMakananTest extends DuskTestCase
                 ->assertPresent('#alamat')
                 ->assertPresent('#lat')
                 ->assertPresent('#lng')
-                ->assertPresent('input[name="category_id"]');
+                ->assertPresent('input[name="category_id"]')
+                ->pause(4000);
         });
     }
 
@@ -52,22 +55,35 @@ class PostingMakananTest extends DuskTestCase
             $this->browse(function (Browser $browser) use ($donorUser, $category, $sampleImage, $title) {
                 $browser->loginAs($donorUser)
                     ->visit('/donor/food-posts/create')
-                    ->type('judul', $title)
+                    ->pause(3000)
+                    ->pause(3000);
+
+                $browser->type('judul', $title)
+                    ->pause(2000)
                     ->type('deskripsi', 'Nasi kotak untuk pengujian Dusk.')
+                    ->pause(2000)
                     ->clear('jumlah_porsi')
-                    ->type('jumlah_porsi', '20');
+                    ->type('jumlah_porsi', '20')
+                    ->pause(2000);
 
-            $deadline = now()->addDays(2)->format('Y-m-d\TH:i');
-            $browser->script('document.getElementById("batas_konsumsi").value = "'.$deadline.'"; document.getElementById("batas_konsumsi").dispatchEvent(new Event("change", {bubbles:true}));');
+                $deadline = now()->addDays(2)->format('Y-m-d\TH:i');
+                $browser->script('document.getElementById("batas_konsumsi").value = "'.$deadline.'"; document.getElementById("batas_konsumsi").dispatchEvent(new Event("change", {bubbles:true}));');
+                $browser->pause(2000);
 
-            $browser->type('alamat', 'Jl. Uji No. 1, Jakarta')
-                    ->attach('foto', $sampleImage);
+                $browser->type('alamat', 'Jl. Uji No. 1, Jakarta')
+                    ->pause(2000)
+                    ->attach('foto', $sampleImage)
+                    ->pause(3000);
 
-            $browser->script("document.querySelector('input[name=\"category_id\"][value=\"".$category->id."\"]').checked = true;");
-            $browser->press('Terbitkan Postingan Sekarang');
-            $browser->pause(2000);
-            $browser->waitForText('Postingan makanan berhasil dibuat.')
-                    ->assertSee($title);
+                $browser->script("document.querySelector('input[name=\"category_id\"][value=\"".$category->id."\"]').checked = true;");
+                $browser->pause(2000);
+
+                $browser->press('Terbitkan Postingan Sekarang')
+                    ->pause(3000)
+                    ->waitForText('Postingan makanan berhasil dibuat.')
+                    ->pause(3000)
+                    ->assertSee($title)
+                    ->pause(4000);
             });
         } finally {
             @unlink($sampleImage);
@@ -89,24 +105,30 @@ class PostingMakananTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($donorUser) {
             $browser->loginAs($donorUser)
-                ->visit('/donor/food-posts/create');
+                ->visit('/donor/food-posts/create')
+                ->pause(3000)
+                ->pause(3000);
 
             $browser->script("document.querySelector('form').setAttribute('novalidate','novalidate'); document.querySelectorAll('[required]').forEach(function (el) { el.removeAttribute('required'); });");
             $browser->clear('judul')
-                    ->clear('deskripsi')
-                    ->clear('jumlah_porsi')
-                    ->clear('alamat')
-                    ->clear('batas_konsumsi');
+                ->clear('deskripsi')
+                ->clear('jumlah_porsi')
+                ->clear('alamat')
+                ->clear('batas_konsumsi')
+                ->pause(2000);
 
             $browser->press('Terbitkan Postingan Sekarang')
+                ->pause(3000)
                 ->waitForText('Periksa kembali data postingan Anda.')
+                ->pause(3000)
                 ->assertSee('judul wajib diisi.')
                 ->assertSee('deskripsi wajib diisi.')
                 ->assertSee('foto wajib diisi.')
                 ->assertSee('jumlah porsi wajib diisi.')
                 ->assertSee('batas konsumsi wajib diisi.')
                 ->assertSee('alamat wajib diisi.')
-                ->assertSee('kategori wajib diisi.');
+                ->assertSee('kategori wajib diisi.')
+                ->pause(4000);
         });
 
         $this->assertDatabaseCount('food_posts', 0);
@@ -153,10 +175,13 @@ class PostingMakananTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($donorUser, $ownTitle, $otherTitle) {
             $browser->loginAs($donorUser)
                 ->visit('/donor/food-posts')
+                ->pause(3000)
+                ->pause(3000)
                 ->assertPathIs('/donor/food-posts')
                 ->assertSee('Postingan Makanan')
                 ->assertSee($ownTitle)
-                ->assertDontSee($otherTitle);
+                ->assertDontSee($otherTitle)
+                ->pause(4000);
         });
     }
 
@@ -185,19 +210,31 @@ class PostingMakananTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($donorUser, $foodPost, $newTitle) {
             $browser->loginAs($donorUser)
                 ->visit("/donor/food-posts/{$foodPost->id}/edit")
+                ->pause(3000)
+                ->pause(3000)
                 ->assertSee('Ubah Postingan Makanan')
-                ->clear('judul')
+                ->pause(2000);
+
+            $browser->clear('judul')
                 ->type('judul', $newTitle)
+                ->pause(2000)
                 ->clear('deskripsi')
                 ->type('deskripsi', 'Deskripsi diperbarui')
+                ->pause(2000)
                 ->clear('jumlah_porsi')
                 ->type('jumlah_porsi', '8')
+                ->pause(2000)
                 ->clear('alamat')
                 ->type('alamat', 'Jl. Baru')
+                ->pause(2000)
                 ->press('Simpan Perubahan')
+                ->pause(3000)
                 ->waitForLocation('/donor/food-posts')
+                ->pause(3000)
                 ->waitForText('Postingan makanan berhasil diperbarui.')
-                ->assertSee($newTitle);
+                ->pause(3000)
+                ->assertSee($newTitle)
+                ->pause(4000);
         });
 
         $foodPost->refresh();
@@ -233,11 +270,18 @@ class PostingMakananTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($donorUser, $title) {
             $browser->loginAs($donorUser)
                 ->visit('/donor/food-posts')
+                ->pause(3000)
+                ->pause(3000)
                 ->assertSee($title)
+                ->pause(2000)
                 ->press('Hapus')
+                ->pause(3000)
                 ->acceptDialog()
+                ->pause(3000)
                 ->waitForText('Postingan makanan berhasil dihapus.')
-                ->assertDontSee($title);
+                ->pause(3000)
+                ->assertDontSee($title)
+                ->pause(4000);
         });
 
         $this->assertDatabaseMissing('food_posts', ['id' => $foodPost->id]);
@@ -279,11 +323,18 @@ class PostingMakananTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($donorUser, $title) {
             $browser->loginAs($donorUser)
                 ->visit('/donor/food-posts')
+                ->pause(3000)
+                ->pause(3000)
                 ->assertSee($title)
+                ->pause(2000)
                 ->press('Hapus')
+                ->pause(3000)
                 ->acceptDialog()
+                ->pause(3000)
                 ->waitForText('Postingan makanan tidak dapat dihapus karena sudah memiliki klaim.')
-                ->assertSee($title);
+                ->pause(3000)
+                ->assertSee($title)
+                ->pause(4000);
         });
 
         $this->assertDatabaseHas('food_posts', ['id' => $foodPost->id]);

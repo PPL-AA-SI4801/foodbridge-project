@@ -24,12 +24,15 @@ class KatalogPanganTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($recipientUser) {
             $browser->loginAs($recipientUser)
                 ->visit('/penerima/katalog')
+                ->pause(3000)
+                ->pause(3000)
                 ->assertPathIs('/penerima/katalog')
                 ->assertSee('Katalog Peta Pangan')
                 ->assertPresent('#catalog-search')
                 ->assertPresent('#category_id')
                 ->assertPresent('#radius_km')
-                ->assertPresent('#food-catalog-map');
+                ->assertPresent('#food-catalog-map')
+                ->pause(4000);
         });
     }
 
@@ -58,9 +61,13 @@ class KatalogPanganTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($recipientUser, $title) {
             $browser->loginAs($recipientUser)
                 ->visit('/penerima/katalog')
+                ->pause(3000)
+                ->pause(3000)
                 ->waitForText($title)
+                ->pause(3000)
                 ->assertSee($title)
-                ->assertSee('donasi aktif');
+                ->assertSee('donasi aktif')
+                ->pause(4000);
         });
     }
 
@@ -105,11 +112,17 @@ class KatalogPanganTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($recipientUser, $matchingTitle, $otherTitle) {
             $browser->loginAs($recipientUser)
                 ->visit('/penerima/katalog')
+                ->pause(3000)
+                ->pause(3000)
                 ->type('q', 'Ayam')
+                ->pause(2000)
                 ->press('Cari')
+                ->pause(3000)
                 ->waitForText($matchingTitle)
+                ->pause(3000)
                 ->assertSee($matchingTitle)
-                ->assertDontSee($otherTitle);
+                ->assertDontSee($otherTitle)
+                ->pause(4000);
         });
     }
 
@@ -155,13 +168,20 @@ class KatalogPanganTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($recipientUser, $protein, $proteinTitle, $vegetableTitle) {
             $browser->loginAs($recipientUser)
                 ->visit('/penerima/katalog')
+                ->pause(3000)
+                ->pause(3000)
                 ->press('Filter')
+                ->pause(2000)
                 ->select('category_id', (string) $protein->id)
+                ->pause(2000)
                 ->press('Terapkan')
+                ->pause(3000)
                 ->waitForText($proteinTitle)
+                ->pause(3000)
                 ->assertSee($proteinTitle)
                 ->assertDontSee($vegetableTitle)
-                ->assertSee('Atur ulang');
+                ->assertSee('Atur ulang')
+                ->pause(4000);
         });
     }
 
@@ -206,13 +226,20 @@ class KatalogPanganTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($recipientUser, $nearTitle, $farTitle) {
             $browser->loginAs($recipientUser)
                 ->visit('/penerima/katalog')
+                ->pause(3000)
+                ->pause(3000)
                 ->press('Filter')
+                ->pause(2000)
                 ->select('radius_km', '5')
+                ->pause(2000)
                 ->press('Terapkan')
+                ->pause(3000)
                 ->waitForText($nearTitle)
+                ->pause(3000)
                 ->assertSee($nearTitle)
                 ->assertDontSee($farTitle)
-                ->assertSee('Radius 5 km');
+                ->assertSee('Radius 5 km')
+                ->pause(4000);
         });
     }
 
@@ -289,14 +316,21 @@ class KatalogPanganTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($recipientUser, $availableNearTitle, $availableFarTitle, $expiredTitle, $soldOutTitle) {
             $browser->loginAs($recipientUser)
                 ->visit('/penerima/katalog')
+                ->pause(3000)
+                ->pause(3000)
                 ->press('Filter')
+                ->pause(2000)
                 ->select('radius_km', '5')
+                ->pause(2000)
                 ->press('Terapkan')
+                ->pause(3000)
                 ->waitForText($availableNearTitle)
+                ->pause(3000)
                 ->assertSee($availableNearTitle)
                 ->assertDontSee($availableFarTitle)
                 ->assertDontSee($expiredTitle)
-                ->assertDontSee($soldOutTitle);
+                ->assertDontSee($soldOutTitle)
+                ->pause(4000);
         });
     }
 
@@ -325,13 +359,90 @@ class KatalogPanganTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($recipientUser, $title) {
             $browser->loginAs($recipientUser)
                 ->visit('/penerima/katalog')
+                ->pause(3000)
+                ->pause(3000)
                 ->waitForText($title)
+                ->pause(3000)
                 ->assertPresent('#food-catalog-map')
                 ->assertSee('1 titik makanan')
-                ->pause(1500);
+                ->pause(3000);
 
             $markerCount = $browser->script('return document.querySelectorAll(".leaflet-marker-icon").length;');
             \PHPUnit\Framework\Assert::assertGreaterThan(0, $markerCount[0] ?? 0);
+            $browser->pause(4000);
+        });
+    }
+
+    public function test_katalog_mengurutkan_berdasarkan_jarak_dan_batas_konsumsi(): void
+    {
+        [$recipientUser, $recipientProfile] = $this->createRecipient(['lat' => -6.2, 'lng' => 106.8]);
+        [, $donorProfile] = $this->createDonor();
+        $category = FoodCategory::create(['nama_kategori' => 'Karbohidrat']);
+
+        $nearSoonTitle = 'Dekat Segera '.uniqid();
+        $nearLaterTitle = 'Dekat Nanti '.uniqid();
+        $farTitle = 'Jauh '.uniqid();
+
+        FoodPost::create([
+            'judul' => $nearSoonTitle,
+            'deskripsi' => 'Dekat segera',
+            'foto' => 'food-posts/test.jpg',
+            'jumlah_porsi' => 10,
+            'sisa_porsi' => 10,
+            'alamat' => 'Jl. Dekat',
+            'lat' => -6.21,
+            'lng' => 106.81,
+            'batas_konsumsi' => now()->addHours(2),
+            'status' => FoodPostStatus::Tersedia,
+            'donor_id' => $donorProfile->id,
+            'category_id' => $category->id,
+        ]);
+
+        FoodPost::create([
+            'judul' => $nearLaterTitle,
+            'deskripsi' => 'Dekat nanti',
+            'foto' => 'food-posts/test.jpg',
+            'jumlah_porsi' => 10,
+            'sisa_porsi' => 10,
+            'alamat' => 'Jl. Dekat',
+            'lat' => -6.21,
+            'lng' => 106.81,
+            'batas_konsumsi' => now()->addDay(),
+            'status' => FoodPostStatus::Tersedia,
+            'donor_id' => $donorProfile->id,
+            'category_id' => $category->id,
+        ]);
+
+        FoodPost::create([
+            'judul' => $farTitle,
+            'deskripsi' => 'Jauh',
+            'foto' => 'food-posts/test.jpg',
+            'jumlah_porsi' => 10,
+            'sisa_porsi' => 10,
+            'alamat' => 'Jl. Jauh',
+            'lat' => -6.4,
+            'lng' => 107.0,
+            'batas_konsumsi' => now()->addMinutes(30),
+            'status' => FoodPostStatus::Tersedia,
+            'donor_id' => $donorProfile->id,
+            'category_id' => $category->id,
+        ]);
+
+        $this->browse(function (Browser $browser) use ($recipientUser, $nearSoonTitle, $nearLaterTitle, $farTitle) {
+            $browser->loginAs($recipientUser)
+                ->visit('/penerima/katalog')
+                ->pause(3000)
+                ->pause(3000)
+                ->waitForText($nearSoonTitle)
+                ->pause(3000);
+
+            $orderedTitles = $browser->script('return Array.from(document.querySelectorAll("article h2")).map(function (element) { return element.textContent.trim(); });');
+            \PHPUnit\Framework\Assert::assertSame(
+                [$nearSoonTitle, $nearLaterTitle, $farTitle],
+                array_slice($orderedTitles[0] ?? [], 0, 3)
+            );
+
+            $browser->pause(4000);
         });
     }
 

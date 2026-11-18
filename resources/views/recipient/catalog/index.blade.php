@@ -11,7 +11,7 @@
 >
     <div class="mx-auto max-w-[1600px] lg:px-6 lg:py-6">
         <div class="lg:grid lg:h-[calc(100dvh-7rem)] lg:min-h-[44rem] lg:grid-cols-[minmax(0,27rem)_minmax(0,1fr)] lg:gap-6 xl:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
-            <aside class="flex min-h-0 flex-col border-b border-border bg-card lg:overflow-hidden lg:rounded-3xl lg:border lg:shadow-sm">
+            <aside class="flex min-h-0 min-w-0 flex-col border-b border-border bg-card lg:overflow-hidden lg:rounded-3xl lg:border">
                 <div class="border-b border-border p-4 sm:p-5">
                     <div class="flex items-start justify-between gap-4">
                         <div>
@@ -36,7 +36,7 @@
                                 type="search"
                                 value="{{ $search }}"
                                 placeholder="Cari makanan, donatur, atau lokasi"
-                                class="h-11 w-full rounded-xl border border-input bg-background pl-10 pr-20 text-sm text-foreground shadow-xs transition placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                class="h-11 w-full rounded-xl border border-input bg-background pl-10 pr-20 text-sm text-foreground transition placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                             />
                             <button
                                 type="submit"
@@ -217,7 +217,7 @@
                             @foreach ($foodPosts as $foodPost)
                                 <article
                                     x-data="{ open: false, qty: 1, max: {{ (int) $foodPost->sisa_porsi }}, submitting: false }"
-                                    class="group overflow-hidden rounded-2xl border border-border bg-card p-3 transition duration-200 hover:border-primary/25 hover:shadow-sm"
+                                    class="group overflow-hidden rounded-2xl border border-border bg-card p-3 transition duration-200 hover:border-primary/25"
                                 >
                                     <div class="flex gap-3">
                                         <div class="relative h-28 w-24 shrink-0 overflow-hidden rounded-xl bg-muted sm:h-32 sm:w-28">
@@ -231,7 +231,7 @@
                                             />
 
                                             <span @class([
-                                                'absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] shadow-sm',
+                                                'absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full border border-border/60 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em]',
                                                 'bg-secondary text-white' => $foodPost->is_urgent,
                                                 'bg-white/95 text-primary' => ! $foodPost->is_urgent,
                                             ])>
@@ -382,11 +382,11 @@
                 @endif
             </aside>
 
-            <section class="relative min-h-[30rem] overflow-hidden border-b border-border bg-[#E8EEE8] lg:min-h-0 lg:rounded-3xl lg:border lg:border-border">
+            <section class="relative min-h-[30rem] min-w-0 overflow-hidden border-b border-border bg-muted lg:min-h-0 lg:rounded-3xl lg:border lg:border-border">
                 <div id="food-catalog-map" class="absolute inset-0 z-0"></div>
 
                 <div class="pointer-events-none absolute inset-x-4 top-4 z-10 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <div class="pointer-events-auto max-w-sm rounded-2xl border border-border/80 bg-white/95 px-4 py-3 shadow-sm backdrop-blur">
+                    <div class="pointer-events-auto max-w-sm rounded-2xl border border-border bg-card/95 px-4 py-3 backdrop-blur">
                         <div class="flex items-center gap-2">
                             <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                                 <x-icon name="map-pin" class="h-3.5 w-3.5" />
@@ -401,7 +401,7 @@
                         </p>
                     </div>
 
-                    <div class="pointer-events-auto w-fit rounded-2xl border border-border/80 bg-white/95 px-3.5 py-3 text-[11px] shadow-sm backdrop-blur">
+                    <div class="pointer-events-auto w-fit rounded-2xl border border-border bg-card/95 px-3.5 py-3 text-[11px] backdrop-blur">
                         <p class="mb-2 text-[9px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Legenda</p>
                         <div class="space-y-1.5">
                             <p class="flex items-center gap-2 text-foreground">
@@ -424,7 +424,7 @@
 
                 @if ($effectiveRadiusKm !== null)
                     <div class="pointer-events-none absolute bottom-4 left-4 z-10">
-                        <span class="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-white/95 px-3 py-1.5 text-[11px] font-medium text-foreground shadow-sm backdrop-blur">
+                        <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/95 px-3 py-1.5 text-[11px] font-medium text-foreground backdrop-blur">
                             <x-icon name="navigation" class="h-3.5 w-3.5 text-primary" />
                             Radius {{ $effectiveRadiusKm }} km
                         </span>
@@ -433,19 +433,19 @@
 
                 @if ($mapPosts->isEmpty())
                     <div class="pointer-events-none absolute inset-x-4 bottom-4 z-10 flex justify-center">
-                        <div class="rounded-xl border border-border/80 bg-white/95 px-4 py-2.5 text-center text-xs text-muted-foreground shadow-sm backdrop-blur">
+                        <div class="rounded-xl border border-border bg-card/95 px-4 py-2.5 text-center text-xs text-muted-foreground backdrop-blur">
                             Tidak ada titik makanan pada filter ini.
                         </div>
                     </div>
                 @endif
 
-                <div id="food-catalog-map-loading" class="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-[#E8EEE8]/80 backdrop-blur-sm">
+                <div id="food-catalog-map-loading" class="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-muted/80 backdrop-blur-sm">
                     <span class="h-8 w-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary" aria-hidden="true"></span>
                     <p class="text-xs font-medium text-muted-foreground">Memuat peta pangan…</p>
                 </div>
 
-                <div id="food-catalog-map-fallback" class="absolute inset-0 z-20 hidden flex-col items-center justify-center gap-3 bg-[#E8EEE8] px-6 text-center">
-                    <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-muted-foreground shadow-sm">
+                <div id="food-catalog-map-fallback" class="absolute inset-0 z-20 hidden flex-col items-center justify-center gap-3 bg-muted px-6 text-center">
+                    <span class="flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-card text-muted-foreground">
                         <x-icon name="map-pin" class="h-6 w-6" />
                     </span>
                     <div>

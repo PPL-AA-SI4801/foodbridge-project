@@ -2,6 +2,12 @@
 
 FoodBridge is a Laravel Web application that connects food donors with organization or individual that need food to reduce food waste.
 
+## Design dan tampilan
+
+README ini adalah acuan utama proyek. Ketentuan visual lengkap ada di [docs/design_system.md](docs/design_system.md) (warna, tipografi, radius, sidebar ~270px, content surface, breakpoint `lg`, dan ikon Lucide), sedangkan struktur sidebar/header per role ada di [docs/PRD.md](docs/PRD.md#12-ui-structure-sidebar-and-header). Implementasi Blade, CSS, dan komponen harus mengikuti kedua dokumen tersebut.
+
+Laravel Dusk memuat aset produksi dari `public/build`, bukan Vite dev server. Jalankan `npm run build` setelah mengubah Blade/CSS dan sebelum menjalankan Dusk agar tampilan Chrome tidak memakai CSS lama.
+
 ## First setup
 
 Never set this project up before? Follow **[docs/FIRST_SETUP.md](docs/FIRST_SETUP.md)** — it takes you from a fresh clone to a running app: toolchain versions (PHP 8.3/8.4/8.5, Composer 2.2+, Node 24+), Laragon/XAMPP setup, MySQL database creation, first-run commands, and troubleshooting.
