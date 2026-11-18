@@ -113,6 +113,11 @@
                             <div class="flex flex-wrap items-center gap-2">
                                 <p class="font-medium">{{ $document->jenisDokumenLabel() }}</p>
                                 <x-status-badge :status="$document->status" />
+                                @if ($document->id === $latestReplacementId)
+                                    <span class="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                                        Dokumen kelengkapan terbaru
+                                    </span>
+                                @endif
                             </div>
 
                             @if ($document->verified_at)
