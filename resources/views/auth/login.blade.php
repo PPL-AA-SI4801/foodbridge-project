@@ -8,7 +8,7 @@
 
     <!-- Session Status -->
     @if (! empty($pendingVerificationUser))
-        @include('auth.partials.verification-status-card')
+        @include('auth.partials.verification-status-card', ['needsCompleteness' => ! empty($needsCompleteness), 'isReverification' => ! empty($isReverification), 'statusAkun' => $pendingVerificationUser->status_akun->value, 'completenessNote' => $completenessNote ?? null])
     @else
         <x-auth-session-status class="mb-5" :status="session('status')" />
     @endif

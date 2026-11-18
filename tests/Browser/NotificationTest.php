@@ -149,7 +149,7 @@ class NotificationTest extends DuskTestCase
             ->select('@register-jenis-dokumen', 'nib')
             ->attach('dokumen', $fixture)
             ->press('@register-submit')
-            ->waitForText('Pendaftaran berhasil. Akun Anda sedang menunggu verifikasi administrator.')
+            ->waitForText('Pendaftaran berhasil. Lengkapi dokumen Anda agar proses verifikasi bisa dilanjutkan.')
             ->assertPathIs('/login');
 
         return $email;

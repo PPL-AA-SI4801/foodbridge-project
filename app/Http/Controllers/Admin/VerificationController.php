@@ -49,11 +49,20 @@ class VerificationController extends Controller
         $user->load([
             'donorProfile',
             'recipientProfile',
-            'verificationDocuments' => fn ($query) => $query->orderByDesc('id'),
+            'verificationDocuments' => fn ($query) => $query->orderBy('id'),
         ]);
+
+        $latestReplacementId = $user->verificationDocuments
+            ->where('status', VerificationStatus::Menunggu)
+            ->filter(fn ($document) => $user->verificationDocuments
+                ->where('jenis_dokumen', $document->jenis_dokumen)
+                ->where('id', '<', $document->id)
+                ->isNotEmpty())
+            ->max('id');
 
         return view('admin.verifications.show', [
             'user' => $user,
+            'latestReplacementId' => $latestReplacementId,
             'pendingVerifications' => User::query()->pendingVerification()->count(),
         ]);
     }
