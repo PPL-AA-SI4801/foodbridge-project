@@ -10,7 +10,6 @@ use App\Models\RecipientProfile;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 
 class ClaimSeeder extends Seeder
 {
@@ -65,6 +64,139 @@ class ClaimSeeder extends Seeder
                 'approved_at' => now()->subDay(),
                 'completed_at' => now(),
             ]);
+        }
+
+        // Historical claim history for the demo recipient: more than ten rows,
+        // with every status represented at least once.
+        $historyClaims = [
+            [
+                'judul' => 'Nasi Kotak Riwayat 01',
+                'jumlah_porsi' => 1,
+                'status' => 'rejected',
+                'metode_pengambilan' => null,
+                'kode_verifikasi' => null,
+                'days_ago' => 10,
+                'approved_at' => null,
+                'completed_at' => null,
+            ],
+            [
+                'judul' => 'Nasi Kotak Riwayat 02',
+                'jumlah_porsi' => 2,
+                'status' => 'approved',
+                'metode_pengambilan' => 'kurir_online',
+                'kode_verifikasi' => null,
+                'days_ago' => 9,
+                'approved_at' => now()->subDays(9),
+                'completed_at' => null,
+            ],
+            [
+                'judul' => 'Nasi Kotak Riwayat 03',
+                'jumlah_porsi' => 1,
+                'status' => 'completed',
+                'metode_pengambilan' => 'ambil_sendiri',
+                'kode_verifikasi' => '482913',
+                'days_ago' => 8,
+                'approved_at' => now()->subDays(8),
+                'completed_at' => now()->subDays(7),
+            ],
+            [
+                'judul' => 'Nasi Kotak Riwayat 04',
+                'jumlah_porsi' => 1,
+                'status' => 'completed',
+                'metode_pengambilan' => 'ambil_sendiri',
+                'kode_verifikasi' => '731204',
+                'days_ago' => 7,
+                'approved_at' => now()->subDays(7),
+                'completed_at' => now()->subDays(6),
+            ],
+            [
+                'judul' => 'Nasi Kotak Riwayat 05',
+                'jumlah_porsi' => 2,
+                'status' => 'rejected',
+                'metode_pengambilan' => null,
+                'kode_verifikasi' => null,
+                'days_ago' => 6,
+                'approved_at' => null,
+                'completed_at' => null,
+            ],
+            [
+                'judul' => 'Nasi Kotak Riwayat 06',
+                'jumlah_porsi' => 1,
+                'status' => 'approved',
+                'metode_pengambilan' => 'ambil_sendiri',
+                'kode_verifikasi' => '590127',
+                'days_ago' => 5,
+                'approved_at' => now()->subDays(5),
+                'completed_at' => null,
+            ],
+            [
+                'judul' => 'Nasi Kotak Riwayat 07',
+                'jumlah_porsi' => 1,
+                'status' => 'completed',
+                'metode_pengambilan' => 'ambil_sendiri',
+                'kode_verifikasi' => '864205',
+                'days_ago' => 4,
+                'approved_at' => now()->subDays(4),
+                'completed_at' => now()->subDays(3),
+            ],
+            [
+                'judul' => 'Nasi Kotak Riwayat 08',
+                'jumlah_porsi' => 1,
+                'status' => 'completed',
+                'metode_pengambilan' => 'kurir_online',
+                'kode_verifikasi' => null,
+                'days_ago' => 3,
+                'approved_at' => now()->subDays(3),
+                'completed_at' => now()->subDays(2),
+            ],
+            [
+                'judul' => 'Nasi Kotak Riwayat 09',
+                'jumlah_porsi' => 1,
+                'status' => 'rejected',
+                'metode_pengambilan' => null,
+                'kode_verifikasi' => null,
+                'days_ago' => 2,
+                'approved_at' => null,
+                'completed_at' => null,
+            ],
+        ];
+
+        $demoCourierClaim = null;
+
+        foreach ($historyClaims as $history) {
+            $post = $posts->get($history['judul']);
+
+            if (! $post || ! $demoRecipient) {
+                continue;
+            }
+
+            $claim = $this->upsertClaim($post, $demoRecipient, [
+                'jumlah_porsi' => $history['jumlah_porsi'],
+                'status' => $history['status'],
+                'metode_pengambilan' => $history['metode_pengambilan'],
+                'kode_verifikasi' => $history['kode_verifikasi'],
+                'tanggal_klaim' => $today->copy()->subDays($history['days_ago']),
+                'approved_at' => $history['approved_at'],
+                'completed_at' => $history['completed_at'],
+            ]);
+
+            if ($history['judul'] === 'Nasi Kotak Riwayat 02') {
+                $demoCourierClaim = $claim;
+            }
+        }
+
+        if ($demoCourierClaim) {
+            CourierDetail::updateOrCreate(
+                ['claim_id' => $demoCourierClaim->id],
+                [
+                    'platform' => 'GrabExpress',
+                    'nama_pengemudi' => 'Rizky Pratama',
+                    'no_kendaraan' => 'B 9087 XY',
+                    'kode_verifikasi_kurir' => 'GRAB88',
+                    'foto_bukti' => 'seed/placeholder.webp',
+                    'created_at' => now()->subDays(9),
+                ]
+            );
         }
 
         // Rejected claim for a different recipient.
