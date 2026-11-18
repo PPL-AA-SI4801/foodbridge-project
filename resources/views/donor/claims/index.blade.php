@@ -287,6 +287,7 @@
 
                                             <button
                                                 type="submit"
+                                                dusk="approve-claim-{{ $claim->id }}"
                                                 x-bind:disabled="busy"
                                                 @disabled($exceedsStock)
                                                 @if ($exceedsStock) title="Sisa porsi tidak mencukupi untuk klaim ini." @endif
@@ -308,6 +309,7 @@
 
                                             <button
                                                 type="submit"
+                                                dusk="reject-claim-{{ $claim->id }}"
                                                 x-bind:disabled="busy"
                                                 class="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-[#FCA5A5] bg-card px-3.5 text-xs font-semibold text-[#B91C1C] transition hover:bg-[#FEE2E2] focus:outline-none focus:ring-2 focus:ring-[#B91C1C]/20 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                             >

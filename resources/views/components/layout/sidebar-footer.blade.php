@@ -35,6 +35,7 @@
 
                 <button
                     type="submit"
+                    dusk="logout"
                     class="flex h-10 w-full items-center justify-center gap-3 rounded-[8px] border border-[#e8e9e8] bg-white px-3 text-[14px] font-normal text-sidebar-muted transition-colors hover:bg-sidebar-accent"
                 >
                     <x-icon name="log-out" class="h-[18px] w-[18px] shrink-0" />
