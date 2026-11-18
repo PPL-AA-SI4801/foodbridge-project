@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Enums\Role;
+use App\Enums\VerificationStatus;
 use App\Models\InAppNotification;
 use App\Models\User;
+use App\Models\VerificationDocument;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
@@ -143,60 +145,77 @@ class NotificationPageTest extends TestCase
         $this->assertTrue($notification->fresh()->is_read);
     }
 
-    public function test_opening_a_notification_with_an_action_url_redirects_to_the_related_page(): void
+    public function test_opening_a_notification_redirects_to_the_fresh_page_for_its_type(): void
     {
-        $user = $this->activeUser(Role::Donor);
-        $notification = $this->notificationFor($user, [
-            'judul' => 'Profil perlu diperbarui',
-            'pesan' => 'Buka halaman profil untuk meninjau data akun Anda.',
-            'action_url' => '/profile',
-        ]);
+        $donor = $this->activeUser(Role::Donor);
+        $recipient = $this->activeUser(Role::Penerima);
 
-        $this->actingAs($user)
-            ->get(route('notifications.open', $notification))
-            ->assertRedirect('/profile');
+        $claimNotification = $this->notificationFor($donor, ['tipe' => 'klaim']);
+        $requestNotification = $this->notificationFor($recipient, ['tipe' => 'request']);
+        $postNotification = $this->notificationFor($donor, ['tipe' => 'post']);
+        $unknownNotification = $this->notificationFor($donor, ['tipe' => 'tidak-dikenal']);
 
-        $this->assertTrue($notification->fresh()->is_read);
+        $this->actingAs($donor)
+            ->get(route('notifications.open', $claimNotification))
+            ->assertRedirect(route('donor.claims.index'));
+
+        $this->actingAs($recipient)
+            ->get(route('notifications.open', $requestNotification))
+            ->assertRedirect(route('recipient.requests.index'));
+
+        $this->actingAs($donor)
+            ->get(route('notifications.open', $postNotification))
+            ->assertRedirect(route('donor.food-posts.index'));
+
+        $this->actingAs($donor)
+            ->get(route('notifications.open', $unknownNotification))
+            ->assertRedirect(route('notifications.index'));
+
+        $this->assertTrue($claimNotification->fresh()->is_read);
+        $this->assertTrue($requestNotification->fresh()->is_read);
+        $this->assertTrue($postNotification->fresh()->is_read);
+        $this->assertTrue($unknownNotification->fresh()->is_read);
     }
 
-    public function test_opening_a_notification_without_an_action_url_shows_a_reading_popup(): void
+    public function test_opening_an_account_notification_uses_the_current_account_status(): void
     {
-        $user = $this->activeUser(Role::Donor);
-        $notification = $this->notificationFor($user, [
-            'judul' => 'Informasi akun',
-            'pesan' => 'Pesan lengkap yang perlu dibaca tanpa membuka halaman lain.',
+        $pending = $this->activeUser(Role::Donor);
+        $pending->update(['status_akun' => 'menunggu']);
+        VerificationDocument::create([
+            'user_id' => $pending->id,
+            'jenis_dokumen' => 'nib',
+            'file_path' => 'verification-documents/nib.pdf',
+            'status' => VerificationStatus::PerluKelengkapan,
+            'catatan' => 'Mohon unggah ulang.',
         ]);
+        $active = $this->activeUser(Role::Penerima);
 
-        $this->actingAs($user)
-            ->get(route('notifications.open', $notification))
-            ->assertRedirect(route('notifications.index', ['open' => $notification->id]))
-            ->assertSessionHas('status', 'Notifikasi ditandai sudah dibaca.');
+        $pendingNotification = $this->notificationFor($pending, ['tipe' => 'akun']);
+        $activeNotification = $this->notificationFor($active, ['tipe' => 'akun']);
 
-        $this->actingAs($user)
-            ->get(route('notifications.index', ['open' => $notification->id]))
-            ->assertOk()
-            ->assertSee('notification-popup')
-            ->assertSee('Informasi akun')
-            ->assertSee('Pesan lengkap yang perlu dibaca tanpa membuka halaman lain.');
+        $this->actingAs($pending)
+            ->get(route('notifications.open', $pendingNotification))
+            ->assertRedirect(route('documents.completeness.edit'));
 
-        $this->assertTrue($notification->fresh()->is_read);
+        $this->actingAs($active)
+            ->get(route('notifications.open', $activeNotification))
+            ->assertRedirect(route('dashboard.recipient'));
     }
 
-    public function test_the_reading_popup_does_not_expose_another_users_notification(): void
+    public function test_marking_a_notification_as_read_returns_the_unread_count_for_ajax(): void
     {
         $user = $this->activeUser(Role::Donor);
-        $otherUser = $this->activeUser(Role::Penerima);
-        $notification = $this->notificationFor($otherUser, [
-            'judul' => 'Notifikasi pengguna lain',
-            'pesan' => 'Isi ini tidak boleh terlihat.',
-        ]);
+        $notification = $this->notificationFor($user);
 
         $this->actingAs($user)
-            ->get(route('notifications.index', ['open' => $notification->id]))
+            ->patchJson(route('notifications.read', $notification))
             ->assertOk()
-            ->assertDontSee('notification-popup')
-            ->assertDontSee('Notifikasi pengguna lain')
-            ->assertDontSee('Isi ini tidak boleh terlihat.');
+            ->assertJson([
+                'is_read' => true,
+                'unread_count' => 0,
+            ]);
+
+        $this->assertTrue($notification->fresh()->is_read);
     }
 
     public function test_a_user_cannot_mark_another_users_notification_as_read(): void

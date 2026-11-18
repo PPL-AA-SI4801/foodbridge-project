@@ -164,11 +164,12 @@ class AccountVerificationTest extends DuskTestCase
     public function test_administrator_can_request_document_completeness_and_applicant_can_reupload(): void
     {
         $admin = $this->createAdmin();
-        $donor = $this->createPendingDonor($this->uniqueEmail('lengkapi'), $this->uniqueName('Resto Lengkapi'));
+        $namaUsaha = $this->uniqueName('Resto Lengkapi');
+        $donor = $this->createPendingDonor($this->uniqueEmail('lengkapi'), $namaUsaha);
         $document = $donor->verificationDocuments()->firstOrFail();
         $fixture = base_path('tests/Browser/fixtures/legalitas.pdf');
 
-        $this->browse(function (Browser $browser) use ($admin, $donor, $document, $fixture) {
+        $this->browse(function (Browser $browser) use ($admin, $donor, $document, $fixture, $namaUsaha) {
             $browser->loginAs($admin)
                 ->visit('/admin/verifications/'.$donor->id)
                 ->type('@verification-request-documents-catatan', 'NIB kurang jelas, mohon unggah ulang.')
@@ -188,7 +189,20 @@ class AccountVerificationTest extends DuskTestCase
                 ->press('@completeness-submit-'.$document->id)
                 ->waitForText('Dokumen perbaikan berhasil diunggah. Akun Anda kembali menunggu verifikasi administrator.')
                 ->assertPathIs('/login');
+
+            $browser->loginAs($admin)
+                ->visit('/admin/verifications/'.$donor->id)
+                ->click('button[aria-label="Notifikasi"]')
+                ->waitFor('#notification-menu-dropdown')
+                ->assertSee('Kelengkapan Dokumen Dikirim')
+                ->assertSee($namaUsaha);
         });
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $admin->id,
+            'judul' => 'Kelengkapan Dokumen Dikirim',
+            'tipe' => 'akun',
+        ]);
 
         $this->assertDatabaseHas('users', [
             'id' => $donor->id,

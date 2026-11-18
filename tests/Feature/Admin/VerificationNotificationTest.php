@@ -35,6 +35,10 @@ class VerificationNotificationTest extends TestCase
         $this->assertStringContainsString('telah disetujui', $notification->pesan);
         $this->assertFalse($notification->is_read);
         $this->assertSame(AccountStatus::Aktif, $applicant->fresh()->status_akun);
+
+        $this->actingAs($applicant->fresh())
+            ->get(route('notifications.open', $notification))
+            ->assertRedirect(route('dashboard.donor'));
     }
 
     public function test_rejecting_a_registration_creates_an_account_notification_with_the_reason(): void
