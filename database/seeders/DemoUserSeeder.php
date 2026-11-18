@@ -26,16 +26,31 @@ class DemoUserSeeder extends Seeder
 
     private function seedAdmin(): void
     {
-        User::updateOrCreate(
-            ['email' => 'admin@foodbridge.test'],
+        $admins = [
             [
+                'email' => 'admin@foodbridge.test',
                 'nama' => 'Administrator Demo',
-                'password' => 'password',
                 'no_hp' => '081200000003',
-                'role' => Role::Administrator,
-                'status_akun' => AccountStatus::Aktif,
-            ]
-        );
+            ],
+            [
+                'email' => 'admin2@foodbridge.test',
+                'nama' => 'Administrator Kedua',
+                'no_hp' => '081200000012',
+            ],
+        ];
+
+        foreach ($admins as $admin) {
+            User::updateOrCreate(
+                ['email' => $admin['email']],
+                [
+                    'nama' => $admin['nama'],
+                    'password' => 'password',
+                    'no_hp' => $admin['no_hp'],
+                    'role' => Role::Administrator,
+                    'status_akun' => AccountStatus::Aktif,
+                ]
+            );
+        }
     }
 
     private function seedDonors(): void
@@ -104,6 +119,19 @@ class DemoUserSeeder extends Seeder
                     'alamat' => 'Jl. Diblokir No. 1, Jakarta',
                     'lat' => -6.2700000,
                     'lng' => 106.8700000,
+                ],
+            ],
+            [
+                'email' => 'donor-rejected@foodbridge.test',
+                'nama' => 'Donor Ditolak',
+                'no_hp' => '081200000013',
+                'status' => AccountStatus::Ditolak,
+                'profile' => [
+                    'nama_usaha' => 'Usaha Ditolak',
+                    'jenis_usaha' => 'Katering',
+                    'alamat' => 'Jl. Ditolak No. 1, Jakarta',
+                    'lat' => -6.2900000,
+                    'lng' => 106.8900000,
                 ],
             ],
         ];
@@ -193,6 +221,19 @@ class DemoUserSeeder extends Seeder
                     'alamat' => 'Jl. Diblokir No. 2, Jakarta',
                     'lat' => -6.2800000,
                     'lng' => 106.8800000,
+                ],
+            ],
+            [
+                'email' => 'penerima-rejected@foodbridge.test',
+                'nama' => 'Penerima Ditolak',
+                'no_hp' => '081200000014',
+                'status' => AccountStatus::Ditolak,
+                'profile' => [
+                    'nama_lembaga' => 'Lembaga Ditolak',
+                    'jenis_lembaga' => 'Komunitas',
+                    'alamat' => 'Jl. Ditolak No. 2, Jakarta',
+                    'lat' => -6.3000000,
+                    'lng' => 106.9000000,
                 ],
             ],
         ];

@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Donor;
 
-use App\Enums\NotificationType;
 use App\Http\Controllers\Controller;
 use App\Models\Claim;
-use App\Models\InAppNotification;
+use App\Services\ClaimWorkflowService;
 use App\Support\ClaimStatus;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ClaimController extends Controller
 {
+    public function __construct(private readonly ClaimWorkflowService $claimWorkflow) {}
+
     /**
      * Menampilkan daftar klaim masuk pada postingan makanan milik donor yang sedang login.
      */
@@ -54,40 +54,7 @@ class ClaimController extends Controller
         $this->authorizeOwnership($request, $claim);
 
         try {
-            DB::transaction(function () use ($claim) {
-                // Kunci baris klaim dan postingan agar tidak terjadi race condition / persetujuan ganda
-                $lockedClaim = Claim::lockForUpdate()->findOrFail($claim->id);
-
-                if (! in_array($lockedClaim->status, ClaimStatus::GROUPS['menunggu'], true)) {
-                    throw new \DomainException('Klaim ini sudah diproses sebelumnya.');
-                }
-
-                $foodPost = $lockedClaim->post()->lockForUpdate()->firstOrFail();
-
-                if ($foodPost->batas_konsumsi && $foodPost->batas_konsumsi->isPast()) {
-                    throw new \DomainException('Makanan sudah kedaluwarsa.');
-                }
-
-                if ($foodPost->sisa_porsi < $lockedClaim->jumlah_porsi) {
-                    throw new \DomainException('Sisa porsi makanan tidak mencukupi untuk klaim ini.');
-                }
-
-                $foodPost->sisa_porsi -= $lockedClaim->jumlah_porsi;
-                $foodPost->save();
-
-                $lockedClaim->status = 'approved';
-                $lockedClaim->approved_at = now();
-                $lockedClaim->save();
-
-                // Notifikasi ke akun penerima (claims tidak punya user_id, ambil dari profil penerima)
-                InAppNotification::create([
-                    'user_id' => $lockedClaim->recipient->user_id,
-                    'judul' => 'Klaim Disetujui',
-                    'pesan' => 'Klaim Anda untuk makanan "'.$foodPost->judul.'" telah disetujui oleh donor.',
-                    'tipe' => NotificationType::Claim->value,
-                    'action_url' => route('recipient.claims.index', [], false),
-                ]);
-            });
+            $this->claimWorkflow->approve($claim);
         } catch (\DomainException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
@@ -103,24 +70,7 @@ class ClaimController extends Controller
         $this->authorizeOwnership($request, $claim);
 
         try {
-            DB::transaction(function () use ($claim) {
-                $lockedClaim = Claim::lockForUpdate()->findOrFail($claim->id);
-
-                if (! in_array($lockedClaim->status, ClaimStatus::GROUPS['menunggu'], true)) {
-                    throw new \DomainException('Klaim ini sudah diproses sebelumnya.');
-                }
-
-                $lockedClaim->status = 'rejected';
-                $lockedClaim->save();
-
-                InAppNotification::create([
-                    'user_id' => $lockedClaim->recipient->user_id,
-                    'judul' => 'Klaim Ditolak',
-                    'pesan' => 'Mohon maaf, klaim Anda untuk makanan "'.$lockedClaim->post->judul.'" ditolak oleh donor.',
-                    'tipe' => NotificationType::Claim->value,
-                    'action_url' => route('recipient.claims.index', [], false),
-                ]);
-            });
+            $this->claimWorkflow->reject($claim);
         } catch (\DomainException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }

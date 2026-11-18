@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\ClaimController as AdminClaimController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\FoodPostController as AdminFoodPostController;
 use App\Http\Controllers\Admin\RequestBoardController as AdminRequestBoardController;
@@ -72,7 +74,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard/admin', [AdminDashboardController::class, 'index'])
             ->name('dashboard.admin');
 
-        Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+        Route::resource('/admin/users', AdminUserController::class)
+            ->except(['show'])
+            ->names('admin.users')
+            ->parameters(['users' => 'user']);
         Route::post('/admin/users/{user}/block', [AdminUserController::class, 'block'])->name('admin.users.block');
 
         Route::get('/admin/verifications', [VerificationController::class, 'index'])->name('admin.verifications.index');
@@ -90,6 +95,16 @@ Route::middleware('auth')->group(function () {
             ->except(['show'])
             ->names('admin.food-posts')
             ->parameters(['food-posts' => 'foodPost']);
+
+        Route::resource('/admin/claims', AdminClaimController::class)
+            ->except(['show'])
+            ->names('admin.claims')
+            ->parameters(['claims' => 'claim']);
+
+        Route::resource('/admin/categories', AdminCategoryController::class)
+            ->except(['show'])
+            ->names('admin.categories')
+            ->parameters(['categories' => 'category']);
     });
 
     Route::middleware(['auth', 'verified', 'role:penerima'])->prefix('recipient')->name('recipient.')->group(function () {
