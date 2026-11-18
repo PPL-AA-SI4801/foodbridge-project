@@ -11,19 +11,19 @@
 @endphp
 
 <div {{ $attributes->class(['mt-auto p-4']) }}>
-    <div class="flex flex-col gap-[10px] rounded-[10px] border border-[#e8e9e8] bg-white p-[12px]">
+    <div class="flex flex-col gap-2.5 rounded-lg border border-border bg-card p-3">
         <div class="flex items-center gap-3 overflow-clip">
             <img
                 src="{{ asset('icons/premium.svg') }}"
                 alt=""
-                class="h-[42px] w-[42px] shrink-0"
+                class="h-10 w-10 shrink-0"
             >
 
-            <div class="flex min-w-0 flex-1 flex-col gap-[5px]">
-                <span class="truncate text-[14px] font-semibold leading-[normal] text-[#0d1c2e]">
+            <div class="flex min-w-0 flex-1 flex-col gap-1">
+                <span class="truncate text-sm font-semibold leading-normal text-foreground">
                     {{ $displayName }}
                 </span>
-                <span class="truncate text-[12px] font-normal leading-[1.5] text-sidebar-muted">
+                <span class="truncate text-xs font-normal leading-normal text-sidebar-muted">
                     {{ $displayEmail }}
                 </span>
             </div>
@@ -35,9 +35,9 @@
 
                 <button
                     type="submit"
-                    class="flex h-10 w-full items-center justify-center gap-3 rounded-[8px] border border-[#e8e9e8] bg-white px-3 text-[14px] font-normal text-sidebar-muted transition-colors hover:bg-sidebar-accent"
+                    class="flex h-10 w-full items-center justify-center gap-3 rounded-lg border border-border bg-card px-3 text-sm font-normal text-sidebar-muted transition-colors hover:bg-sidebar-accent"
                 >
-                    <x-icon name="log-out" class="h-[18px] w-[18px] shrink-0" />
+                    <x-icon name="log-out" class="h-4 w-4 shrink-0" />
                     <span>Logout</span>
                 </button>
             </form>

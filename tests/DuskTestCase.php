@@ -28,7 +28,7 @@ abstract class DuskTestCase extends BaseTestCase
     protected function driver(): RemoteWebDriver
     {
         $options = (new ChromeOptions)->addArguments(collect([
-            $this->shouldStartMaximized() ? '--start-maximized' : '--window-size=1920,1080',
+            '--window-size=1365,900',
             '--disable-search-engine-choice-screen',
             '--disable-smooth-scrolling',
             '--no-sandbox',
@@ -51,5 +51,21 @@ abstract class DuskTestCase extends BaseTestCase
                 ChromeOptions::CAPABILITY, $options
             )
         );
+    }
+
+    /**
+     * Force Dusk to always run Chrome with a visible GUI window.
+     */
+    protected function hasHeadlessDisabled(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Keep the browser window at the configured presentation size.
+     */
+    protected function shouldStartMaximized(): bool
+    {
+        return false;
     }
 }

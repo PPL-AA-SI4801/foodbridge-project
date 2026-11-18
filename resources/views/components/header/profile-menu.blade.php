@@ -13,19 +13,19 @@
         aria-haspopup="true"
         aria-controls="profile-menu-dropdown"
         aria-label="Menu profil {{ $menuName }}"
-        class="flex items-center gap-3 rounded-[8px] border border-[#e8e9e8] bg-white p-0 transition-colors hover:bg-sidebar-accent"
+        class="flex items-center gap-3 rounded-lg border border-border bg-card p-0 transition-colors hover:bg-sidebar-accent"
     >
         <img
             src="{{ asset('icons/premium.svg') }}"
             alt=""
-            class="h-[42px] w-[42px] shrink-0"
+            class="h-10 w-10 shrink-0"
         >
 
-        <div class="flex min-w-0 flex-col gap-[5px] pr-3">
-            <span class="truncate text-[14px] font-semibold leading-[normal] text-[#0d1c2e]">
+        <div class="flex min-w-0 flex-col gap-1 pr-3">
+            <span class="truncate text-sm font-semibold leading-normal text-foreground">
                 {{ $menuName }}
             </span>
-            <span class="truncate text-[12px] font-normal leading-[1.5] text-sidebar-muted">
+            <span class="truncate text-xs font-normal leading-normal text-sidebar-muted">
                 {{ auth()->user()->email }}
             </span>
         </div>

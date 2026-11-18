@@ -86,7 +86,7 @@
             @endif
 
             <div class="flex min-w-0 flex-1 flex-col bg-background p-2 lg:p-4 lg:pl-0">
-                <div data-content-surface class="flex min-h-[calc(100vh-2rem)] flex-1 flex-col overflow-clip rounded-[10px] border border-[#e8e9e8] bg-white lg:min-h-[calc(100vh-2rem)]">
+                <div data-content-surface class="flex min-h-[calc(100vh-1rem)] min-w-0 flex-1 flex-col overflow-clip rounded-lg border border-border bg-card lg:min-h-[calc(100vh-2rem)]">
                     <x-layout.header
                         :title="$title"
                         :role-label="$roleLabel"

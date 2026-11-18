@@ -55,7 +55,15 @@
                                 <tr>
                                     <td class="px-6 py-4">
                                         <div class="flex items-center gap-3">
-                                            <img src="{{ asset('storage/'.$foodPost->foto) }}" alt="{{ $foodPost->judul }}" class="h-14 w-14 rounded-md object-cover" />
+                                            <div class="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
+                                                <x-icon name="leaf" class="h-6 w-6 text-muted-foreground/35" />
+                                                <img
+                                                    src="{{ asset('storage/'.$foodPost->foto) }}"
+                                                    alt="{{ $foodPost->judul }}"
+                                                    class="absolute inset-0 h-full w-full object-cover"
+                                                    onerror="this.style.opacity='0'"
+                                                />
+                                            </div>
                                             <div class="min-w-0">
                                                 <p class="font-medium text-foreground">{{ $foodPost->judul }}</p>
                                                 <p class="mt-1 max-w-xs truncate text-xs text-muted-foreground">{{ $foodPost->alamat }}</p>

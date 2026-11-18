@@ -12,7 +12,7 @@
         <img
             src="{{ asset(rawurlencode('Logo Foodbridge.webp')) }}"
             alt="{{ config('app.name', 'FoodBridge') }}"
-            class="h-[55px] w-[194px] max-w-full object-contain"
+            class="h-[55px] w-[194px] max-w-full shrink-0 object-contain"
         >
     </a>
 

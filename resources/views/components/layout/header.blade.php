@@ -29,14 +29,14 @@
     }
 @endphp
 
-<header @class(['flex min-h-[79px] items-center border-b border-[#e8e9e8] bg-white', 'sticky top-0 z-20' => $sticky])>
+<header @class(['flex min-h-[79px] items-center border-b border-border bg-card', 'sticky top-0 z-20' => $sticky])>
     <div class="w-full {{ filled($maxWidth) ? $maxWidth.' mx-auto' : '' }} px-4 py-4">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
-            <div class="order-2 min-w-0 flex-1 flex-col gap-2 sm:order-1">
+            <div class="order-2 flex min-w-0 flex-1 flex-col gap-2 sm:order-1">
                 <nav aria-label="Breadcrumb" class="flex min-w-0 items-center gap-3">
                     <a
                         href="{{ route(auth()->user()->dashboardRouteName()) }}"
-                        class="shrink-0 text-[12px] font-normal leading-[normal] text-sidebar-muted transition-colors hover:text-foreground"
+                        class="shrink-0 text-xs font-normal leading-normal text-sidebar-muted transition-colors hover:text-foreground"
                     >
                         FoodBridge
                     </a>
@@ -47,12 +47,12 @@
                         @if (filled($item['href'] ?? null))
                             <a
                                 href="{{ $item['href'] }}"
-                                class="truncate text-[12px] font-normal leading-[normal] text-[#0d1c2e] transition-colors hover:text-foreground"
+                                class="truncate text-xs font-normal leading-normal text-foreground transition-colors hover:text-foreground"
                             >
                                 {{ $item['label'] }}
                             </a>
                         @else
-                            <span class="truncate text-[12px] font-normal leading-[normal] text-[#0d1c2e]">
+                            <span class="truncate text-xs font-normal leading-normal text-foreground">
                                 {{ $item['label'] }}
                             </span>
                         @endif
@@ -60,7 +60,7 @@
                 </nav>
 
                 @if ($title)
-                    <h1 class="truncate text-[20px] font-medium leading-[1.2] tracking-[-0.6px] text-[#0d1c2e]">
+                    <h1 class="truncate text-xl font-medium leading-[1.2] tracking-[-0.6px] text-foreground">
                         {{ $title }}
                     </h1>
                 @endif
@@ -80,7 +80,7 @@
                         {{ $actions }}
                     @endisset
 
-                    <div class="relative flex h-9 w-9 items-center justify-center rounded-[8px] border border-[#e8e9e8] bg-white">
+                    <div class="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card">
                         <x-header.notifications />
                     </div>
                 </div>
