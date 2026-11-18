@@ -123,6 +123,9 @@ class RegisteredUserController extends Controller
             throw $exception;
         }
 
+        // Persistent (not flashed): keeps the verification card visible on refresh.
+        session(['pending_verification_email' => $validated['email']]);
+
         return redirect()
             ->route('login')
             ->with('status', 'Pendaftaran berhasil. Akun Anda sedang menunggu verifikasi administrator.');
