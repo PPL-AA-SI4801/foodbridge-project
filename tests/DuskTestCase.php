@@ -22,6 +22,11 @@ abstract class DuskTestCase extends BaseTestCase
         }
     }
 
+    protected function newBrowser($driver)
+    {
+        return new SlowBrowser($driver);
+    }
+
     /**
      * Create the RemoteWebDriver instance.
      */
