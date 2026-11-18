@@ -22,16 +22,23 @@ class RecipientClaimService
     /**
      * Paginate the authenticated recipient's claims with optional search and status filters.
      *
+     * When a focused claim is provided, only that claim is returned so a
+     * notification action opens the related claim instead of the history list.
+     *
      * @param  array{q?: string|null, status?: string|null}  $filters
      */
-    public function paginateForRecipient(int $recipientId, array $filters = []): LengthAwarePaginator
-    {
+    public function paginateForRecipient(
+        int $recipientId,
+        array $filters = [],
+        ?int $focusedClaimId = null,
+    ): LengthAwarePaginator {
         $search = trim((string) ($filters['q'] ?? ''));
         $status = $filters['status'] ?? null;
 
         return Claim::query()
             ->where('recipient_id', $recipientId)
             ->with(['post.donor', 'post.category', 'courierDetail'])
+            ->when($focusedClaimId !== null, fn (Builder $query) => $query->whereKey($focusedClaimId))
             ->when($search !== '', function (Builder $query) use ($search): void {
                 $term = '%'.$search.'%';
 
@@ -47,7 +54,10 @@ class RecipientClaimService
             ->orderByDesc('tanggal_klaim')
             ->orderByDesc('id')
             ->paginate(self::PER_PAGE)
-            ->withQueryString();
+            ->appends(array_filter([
+                'q' => $search !== '' ? $search : null,
+                'status' => is_string($status) ? $status : null,
+            ], fn ($value) => $value !== null));
     }
 
     /**

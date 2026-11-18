@@ -25,17 +25,32 @@ class ClaimController extends Controller
 
         $ownedByDonor = fn ($query) => $query->where('donor_id', $donor->id);
 
+        $focusedClaimId = $request->integer('claim') ?: null;
+        $focusedClaim = $focusedClaimId !== null
+            ? Claim::query()
+                ->with(['post.category', 'recipient'])
+                ->whereHas('post', $ownedByDonor)
+                ->find($focusedClaimId)
+            : null;
+
+        if ($focusedClaim !== null) {
+            $activeFilter = null;
+        }
+
         // Model Claim tidak punya created_at (WithoutTimestamps), jadi latest() akan error.
         // Relasi ke makanan bernama post(), bukan foodPost().
         $claims = Claim::query()
             ->with(['post.category', 'recipient'])
             ->whereHas('post', $ownedByDonor)
+            ->when($focusedClaim !== null, fn ($query) => $query->whereKey($focusedClaim->id))
             ->when($activeFilter, fn ($query) => $query->whereIn('status', ClaimStatus::GROUPS[$activeFilter]))
             ->orderByRaw("CASE WHEN status IN ('pending', 'menunggu') THEN 0 ELSE 1 END")
             ->orderByDesc('tanggal_klaim')
             ->orderByDesc('id')
             ->paginate(10)
-            ->withQueryString();
+            ->appends(array_filter([
+                'status' => $activeFilter,
+            ], fn ($value) => $value !== null));
 
         $statusCounts = Claim::query()
             ->whereHas('post', $ownedByDonor)
@@ -43,7 +58,12 @@ class ClaimController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        return view('donor.claims.index', compact('claims', 'statusCounts', 'activeFilter'));
+        return view('donor.claims.index', [
+            'claims' => $claims,
+            'statusCounts' => $statusCounts,
+            'activeFilter' => $activeFilter,
+            'focusedClaimId' => $focusedClaim?->id,
+        ]);
     }
 
     /**

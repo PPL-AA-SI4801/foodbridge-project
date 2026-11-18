@@ -72,6 +72,18 @@
             @endif
         </div>
 
+        @if ($focusedClaimId)
+            <div class="mb-6 flex flex-col gap-3 rounded-2xl border border-primary/25 bg-accent/50 px-4 py-3 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between">
+                <p class="flex items-center gap-2">
+                    <x-icon name="clipboard-check" class="h-4 w-4 shrink-0 text-primary" />
+                    <span>Menampilkan klaim yang Anda buka dari notifikasi.</span>
+                </p>
+                <a href="{{ route('donor.claims.index') }}" class="inline-flex w-fit items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold transition hover:bg-accent">
+                    Tampilkan semua klaim
+                </a>
+            </div>
+        @endif
+
         {{-- Ringkasan status (juga berfungsi sebagai filter) --}}
         <div class="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
             @foreach ($stats as $key => $stat)
@@ -177,11 +189,13 @@
                         @endphp
 
                         <li
+                            id="claim-{{ $claim->id }}"
                             x-data="{ busy: false }"
                             @class([
                                 'grid gap-3 px-4 py-4 transition-colors sm:px-6 lg:items-center lg:gap-4',
                                 'hover:bg-muted/40' => ! $isPending,
                                 'bg-secondary/[0.03] hover:bg-secondary/[0.06]' => $isPending,
+                                'ring-2 ring-inset ring-primary/25' => $claim->id === $focusedClaimId,
                                 $columns,
                             ])
                         >

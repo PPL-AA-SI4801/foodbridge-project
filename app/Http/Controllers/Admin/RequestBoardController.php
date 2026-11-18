@@ -104,7 +104,6 @@ class RequestBoardController extends Controller
                     $foodRequest->judul,
                 ),
                 'tipe' => NotificationType::FoodRequest->value,
-                'action_url' => route('recipient.requests.index', ['status' => 'cancelled'], false),
             ]);
         }
 
@@ -132,7 +131,6 @@ class RequestBoardController extends Controller
                     $judul,
                 ),
                 'tipe' => NotificationType::FoodRequest->value,
-                'action_url' => route('recipient.requests.index', [], false),
             ]);
         }
 

@@ -58,6 +58,18 @@
             </div>
         </div>
 
+        @if ($focusedRequestId)
+            <div class="mb-6 flex flex-col gap-3 rounded-2xl border border-primary/25 bg-accent/50 px-4 py-3 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between">
+                <p class="flex items-center gap-2">
+                    <x-icon name="message-square" class="h-4 w-4 shrink-0 text-primary" />
+                    <span>Menampilkan permintaan kebutuhan yang Anda buka dari notifikasi.</span>
+                </p>
+                <a href="{{ route('recipient.requests.index') }}" class="inline-flex w-fit items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold transition hover:bg-accent">
+                    Tampilkan semua permintaan
+                </a>
+            </div>
+        @endif
+
         {{-- Kuota permintaan terbuka + filter status --}}
         <div class="mb-6 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.8fr)]">
             <section class="rounded-2xl border border-border bg-card p-5 sm:p-6" aria-labelledby="open-quota-title">
@@ -324,7 +336,13 @@
                                 : \App\Enums\FoodRequestStatus::tryFrom((string) $req->status) ?? \App\Enums\FoodRequestStatus::Open;
                         @endphp
 
-                        <li class="p-4 transition-colors hover:bg-muted/30 sm:px-6 sm:py-5">
+                        <li
+                            id="request-{{ $req->id }}"
+                            @class([
+                                'p-4 transition-colors hover:bg-muted/30 sm:px-6 sm:py-5',
+                                'bg-accent/30 ring-2 ring-inset ring-primary/25' => $req->id === $focusedRequestId,
+                            ])
+                        >
                             <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                 <div class="min-w-0 flex-1">
                                     <div class="flex flex-wrap items-center gap-2">

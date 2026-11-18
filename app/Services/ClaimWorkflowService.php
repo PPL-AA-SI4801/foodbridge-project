@@ -54,7 +54,6 @@ class ClaimWorkflowService
                 'judul' => 'Klaim Disetujui',
                 'pesan' => 'Klaim Anda untuk makanan "'.$foodPost->judul.'" telah disetujui oleh '.$actorLabel.'.',
                 'tipe' => NotificationType::Claim->value,
-                'action_url' => route('recipient.claims.index', [], false),
             ]);
 
             return $lockedClaim;
@@ -83,7 +82,6 @@ class ClaimWorkflowService
                 'judul' => 'Klaim Ditolak',
                 'pesan' => 'Mohon maaf, klaim Anda untuk makanan "'.$lockedClaim->post->judul.'" ditolak oleh '.$actorLabel.'.',
                 'tipe' => NotificationType::Claim->value,
-                'action_url' => route('recipient.claims.index', [], false),
             ]);
 
             return $lockedClaim;

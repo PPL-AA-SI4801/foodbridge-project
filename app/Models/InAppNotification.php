@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Notifiable trait must not be used against this table.
  */
 #[Table('notifications')]
-#[Fillable(['judul', 'pesan', 'tipe', 'action_url', 'is_read', 'user_id'])]
+#[Fillable(['judul', 'pesan', 'tipe', 'is_read', 'user_id'])]
 class InAppNotification extends Model
 {
     /**

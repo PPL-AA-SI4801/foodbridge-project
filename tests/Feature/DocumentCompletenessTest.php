@@ -48,6 +48,10 @@ class DocumentCompletenessTest extends TestCase
         $this->assertSame('Dokumen Akun Perlu Dilengkapi', $notification->judul);
         $this->assertStringContainsString('NIB kurang jelas, mohon unggah ulang.', $notification->pesan);
         $this->assertFalse($notification->is_read);
+
+        $this->actingAs($applicant->fresh())
+            ->get(route('notifications.open', $notification))
+            ->assertRedirect(route('documents.completeness.edit'));
     }
 
     public function test_pending_applicant_can_login_to_complete_requested_documents(): void
@@ -112,6 +116,96 @@ class DocumentCompletenessTest extends TestCase
 
         $this->assertSame('nib', $replacement->jenis_dokumen);
         $this->assertTrue(Storage::disk('local')->exists($replacement->file_path));
+    }
+
+    public function test_all_active_administrators_are_notified_after_the_applicant_finishes_completing_documents(): void
+    {
+        Storage::fake('local');
+
+        $administrator = $this->activeUser(Role::Administrator);
+        $secondAdministrator = $this->activeUser(Role::Administrator);
+        $inactiveAdministrator = User::factory()->create([
+            'role' => Role::Administrator,
+            'status_akun' => AccountStatus::Diblokir->value,
+        ]);
+        $applicant = $this->pendingApplicant();
+        $document = $this->documentFor($applicant, [
+            'status' => VerificationStatus::PerluKelengkapan,
+            'catatan' => 'Dokumen tidak lengkap.',
+        ]);
+
+        $this->actingAs($applicant)
+            ->post(route('documents.completeness.update', $document), [
+                'dokumen' => UploadedFile::fake()->create('nib-baru.pdf', 100, 'application/pdf'),
+            ])
+            ->assertRedirect(route('login'));
+
+        $notifications = InAppNotification::query()
+            ->whereIn('user_id', [$administrator->id, $secondAdministrator->id])
+            ->get();
+
+        $this->assertCount(2, $notifications);
+
+        foreach ($notifications as $notification) {
+            $this->assertSame('akun', $notification->tipe);
+            $this->assertSame('Kelengkapan Dokumen Dikirim', $notification->judul);
+            $this->assertStringContainsString($applicant->nama, $notification->pesan);
+            $this->assertFalse($notification->is_read);
+        }
+
+        $this->actingAs($administrator)
+            ->get(route('notifications.open', $notifications->first()))
+            ->assertRedirect(route('admin.verifications.index'));
+
+        $this->assertSame(
+            0,
+            InAppNotification::query()
+                ->where('user_id', $inactiveAdministrator->id)
+                ->count(),
+        );
+    }
+
+    public function test_administrators_are_not_notified_until_every_requested_document_is_replaced(): void
+    {
+        Storage::fake('local');
+
+        $administrator = $this->activeUser(Role::Administrator);
+        $applicant = $this->pendingApplicant();
+        $firstDocument = $this->documentFor($applicant, [
+            'jenis_dokumen' => 'nib',
+            'status' => VerificationStatus::PerluKelengkapan,
+        ]);
+        $secondDocument = $this->documentFor($applicant, [
+            'jenis_dokumen' => 'akta_pendirian',
+            'file_path' => 'verification-documents/'.$applicant->id.'/akta.pdf',
+            'status' => VerificationStatus::PerluKelengkapan,
+        ]);
+
+        $this->actingAs($applicant)
+            ->post(route('documents.completeness.update', $firstDocument), [
+                'dokumen' => UploadedFile::fake()->create('nib-baru.pdf', 100, 'application/pdf'),
+            ])
+            ->assertRedirect(route('documents.completeness.edit'));
+
+        $this->assertSame(
+            0,
+            InAppNotification::query()
+                ->where('user_id', $administrator->id)
+                ->count(),
+        );
+
+        $this->actingAs($applicant)
+            ->post(route('documents.completeness.update', $secondDocument), [
+                'dokumen' => UploadedFile::fake()->create('akta-baru.pdf', 100, 'application/pdf'),
+            ])
+            ->assertRedirect(route('login'));
+
+        $this->assertSame(
+            1,
+            InAppNotification::query()
+                ->where('user_id', $administrator->id)
+                ->count(),
+        );
     }
 
     public function test_administrator_cannot_approve_while_completeness_is_pending(): void

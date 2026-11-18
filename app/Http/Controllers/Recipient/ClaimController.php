@@ -23,12 +23,22 @@ class ClaimController extends Controller
         $search = mb_substr(trim((string) $request->query('q', '')), 0, 100);
         $status = $request->query('status');
 
+        $focusedClaimId = $request->integer('claim') ?: null;
+        $focusedClaim = $focusedClaimId !== null
+            ? Claim::query()
+                ->where('recipient_id', $recipient->id)
+                ->find($focusedClaimId)
+            : null;
+
         $filters = [
-            'q' => $search,
-            'status' => is_string($status) && array_key_exists($status, ClaimStatus::GROUPS) ? $status : null,
+            'q' => $focusedClaim !== null ? '' : $search,
+            'status' => $focusedClaim === null && is_string($status) && array_key_exists($status, ClaimStatus::GROUPS)
+                ? $status
+                : null,
         ];
 
-        $claims = $claimService->paginateForRecipient($recipient->id, $filters);
+        $claims = $claimService->paginateForRecipient($recipient->id, $filters, $focusedClaim?->id);
+        $focusedClaimId = $focusedClaim?->id;
         $quota = $claimService->quotaSummary($recipient->id);
         $statusCounts = $claimService->statusCounts($recipient->id);
         $statusOptions = ClaimStatus::LABELS;
@@ -39,6 +49,7 @@ class ClaimController extends Controller
             'statusCounts',
             'statusOptions',
             'filters',
+            'focusedClaimId',
         ));
     }
 
@@ -80,7 +91,7 @@ class ClaimController extends Controller
         }
 
         DB::transaction(function () use ($request, $foodPost, $recipientId, $today) {
-            Claim::create([
+            $claim = Claim::create([
                 'post_id' => $foodPost->id,
                 'recipient_id' => $recipientId,
                 'jumlah_porsi' => $request->jumlah_porsi,
@@ -93,7 +104,6 @@ class ClaimController extends Controller
                 'judul' => 'Pengajuan Klaim Baru',
                 'pesan' => 'Penerima mengajukan klaim sebanyak '.$request->jumlah_porsi.' porsi pada postingan '.$foodPost->judul,
                 'tipe' => NotificationType::Claim->value,
-                'action_url' => route('donor.claims.index', ['status' => 'menunggu'], false),
             ]);
         });
 

@@ -47,6 +47,10 @@ erDiagram
     recipient_profiles ||--o{ food_requests : "creates (recipient_id)"
     recipient_profiles ||--o{ claims : "submits (recipient_id)"
     food_posts ||--o{ claims : "is claimed (post_id)"
+    food_categories ||--o{ food_requests : "groups (nullable)"
+
+    donor_profiles ||--o{ food_requests : "fulfils (donor_id, nullable)"
+    claims ||--o| food_requests : "auto-claim (claim_id, nullable)"
 
     claims ||--o| courier_details : "if online courier"
     claims ||--o| food_reviews : "feedback"
@@ -67,6 +71,18 @@ Cardinality:
 | food_posts → claims | 1 : 0..* |
 | claims ↔ courier_details | 1 : 0..1 |
 | claims ↔ food_reviews | 1 : 0..1 |
+| donor_profiles → food_requests | 1 : 0..* (nullable `donor_id`; null while the request is still open) |
+| claims → food_requests | 1 : 0..1 (nullable `claim_id`; set when a donor fulfils via an auto-approved claim) |
+| food_categories → food_requests | 1 : 0..* (nullable `category_id`) |
+
+### Why each relationship is shaped this way
+
+- **Profiles are 1:1 with `unique(user_id)`.** One account owns at most one donor or recipient profile; admins own none. `cascadeOnDelete` keeps orphan profiles from surviving their account.
+- **History tables use `restrictOnDelete`.** `food_posts`, `claims`, and `food_requests.recipient_id` block deletion of anything that distribution history depends on. A donor cannot delete a post that already has claims; the admin flow deletes the post first only when no claim references it.
+- **Fulfilment links use `nullOnDelete`.** `food_requests.donor_id`, `claim_id`, and `category_id` describe a state, not ownership. If the linked donor, claim, or category disappears, the request survives with the link nulled instead of vanishing.
+- **One courier / one review per claim (`unique(claim_id)`).** A claim has at most one handover method and at most one piece of feedback; both `cascadeOnDelete` with the claim.
+- **Notifications belong to exactly one user (`cascadeOnDelete`).** Deleting an account wipes its inbox; notifications are never shared between accounts, which is what makes the 403 rule on cross-account opens trivially enforceable.
+- **The open destination is derived fresh in code, not stored.** `NotificationController` maps the notification `tipe` plus the account's role and status to the current list or dashboard page, so a click always shows up-to-date data and can never point at a deleted row or an external URL.
 
 ---
 
@@ -79,7 +95,7 @@ ERD → Laravel type conversion: `integer(10)` → integer/`id()`, `varchar(n)` 
 | Column | Type | Null | Key | Description |
 |---|---|---|---|---|
 | id | integer(10) | No | PK | |
-| nama | varchar(255) | No | U ⚠ | User name / PIC (person in charge) |
+| nama | varchar(255) | No | | User name / PIC (person in charge); not unique, only `email` is |
 | email | varchar(255) | No | U | Login identity |
 | password | varchar(255) | No | | Hash |
 | no_hp | varchar(20) | No | | Phone number |
@@ -96,7 +112,7 @@ ERD → Laravel type conversion: `integer(10)` → integer/`id()`, `varchar(n)` 
 | jenis_usaha | varchar(255) | No | | Business type: restaurant, hotel, caterer, MBG kitchen, etc. |
 | lat | decimal(10,7) | Yes | | |
 | lng | decimal(10,7) | Yes | | |
-| user_id | integer(10) | No | FK → users.id | 1:1 ⚠ |
+| user_id | integer(10) | No | FK → users.id, unique | 1:1, enforced by unique constraint |
 
 ### 3.3 `recipient_profiles`
 
@@ -108,7 +124,7 @@ ERD → Laravel type conversion: `integer(10)` → integer/`id()`, `varchar(n)` 
 | alamat | varchar(255) | No | | Address |
 | lat | decimal(10,7) | Yes | | |
 | lng | decimal(10,7) | Yes | | |
-| user_id | integer(10) | No | FK → users.id | 1:1 ⚠ |
+| user_id | integer(10) | No | FK → users.id, unique | 1:1, enforced by unique constraint |
 
 ### 3.4 `verification_documents`
 
@@ -119,7 +135,7 @@ ERD → Laravel type conversion: `integer(10)` → integer/`id()`, `varchar(n)` 
 | file_path | varchar(255) | No | | File path in storage (private disk recommended) |
 | status | varchar(255) | No | | Review status: menunggu, perlu_kelengkapan, disetujui, ditolak |
 | catatan | varchar(255) | Yes | | Rejection reason / admin completeness request notes |
-| verified_at | timestamp | No ⚠ | | Time of review; should be nullable |
+| verified_at | timestamp | Yes | | Time of review; null until reviewed |
 | user_id | integer(10) | No | FK → users.id | |
 
 ### 3.5 `food_categories`
@@ -152,12 +168,17 @@ ERD → Laravel type conversion: `integer(10)` → integer/`id()`, `varchar(n)` 
 | Column | Type | Null | Key | Description |
 |---|---|---|---|---|
 | id | integer(10) | No | PK | |
-| recipient_id | integer(10) | No | FK → **recipient_profiles.id** | |
+| recipient_id | integer(10) | No | FK → **recipient_profiles.id** | Owner of the request |
+| category_id | integer(10) | Yes | FK → food_categories.id, `nullOnDelete` | Optional category |
 | judul | varchar(255) | No | | Title |
 | deskripsi | varchar(255) | Yes | | Description |
 | jumlah_porsi | integer(10) | No | | Portions needed |
-| batas_waktu | timestamp | No | | Deadline |
+| urgency_level | varchar(255) | No | | Default `mendesak` |
+| metode_penerimaan | varchar(255) | Yes | | Penerima's preferred handover method |
+| batas_waktu | timestamp | No | | Deadline; past deadline → expired |
 | status | varchar(255) | No | | |
+| donor_id | integer(10) | Yes | FK → **donor_profiles.id**, `nullOnDelete` | Fulfilling donor; null while open |
+| claim_id | integer(10) | Yes | FK → claims.id, `nullOnDelete` | Auto-created claim; null while open |
 | created_at | timestamp | No | | No `updated_at` |
 
 ### 3.8 `claims`
@@ -170,7 +191,7 @@ ERD → Laravel type conversion: `integer(10)` → integer/`id()`, `varchar(n)` 
 | metode_pengambilan | varchar(255) | Yes | | Filled in after the claim is approved: self pickup / online courier |
 | kode_verifikasi | varchar(255) | Yes | | 6 digits, only for self pickup |
 | tanggal_klaim | date | No | | Basis for the daily quota calculation |
-| approved_at | timestamp | No ⚠ | | Should be nullable (claims not yet / never approved) |
+| approved_at | timestamp | Yes | | Filled in when the claim is approved; null otherwise |
 | completed_at | timestamp | Yes | | Filled in when the Donor presses "Food has been handed over" |
 | post_id | integer(10) | No | FK → food_posts.id | |
 | recipient_id | integer(10) | No | FK → **recipient_profiles.id** | |
@@ -182,7 +203,7 @@ Only created if the claim uses an online courier.
 | Column | Type | Null | Key | Description |
 |---|---|---|---|---|
 | id | integer(10) | No | PK | |
-| claim_id | integer(10) | No | FK → claims.id | 1:1 ⚠ |
+| claim_id | integer(10) | No | FK → claims.id, unique | 1:1, enforced by unique constraint |
 | platform | varchar(255) | No | | Gojek / Grab |
 | nama_pengemudi | varchar(255) | No | | Driver name |
 | no_kendaraan | varchar(20) | No | | Vehicle number |
@@ -197,10 +218,10 @@ One table for two purposes: quality reviews and reports of unfit food, distingui
 | Column | Type | Null | Key | Description |
 |---|---|---|---|---|
 | id | integer(10) | No | PK | |
-| claim_id | integer(10) | No | FK → claims.id | 1:1 ⚠ |
-| rating | integer(10) | No ⚠ | | May not be relevant for reports |
+| claim_id | integer(10) | No | FK → claims.id, unique | 1:1, enforced by unique constraint |
+| rating | integer(10) | Yes | | Null for `jenis_feedback = laporan` (a report has no rating) |
 | komentar | varchar(255) | No | | Comment |
-| created_at | timestamp | Yes ⚠ | | No `updated_at` |
+| created_at | timestamp | No | | No `updated_at` |
 | jenis_feedback | varchar(255) | No | | `ulasan` (review) / `laporan` (report) |
 | foto_bukti | varchar(255) | Yes | | Photo of the food's condition |
 | status_penanganan | varchar(255) | Yes | | Filled in by Admin for reports |
@@ -213,9 +234,8 @@ One table for two purposes: quality reviews and reports of unfit food, distingui
 | id | integer(10) | No | PK | |
 | judul | varchar(255) | No | | Title |
 | pesan | varchar(255) | No | | Message |
-| tipe | varchar(255) | No | | Event type |
-| action_url | varchar(2048) | Yes | | Related page opened when the notification is clicked; null means the notification opens in a reading popup |
-| is_read | binary(1) | No | | Boolean, default `false` (proposed) |
+| tipe | varchar(255) | No | | Event type; canonical values in `App\Enums\NotificationType` |
+| is_read | binary(1) | No | | Boolean, default `false` |
 | created_at | timestamp | No | | No `updated_at` |
 | user_id | integer(10) | No | FK → users.id | Notification recipient |
 
@@ -259,7 +279,7 @@ The ERD only specifies the type `varchar(255)`. The values below are derived fro
 | `courier_details.platform` | `gojek`, `grab` |
 | `food_reviews.jenis_feedback` | `ulasan` (review), `laporan` (report) |
 | `food_reviews.status_penanganan` | `menunggu` (pending), `diproses` (in progress), `selesai` (completed) (null for `ulasan`) |
-| `notifications.tipe` | e.g. `akun` (account), `klaim` (claim), `laporan` (report) |
+| `notifications.tipe` | `akun`, `klaim`, `post`, `request`, `laporan` — see `App\Enums\NotificationType`; new code must use the enum, never hard-coded strings |
 
 ### Account verification ownership (PBI-03)
 
@@ -286,20 +306,16 @@ The ERD only specifies the type `varchar(255)`. The values below are derived fro
 
 ---
 
-## 7. ERD Findings to Check
+## 7. ERD Findings — resolved
 
-The following items should be decided before generating migrations and models.
+All items below were checked against the migrations; the schema already implements the correct choice, and the table details above reflect it.
 
-**Columns with suspected incorrect nullability**
-- `verification_documents.verified_at` and `claims.approved_at` are marked NOT NULL, even though they are only filled in after a review or approval. Make them nullable.
-- `food_reviews.rating` is NOT NULL, while for `jenis_feedback = laporan` a rating may not exist. Consider making it nullable.
-- `food_reviews.created_at` is nullable, while in other tables it is NOT NULL. Possibly unintentional.
-
-**Constraints not depicted**
-- `users.nama` is marked unique. Two people can share the same name, so probably only `email` should be unique.
-- `user_id` in `donor_profiles` and `recipient_profiles` (1:1 relationship), as well as `claim_id` in `courier_details` and `food_reviews` (at most one per claim), need `unique` so the 1:1 is actually enforced at the database level.
-- `onDelete` is absent from the ERD. Proposal: `cascade` for profiles, documents, notifications, `courier_details`, and `food_reviews`; `restrict` for `food_posts` → `claims` so that distribution history is not lost.
-- Proposed indexes: `food_posts(status, batas_konsumsi)` for the catalog, and `claims(recipient_id, tanggal_klaim)` for the daily quota calculation.
+- `verification_documents.verified_at` and `claims.approved_at` are **nullable** in the migrations (the ERD's NOT NULL was wrong).
+- `food_reviews.rating` is **nullable** (reports carry no rating); `food_reviews.created_at` is **NOT NULL** (every row is created at some time — the ERD's nullable marker was wrong).
+- `users.nama` is **not unique**; only `email` is. The ERD's `U` marker on `nama` is ignored.
+- `user_id` in `donor_profiles` / `recipient_profiles` and `claim_id` in `courier_details` / `food_reviews` are **`unique`**, so the 1:1 is enforced at the database level.
+- `onDelete`: `cascade` for profiles, documents, notifications, `courier_details`, `food_reviews`; `restrict` for `food_posts` → `claims` and `claims`/`recipient_profiles` → `food_requests` so distribution history is not lost; `nullOnDelete` for the fulfilment links (`food_requests.donor_id`, `claim_id`, `category_id`).
+- Proposed indexes exist: `food_requests(status, batas_waktu)`; add `claims(recipient_id, tanggal_klaim)` if the daily quota query ever slows down.
 
 **Logic not present in the database**
 - The daily quota value is not stored in any table. Put it in `config/` or a constant.

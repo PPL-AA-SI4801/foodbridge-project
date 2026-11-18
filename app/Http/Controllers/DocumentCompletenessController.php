@@ -2,7 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AccountStatus;
+use App\Enums\NotificationType;
+use App\Enums\Role;
 use App\Enums\VerificationStatus;
+use App\Models\InAppNotification;
+use App\Models\User;
 use App\Models\VerificationDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -76,6 +81,10 @@ class DocumentCompletenessController extends Controller
                     'file_path' => $path,
                     'status' => VerificationStatus::Menunggu,
                 ]);
+
+                if (! $user->hasDocumentCompletenessRequest()) {
+                    $this->notifyAdministrators($user);
+                }
             });
         } catch (Throwable $exception) {
             Storage::disk('local')->delete($path);
@@ -96,5 +105,34 @@ class DocumentCompletenessController extends Controller
         return redirect()
             ->route('documents.completeness.edit')
             ->with('status', 'Dokumen berhasil diperbarui. Silakan lengkapi dokumen lain jika ada.');
+    }
+
+    /**
+     * Let every active administrator know the applicant is ready for review.
+     */
+    private function notifyAdministrators(User $applicant): void
+    {
+        $administratorIds = User::query()
+            ->where('role', Role::Administrator->value)
+            ->where('status_akun', AccountStatus::Aktif->value)
+            ->pluck('id');
+
+        if ($administratorIds->isEmpty()) {
+            return;
+        }
+
+        $applicantName = $applicant->profileName() ?: $applicant->nama;
+
+        foreach ($administratorIds as $administratorId) {
+            InAppNotification::create([
+                'user_id' => $administratorId,
+                'judul' => 'Kelengkapan Dokumen Dikirim',
+                'pesan' => sprintf(
+                    '%s telah mengirim ulang dokumen kelengkapan. Silakan tinjau verifikasi akun.',
+                    $applicantName,
+                ),
+                'tipe' => NotificationType::Account->value,
+            ]);
+        }
     }
 }

@@ -99,7 +99,6 @@ class VerificationController extends Controller
                 'judul' => 'Akun Anda Telah Diverifikasi',
                 'pesan' => 'Selamat! Pendaftaran akun Anda telah disetujui. Anda sekarang dapat masuk dan menggunakan seluruh fitur FoodBridge.',
                 'tipe' => NotificationType::Account->value,
-                'action_url' => route('profile.edit', [], false),
             ]);
 
             return 'approved';
