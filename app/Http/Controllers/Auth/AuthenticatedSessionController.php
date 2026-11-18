@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\AccountStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +18,18 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
-        return view('auth.login');
+        $pendingVerificationUser = null;
+        $email = session('pending_verification_email');
+
+        if (is_string($email) && $email !== '') {
+            $user = User::where('email', $email)->first();
+
+            if ($user !== null && $user->status_akun === AccountStatus::Menunggu) {
+                $pendingVerificationUser = $user;
+            }
+        }
+
+        return view('auth.login', ['pendingVerificationUser' => $pendingVerificationUser]);
     }
 
     /**
@@ -27,6 +40,7 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+        $request->session()->forget('pending_verification_email');
 
         $redirect = $request->user()->dashboardRouteName();
 
