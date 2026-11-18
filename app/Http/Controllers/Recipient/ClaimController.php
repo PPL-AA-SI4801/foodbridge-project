@@ -58,6 +58,14 @@ class ClaimController extends Controller
         $recipientId = $request->user()->recipientProfile()->firstOrFail()->id;
         $today = Carbon::today();
 
+        if ($foodPost->sisa_porsi <= 0) {
+            return back()->withErrors(['jumlah_porsi' => 'Makanan sudah habis.']);
+        }
+
+        if ($foodPost->batas_konsumsi && Carbon::parse($foodPost->batas_konsumsi)->isPast()) {
+            return back()->withErrors(['jumlah_porsi' => 'Makanan sudah kedaluwarsa dan tidak dapat diklaim.']);
+        }
+
         $request->validate([
             'jumlah_porsi' => ['required', 'integer', 'min:1', "max:{$foodPost->sisa_porsi}"],
         ], [
@@ -71,14 +79,6 @@ class ClaimController extends Controller
             $limit = RecipientClaimService::DAILY_CLAIM_LIMIT;
 
             return back()->withErrors(['jumlah_porsi' => "Kuota klaim harian Anda sudah habis ({$limit}/{$limit})."]);
-        }
-
-        if ($foodPost->batas_konsumsi && Carbon::parse($foodPost->batas_konsumsi)->isPast()) {
-            return back()->withErrors(['jumlah_porsi' => 'Makanan sudah kedaluwarsa dan tidak dapat diklaim.']);
-        }
-
-        if ($foodPost->sisa_porsi <= 0) {
-            return back()->withErrors(['jumlah_porsi' => 'Makanan sudah habis.']);
         }
 
         $existingClaim = Claim::where('recipient_id', $recipientId)
