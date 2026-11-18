@@ -28,6 +28,16 @@ abstract class DuskTestCase extends BaseTestCase
     }
 
     /**
+     * Determine if headless mode is disabled.
+     */
+    protected function hasHeadlessDisabled(): bool
+    {
+        return parent::hasHeadlessDisabled()
+            || filter_var(env('DUSK_HEADLESS_DISABLED', false), FILTER_VALIDATE_BOOLEAN)
+            || filter_var(env('DUSK_HEADLESS_DISABLE', false), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
      * Create the RemoteWebDriver instance.
      */
     protected function driver(): RemoteWebDriver
