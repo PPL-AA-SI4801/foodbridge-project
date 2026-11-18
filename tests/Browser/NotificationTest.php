@@ -24,7 +24,7 @@ class NotificationTest extends DuskTestCase
     /**
      * Jeda antar langkah agar penguji sempat membaca layar.
      */
-    private const REVIEW_PAUSE = 1500;
+    private const REVIEW_PAUSE = 2500;
 
     /**
      * TS-1: Penerima mengajukan klaim → Donor mendapat notifikasi dan membukanya.
