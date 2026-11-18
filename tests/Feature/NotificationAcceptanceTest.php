@@ -32,11 +32,15 @@ class NotificationAcceptanceTest extends TestCase
             ->post(route('recipient.claims.store', $foodPost), ['jumlah_porsi' => 2])
             ->assertRedirect(route('recipient.claims.index'));
 
+        $claim = Claim::query()
+            ->where('post_id', $foodPost->id)
+            ->sole();
+
         $notification = InAppNotification::query()
             ->where('user_id', $donorUser->id)
             ->sole();
 
-        $this->assertSame('claim', $notification->tipe);
+        $this->assertSame('klaim', $notification->tipe);
         $this->assertSame('Pengajuan Klaim Baru', $notification->judul);
         $this->assertStringContainsString('2 porsi', $notification->pesan);
         $this->assertFalse($notification->is_read);
@@ -67,7 +71,7 @@ class NotificationAcceptanceTest extends TestCase
             ->where('judul', 'Klaim Disetujui')
             ->sole();
 
-        $this->assertSame('claim', $approvedNotification->tipe);
+        $this->assertSame('klaim', $approvedNotification->tipe);
         $this->assertStringContainsString($foodPost->judul, $approvedNotification->pesan);
 
         $this->actingAs($donorUser)
@@ -79,7 +83,7 @@ class NotificationAcceptanceTest extends TestCase
             ->where('judul', 'Klaim Ditolak')
             ->sole();
 
-        $this->assertSame('claim', $rejectedNotification->tipe);
+        $this->assertSame('klaim', $rejectedNotification->tipe);
         $this->assertStringContainsString($foodPost->judul, $rejectedNotification->pesan);
     }
 
@@ -127,8 +131,7 @@ class NotificationAcceptanceTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('notifications.open', $first))
-            ->assertRedirect(route('notifications.index'))
-            ->assertSessionHas('status', 'Notifikasi ditandai sudah dibaca.');
+            ->assertRedirect(route('donor.claims.index'));
 
         $this->assertTrue($first->fresh()->is_read);
 
@@ -262,7 +265,7 @@ class NotificationAcceptanceTest extends TestCase
             'user_id' => $user->id,
             'judul' => 'Judul notifikasi',
             'pesan' => 'Pesan notifikasi',
-            'tipe' => 'claim',
+            'tipe' => 'klaim',
         ], $attributes));
     }
 }

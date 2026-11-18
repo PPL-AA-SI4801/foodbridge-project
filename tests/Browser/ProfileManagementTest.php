@@ -4,26 +4,48 @@ namespace Tests\Browser;
 
 use App\Enums\Role;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
 class ProfileManagementTest extends DuskTestCase
 {
-    use DatabaseMigrations;
+    private static int $emailSeq = 0;
+
+    /**
+     * Generate a unique email per run so tests can run repeatedly
+     * against the persistent Dusk database without duplicates.
+     */
+    private function uniqueEmail(string $prefix): string
+    {
+        self::$emailSeq++;
+
+        return sprintf('%s-%d-%d-%s@example.com', strtolower($prefix), time(), self::$emailSeq, strtolower(Str::random(4)));
+    }
+
+    /**
+     * Generate a unique business/organization name per run, since
+     * nama_usaha is unique at the database level and both names are
+     * validated unique on register and profile update.
+     */
+    private function uniqueName(string $base): string
+    {
+        return sprintf('%s %d-%s', $base, time(), strtolower(Str::random(4)));
+    }
 
     /**
      * TC-4-01: Donor can view their own profile.
      */
     public function test_donor_can_view_own_profile(): void
     {
-        $donor = $this->createDonor('donor-lihat@example.com', 'Resto Donor Satu', -6.9175, 107.6191, 'Jl. Merdeka No. 1, Bandung');
+        $namaUsaha = $this->uniqueName('Resto Donor Satu');
+        $donor = $this->createDonor($this->uniqueEmail('donor-lihat'), $namaUsaha, -6.9175, 107.6191, 'Jl. Merdeka No. 1, Bandung');
 
-        $this->browse(function (Browser $browser) {
-            $browser->loginAs(User::where('email', 'donor-lihat@example.com')->firstOrFail())
+        $this->browse(function (Browser $browser) use ($donor, $namaUsaha) {
+            $browser->loginAs($donor)
                 ->visit('/profile')
                 ->assertSee('Profil Saya')
-                ->assertSee('Resto Donor Satu')
+                ->assertSee($namaUsaha)
                 ->assertInputValue('alamat', 'Jl. Merdeka No. 1, Bandung')
                 ->assertInputValue('lat', '-6.9175')
                 ->assertInputValue('lng', '107.6191');
@@ -35,14 +57,16 @@ class ProfileManagementTest extends DuskTestCase
      */
     public function test_donor_can_update_profile_and_location(): void
     {
-        $this->createDonor('donor-ubah@example.com', 'Resto Lama', -6.9, 107.6, 'Jl. Lama No. 1');
+        $email = $this->uniqueEmail('donor-ubah');
+        $namaBaru = $this->uniqueName('Resto Sedap Baru');
+        $this->createDonor($email, $this->uniqueName('Resto Lama'), -6.9, 107.6, 'Jl. Lama No. 1');
 
-        $this->browse(function (Browser $browser) {
-            $browser->loginAs(User::where('email', 'donor-ubah@example.com')->firstOrFail())
+        $this->browse(function (Browser $browser) use ($email, $namaBaru) {
+            $browser->loginAs(User::where('email', $email)->firstOrFail())
                 ->visit('/profile')
                 ->assertSee('Profil Saya')
                 ->clear('nama_usaha')
-                ->type('nama_usaha', 'Resto Sedap Baru')
+                ->type('nama_usaha', $namaBaru)
                 ->clear('alamat')
                 ->type('alamat', 'Jl. Asia Afrika No. 10, Bandung');
             $browser->script("document.getElementById('lat').value='-6.9217'; document.getElementById('lng').value='107.6071';");
@@ -53,10 +77,10 @@ class ProfileManagementTest extends DuskTestCase
         });
 
         $this->assertDatabaseHas('donor_profiles', [
-            'nama_usaha' => 'Resto Sedap Baru',
+            'nama_usaha' => $namaBaru,
             'alamat' => 'Jl. Asia Afrika No. 10, Bandung',
         ]);
-        $user = User::where('email', 'donor-ubah@example.com')->firstOrFail();
+        $user = User::where('email', $email)->firstOrFail();
         $profile = $user->donorProfile;
         $this->assertEqualsWithDelta(-6.9217, (float) $profile->lat, 0.0001);
         $this->assertEqualsWithDelta(107.6071, (float) $profile->lng, 0.0001);
@@ -67,13 +91,15 @@ class ProfileManagementTest extends DuskTestCase
      */
     public function test_recipient_can_update_profile_and_location(): void
     {
-        $this->createRecipient('penerima-ubah@example.com', 'Panti Asuhan Harapan');
+        $email = $this->uniqueEmail('penerima-ubah');
+        $namaLembaga = $this->uniqueName('Panti Asuhan Harapan');
+        $this->createRecipient($email, $namaLembaga);
 
-        $this->browse(function (Browser $browser) {
-            $browser->loginAs(User::where('email', 'penerima-ubah@example.com')->firstOrFail())
+        $this->browse(function (Browser $browser) use ($email, $namaLembaga) {
+            $browser->loginAs(User::where('email', $email)->firstOrFail())
                 ->visit('/profile')
                 ->assertSee('Profil Saya')
-                ->assertSee('Panti Asuhan Harapan')
+                ->assertSee($namaLembaga)
                 ->clear('alamat')
                 ->type('alamat', 'Jl. Baru No. 20, Bandung');
             $browser->script("document.getElementById('lat').value='-6.9147'; document.getElementById('lng').value='107.6098';");
@@ -83,7 +109,7 @@ class ProfileManagementTest extends DuskTestCase
         });
 
         $this->assertDatabaseHas('recipient_profiles', [
-            'nama_lembaga' => 'Panti Asuhan Harapan',
+            'nama_lembaga' => $namaLembaga,
             'alamat' => 'Jl. Baru No. 20, Bandung',
         ]);
     }
@@ -93,10 +119,12 @@ class ProfileManagementTest extends DuskTestCase
      */
     public function test_profile_update_is_rejected_for_invalid_input(): void
     {
-        $this->createDonor('donor-invalid@example.com', 'Resto Valid', -6.9, 107.6, 'Jl. Valid No. 1');
+        $email = $this->uniqueEmail('donor-invalid');
+        $namaValid = $this->uniqueName('Resto Valid');
+        $this->createDonor($email, $namaValid, -6.9, 107.6, 'Jl. Valid No. 1');
 
-        $this->browse(function (Browser $browser) {
-            $browser->loginAs(User::where('email', 'donor-invalid@example.com')->firstOrFail())
+        $this->browse(function (Browser $browser) use ($email) {
+            $browser->loginAs(User::where('email', $email)->firstOrFail())
                 ->visit('/profile')
                 ->clear('nama_usaha');
             $browser->script("document.querySelector('[dusk=profile-form]').setAttribute('novalidate','novalidate'); document.querySelectorAll('[required]').forEach(function (el) { el.removeAttribute('required'); }); document.getElementById('lat').value='95'; document.getElementById('lng').value='200';");
@@ -109,7 +137,7 @@ class ProfileManagementTest extends DuskTestCase
         });
 
         $this->assertDatabaseHas('donor_profiles', [
-            'nama_usaha' => 'Resto Valid',
+            'nama_usaha' => $namaValid,
         ]);
         $this->assertDatabaseMissing('donor_profiles', [
             'nama_usaha' => '',
@@ -124,26 +152,28 @@ class ProfileManagementTest extends DuskTestCase
      */
     public function test_user_cannot_update_another_users_profile(): void
     {
-        $donorA = $this->createDonor('donor-a@example.com', 'Resto A Asli', -6.9, 107.6, 'Jl. A No. 1');
-        $donorB = $this->createDonor('donor-b@example.com', 'Resto B Asli', -6.91, 107.61, 'Jl. B No. 2');
+        $namaAwalB = $this->uniqueName('Resto B Asli');
+        $namaDiubah = $this->uniqueName('Diubah Donor A');
+        $donorA = $this->createDonor($this->uniqueEmail('donor-a'), $this->uniqueName('Resto A Asli'), -6.9, 107.6, 'Jl. A No. 1');
+        $donorB = $this->createDonor($this->uniqueEmail('donor-b'), $namaAwalB, -6.91, 107.61, 'Jl. B No. 2');
 
-        $this->browse(function (Browser $browser) use ($donorB) {
-            $browser->loginAs(User::where('email', 'donor-a@example.com')->firstOrFail())
+        $this->browse(function (Browser $browser) use ($donorA, $donorB, $namaDiubah) {
+            $browser->loginAs($donorA)
                 ->visit('/profile');
             $browser->script("var i=document.createElement('input'); i.type='hidden'; i.name='user_id'; i.value='".$donorB->id."'; document.querySelector('[dusk=profile-form]').appendChild(i);");
             $browser->clear('nama_usaha')
-                ->type('nama_usaha', 'Diubah Donor A')
+                ->type('nama_usaha', $namaDiubah)
                 ->press('@profile-submit')
                 ->waitForText('Profil berhasil diperbarui.');
         });
 
         $this->assertDatabaseHas('donor_profiles', [
             'user_id' => $donorA->id,
-            'nama_usaha' => 'Diubah Donor A',
+            'nama_usaha' => $namaDiubah,
         ]);
         $this->assertDatabaseHas('donor_profiles', [
             'user_id' => $donorB->id,
-            'nama_usaha' => 'Resto B Asli',
+            'nama_usaha' => $namaAwalB,
         ]);
     }
 
@@ -155,7 +185,7 @@ class ProfileManagementTest extends DuskTestCase
      */
     public function test_inactive_account_cannot_access_profile(): void
     {
-        $pending = $this->createDonor('pending-profil@example.com', 'Resto Pending', -6.9, 107.6, 'Jl. Pending No. 1', 'menunggu');
+        $pending = $this->createDonor($this->uniqueEmail('pending-profil'), $this->uniqueName('Resto Pending'), -6.9, 107.6, 'Jl. Pending No. 1', 'menunggu');
 
         $this->browse(function (Browser $browser) use ($pending) {
             $browser->loginAs($pending)

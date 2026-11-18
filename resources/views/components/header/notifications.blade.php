@@ -14,7 +14,15 @@ $unreadCount = \App\Models\InAppNotification::query()
     ->count();
 @endphp
 
-<div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false" dusk="notification-bell" data-unread-count="{{ $unreadCount }}">
+<div
+    class="relative"
+    x-data="{ open: false, unreadCount: {{ $unreadCount }} }"
+    @keydown.escape.window="open = false"
+    @notification-read.window="unreadCount = $event.detail.unreadCount"
+    dusk="notification-bell"
+    data-unread-count="{{ $unreadCount }}"
+    x-bind:data-unread-count="unreadCount"
+>
     <button
         type="button"
         @click="open = ! open"
@@ -26,11 +34,12 @@ $unreadCount = \App\Models\InAppNotification::query()
     >
         <x-icon name="bell" class="h-5 w-5" />
 
-        @if ($unreadCount > 0)
-            <span class="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[10px] font-medium text-white">
-                {{ $unreadCount > 9 ? '9+' : $unreadCount }}
-            </span>
-        @endif
+        <span
+            x-show="unreadCount > 0"
+            x-cloak
+            x-text="unreadCount > 9 ? '9+' : unreadCount"
+            class="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[10px] font-medium text-white"
+        >{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
     </button>
 
     <div id="notification-menu-dropdown" x-show="open" x-cloak @click.outside="open = false" class="absolute right-0 z-50 mt-2">
@@ -38,12 +47,10 @@ $unreadCount = \App\Models\InAppNotification::query()
             <div class="flex items-center justify-between border-b border-border px-4 py-2.5">
                 <span class="text-sm font-medium">Notifikasi</span>
 
-                @if ($unreadCount > 0)
-                    <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <span class="h-1.5 w-1.5 rounded-full bg-secondary" aria-hidden="true"></span>
-                        {{ $unreadCount }} belum dibaca
-                    </span>
-                @endif
+                <span x-show="unreadCount > 0" x-cloak class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span class="h-1.5 w-1.5 rounded-full bg-secondary" aria-hidden="true"></span>
+                    <span x-text="`${unreadCount} belum dibaca`">{{ $unreadCount }} belum dibaca</span>
+                </span>
             </div>
 
             @if ($notifications->isEmpty())
@@ -67,7 +74,8 @@ $unreadCount = \App\Models\InAppNotification::query()
                                 <div class="flex items-start justify-between gap-2">
                                     <a
                                         href="{{ route('notifications.open', $notification) }}"
-                                        title="Buka notifikasi"
+                                        dusk="header-open-notification-{{ $notification->id }}"
+                                        title="Buka halaman terkait"
                                         class="min-w-0 flex-1 truncate text-sm font-medium transition-colors hover:text-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                     >
                                         {{ $notification->judul }}
@@ -102,7 +110,7 @@ $unreadCount = \App\Models\InAppNotification::query()
             @if (\Illuminate\Support\Facades\Route::has('notifications.index'))
                 <div class="border-t border-border p-1">
                     @if ($unreadCount > 0 && \Illuminate\Support\Facades\Route::has('notifications.read-all'))
-                        <form method="POST" action="{{ route('notifications.read-all') }}">
+                        <form method="POST" action="{{ route('notifications.read-all') }}" x-show="unreadCount > 0" x-cloak>
                             @csrf
                             @method('PATCH')
 
@@ -126,13 +134,13 @@ $unreadCount = \App\Models\InAppNotification::query()
                             Lihat semua notifikasi
                         </span>
 
-                        @if ($unreadCount > 0)
-                            <span class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-secondary/10 px-1.5 text-[10px] font-semibold text-secondary">
-                                {{ $unreadCount > 99 ? '99+' : $unreadCount }}
-                            </span>
-                        @else
-                            <x-icon name="chevron-right" class="h-4 w-4" />
-                        @endif
+                        <span
+                            x-show="unreadCount > 0"
+                            x-cloak
+                            x-text="unreadCount > 99 ? '99+' : unreadCount"
+                            class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-secondary/10 px-1.5 text-[10px] font-semibold text-secondary"
+                        >{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
+                        <x-icon x-show="unreadCount === 0" name="chevron-right" class="h-4 w-4" />
                     </a>
                 </div>
             @endif

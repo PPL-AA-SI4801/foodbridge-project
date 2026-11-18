@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Enums\Role;
+use App\Enums\VerificationStatus;
 use App\Models\InAppNotification;
 use App\Models\User;
+use App\Models\VerificationDocument;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
@@ -29,13 +31,13 @@ class NotificationPageTest extends TestCase
         $this->notificationFor($donor, [
             'judul' => 'Klaim baru menunggu persetujuan',
             'pesan' => 'Ada penerima yang mengajukan klaim untuk postingan Anda.',
-            'tipe' => 'claim',
+            'tipe' => 'klaim',
         ]);
 
         $this->notificationFor($otherUser, [
             'judul' => 'Notifikasi rahasia pengguna lain',
             'pesan' => 'Notifikasi ini bukan milik akun yang sedang masuk.',
-            'tipe' => 'claim',
+            'tipe' => 'klaim',
         ]);
 
         $this->actingAs($donor)
@@ -54,14 +56,14 @@ class NotificationPageTest extends TestCase
         $this->notificationFor($user, [
             'judul' => 'Notifikasi yang belum dibaca',
             'pesan' => 'Notifikasi ini masih baru.',
-            'tipe' => 'claim',
+            'tipe' => 'klaim',
             'is_read' => false,
         ]);
 
         $this->notificationFor($user, [
             'judul' => 'Notifikasi yang sudah dibaca',
             'pesan' => 'Notifikasi ini sudah dibuka sebelumnya.',
-            'tipe' => 'claim',
+            'tipe' => 'klaim',
             'is_read' => true,
         ]);
 
@@ -143,6 +145,79 @@ class NotificationPageTest extends TestCase
         $this->assertTrue($notification->fresh()->is_read);
     }
 
+    public function test_opening_a_notification_redirects_to_the_fresh_page_for_its_type(): void
+    {
+        $donor = $this->activeUser(Role::Donor);
+        $recipient = $this->activeUser(Role::Penerima);
+
+        $claimNotification = $this->notificationFor($donor, ['tipe' => 'klaim']);
+        $requestNotification = $this->notificationFor($recipient, ['tipe' => 'request']);
+        $postNotification = $this->notificationFor($donor, ['tipe' => 'post']);
+        $unknownNotification = $this->notificationFor($donor, ['tipe' => 'tidak-dikenal']);
+
+        $this->actingAs($donor)
+            ->get(route('notifications.open', $claimNotification))
+            ->assertRedirect(route('donor.claims.index'));
+
+        $this->actingAs($recipient)
+            ->get(route('notifications.open', $requestNotification))
+            ->assertRedirect(route('recipient.requests.index'));
+
+        $this->actingAs($donor)
+            ->get(route('notifications.open', $postNotification))
+            ->assertRedirect(route('donor.food-posts.index'));
+
+        $this->actingAs($donor)
+            ->get(route('notifications.open', $unknownNotification))
+            ->assertRedirect(route('notifications.index'));
+
+        $this->assertTrue($claimNotification->fresh()->is_read);
+        $this->assertTrue($requestNotification->fresh()->is_read);
+        $this->assertTrue($postNotification->fresh()->is_read);
+        $this->assertTrue($unknownNotification->fresh()->is_read);
+    }
+
+    public function test_opening_an_account_notification_uses_the_current_account_status(): void
+    {
+        $pending = $this->activeUser(Role::Donor);
+        $pending->update(['status_akun' => 'menunggu']);
+        VerificationDocument::create([
+            'user_id' => $pending->id,
+            'jenis_dokumen' => 'nib',
+            'file_path' => 'verification-documents/nib.pdf',
+            'status' => VerificationStatus::PerluKelengkapan,
+            'catatan' => 'Mohon unggah ulang.',
+        ]);
+        $active = $this->activeUser(Role::Penerima);
+
+        $pendingNotification = $this->notificationFor($pending, ['tipe' => 'akun']);
+        $activeNotification = $this->notificationFor($active, ['tipe' => 'akun']);
+
+        $this->actingAs($pending)
+            ->get(route('notifications.open', $pendingNotification))
+            ->assertRedirect(route('documents.completeness.edit'));
+
+        $this->actingAs($active)
+            ->get(route('notifications.open', $activeNotification))
+            ->assertRedirect(route('dashboard.recipient'));
+    }
+
+    public function test_marking_a_notification_as_read_returns_the_unread_count_for_ajax(): void
+    {
+        $user = $this->activeUser(Role::Donor);
+        $notification = $this->notificationFor($user);
+
+        $this->actingAs($user)
+            ->patchJson(route('notifications.read', $notification))
+            ->assertOk()
+            ->assertJson([
+                'is_read' => true,
+                'unread_count' => 0,
+            ]);
+
+        $this->assertTrue($notification->fresh()->is_read);
+    }
+
     public function test_a_user_cannot_mark_another_users_notification_as_read(): void
     {
         $user = $this->activeUser(Role::Donor);
@@ -186,7 +261,7 @@ class NotificationPageTest extends TestCase
         $this->notificationFor($user, [
             'judul' => 'Klaim baru menunggu persetujuan',
             'pesan' => 'Ada penerima yang mengajukan klaim untuk postingan Anda.',
-            'tipe' => 'claim',
+            'tipe' => 'klaim',
         ]);
 
         $this->actingAs($user)
@@ -232,7 +307,7 @@ class NotificationPageTest extends TestCase
             'user_id' => $user->id,
             'judul' => 'Judul notifikasi',
             'pesan' => 'Pesan notifikasi',
-            'tipe' => 'claim',
+            'tipe' => 'klaim',
         ], $attributes));
     }
 

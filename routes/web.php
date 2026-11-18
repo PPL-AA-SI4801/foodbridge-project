@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\ClaimController as AdminClaimController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\FoodPostController as AdminFoodPostController;
 use App\Http\Controllers\Admin\RequestBoardController as AdminRequestBoardController;
@@ -7,6 +9,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VerificationController;
 use App\Http\Controllers\Admin\VerificationDocumentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocumentCompletenessController;
 use App\Http\Controllers\Donor\ClaimController as DonorClaimController;
 use App\Http\Controllers\Donor\FoodPostController;
 use App\Http\Controllers\Donor\RequestBoardController as DonorRequestBoardController;
@@ -49,6 +52,12 @@ Route::middleware('auth')->group(function () {
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     });
 
+    Route::get('/lengkapi-dokumen', [DocumentCompletenessController::class, 'edit'])
+        ->name('documents.completeness.edit');
+
+    Route::post('/lengkapi-dokumen/{verificationDocument}', [DocumentCompletenessController::class, 'update'])
+        ->name('documents.completeness.update');
+
     Route::get('/notifikasi', [NotificationController::class, 'index'])
         ->name('notifications.index');
 
@@ -65,12 +74,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard/admin', [AdminDashboardController::class, 'index'])
             ->name('dashboard.admin');
 
-        Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+        Route::resource('/admin/users', AdminUserController::class)
+            ->except(['show'])
+            ->names('admin.users')
+            ->parameters(['users' => 'user']);
         Route::post('/admin/users/{user}/block', [AdminUserController::class, 'block'])->name('admin.users.block');
 
         Route::get('/admin/verifications', [VerificationController::class, 'index'])->name('admin.verifications.index');
         Route::get('/admin/verifications/{user}', [VerificationController::class, 'show'])->name('admin.verifications.show');
         Route::post('/admin/verifications/{user}/approve', [VerificationController::class, 'approve'])->name('admin.verifications.approve');
+        Route::post('/admin/verifications/{user}/request-documents', [VerificationController::class, 'requestDocuments'])->name('admin.verifications.request-documents');
         Route::post('/admin/verifications/{user}/reject', [VerificationController::class, 'reject'])->name('admin.verifications.reject');
         Route::get('/admin/documents/{verificationDocument}', [VerificationDocumentController::class, 'show'])->name('admin.documents.show');
 
@@ -82,6 +95,16 @@ Route::middleware('auth')->group(function () {
             ->except(['show'])
             ->names('admin.food-posts')
             ->parameters(['food-posts' => 'foodPost']);
+
+        Route::resource('/admin/claims', AdminClaimController::class)
+            ->except(['show'])
+            ->names('admin.claims')
+            ->parameters(['claims' => 'claim']);
+
+        Route::resource('/admin/categories', AdminCategoryController::class)
+            ->except(['show'])
+            ->names('admin.categories')
+            ->parameters(['categories' => 'category']);
     });
 
     Route::middleware(['auth', 'verified', 'role:penerima'])->prefix('recipient')->name('recipient.')->group(function () {

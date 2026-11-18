@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Donor;
 
 use App\Enums\FoodPostStatus;
 use App\Enums\FoodRequestStatus;
+use App\Enums\NotificationType;
 use App\Enums\UrgencyLevel;
 use App\Http\Controllers\Controller;
 use App\Models\Claim;
@@ -44,10 +45,29 @@ class RequestBoardController extends Controller
         $selectedUrgency = $validated['urgency'] ?? null;
         $viewMode = $validated['view'] ?? 'open';
 
+        $focusedRequestId = $request->integer('request') ?: null;
+        $focusedRequest = $focusedRequestId !== null
+            ? FoodRequest::query()
+                ->with(['recipient', 'category', 'donor', 'claim.post'])
+                ->find($focusedRequestId)
+            : null;
+
+        if ($focusedRequest !== null) {
+            $focusedRequestId = $focusedRequest->id;
+            $search = '';
+            $selectedCategoryId = null;
+            $selectedUrgency = null;
+            $viewMode = $focusedRequest->donor_id === $donor->id ? 'mine' : 'open';
+        } else {
+            $focusedRequestId = null;
+        }
+
         $baseQuery = FoodRequest::query()
             ->with(['recipient', 'category', 'donor', 'claim.post']);
 
-        if ($viewMode === 'mine') {
+        if ($focusedRequest !== null) {
+            $baseQuery->whereKey($focusedRequest->id);
+        } elseif ($viewMode === 'mine') {
             $baseQuery->where('donor_id', $donor->id);
         } else {
             $baseQuery->openBoard();
@@ -68,7 +88,12 @@ class RequestBoardController extends Controller
             ->orderBy('batas_waktu')
             ->orderByDesc('id')
             ->paginate(9)
-            ->withQueryString();
+            ->appends(array_filter([
+                'q' => $search !== '' ? $search : null,
+                'category_id' => $selectedCategoryId,
+                'urgency' => $selectedUrgency,
+                'view' => $viewMode !== 'open' ? $viewMode : null,
+            ], fn ($value) => $value !== null && $value !== ''));
 
         $foodRequests->getCollection()->each(function (FoodRequest $item) use ($donorLocation): void {
             $recipientLocation = Geo::coordinate($item->recipient?->lat, $item->recipient?->lng);
@@ -114,6 +139,7 @@ class RequestBoardController extends Controller
             'openBoardCount',
             'urgentOpenCount',
             'myCommitmentsCount',
+            'focusedRequestId',
         ));
     }
 
@@ -222,7 +248,7 @@ class RequestBoardController extends Controller
                         'user_id' => $lockedRequest->recipient->user_id,
                         'judul' => 'Permintaan Makanan Anda Direspons Donatur',
                         'pesan' => $message,
-                        'tipe' => 'request',
+                        'tipe' => NotificationType::FoodRequest->value,
                     ]);
                 }
             });
@@ -275,7 +301,7 @@ class RequestBoardController extends Controller
                         $donor->nama_usaha,
                         $locked->judul,
                     ),
-                    'tipe' => 'request',
+                    'tipe' => NotificationType::FoodRequest->value,
                 ]);
             }
         });

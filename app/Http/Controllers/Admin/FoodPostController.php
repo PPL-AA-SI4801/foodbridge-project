@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\FoodPostStatus;
+use App\Enums\NotificationType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AdminFoodPostRequest;
 use App\Models\DonorProfile;
@@ -249,7 +250,7 @@ class FoodPostController extends Controller
                 'user_id' => $donorUserId,
                 'judul' => 'Postingan Makanan Dihapus oleh Administrator',
                 'pesan' => sprintf('Postingan makanan "%s" milik usaha Anda telah dihapus oleh Administrator.', $judul),
-                'tipe' => 'post',
+                'tipe' => NotificationType::FoodPost->value,
             ]);
         }
 
