@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Enums\AccountStatus;
+use App\Enums\NotificationType;
 use App\Enums\Role;
 use App\Enums\VerificationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Models\InAppNotification;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -84,6 +86,34 @@ class RegisteredUserController extends Controller
                     'file_path' => $path,
                     'status' => VerificationStatus::Menunggu,
                 ]);
+
+                $administratorIds = User::query()
+                    ->where('role', Role::Administrator->value)
+                    ->where('status_akun', AccountStatus::Aktif->value)
+                    ->pluck('id');
+
+                if ($administratorIds->isEmpty()) {
+                    return;
+                }
+
+                $applicantName = $role === Role::Donor
+                    ? $validated['nama_usaha']
+                    : $validated['nama_lembaga'];
+
+                $roleLabel = $role === Role::Donor ? 'Donor' : 'Penerima';
+
+                foreach ($administratorIds as $administratorId) {
+                    InAppNotification::create([
+                        'user_id' => $administratorId,
+                        'judul' => 'Akun Menunggu Verifikasi',
+                        'pesan' => sprintf(
+                            '%s mendaftar sebagai %s dan menunggu verifikasi.',
+                            $applicantName,
+                            $roleLabel,
+                        ),
+                        'tipe' => NotificationType::Account->value,
+                    ]);
+                }
             });
         } catch (Throwable $exception) {
             if ($path !== null) {

@@ -25,17 +25,32 @@ class ClaimController extends Controller
 
         $ownedByDonor = fn ($query) => $query->where('donor_id', $donor->id);
 
+        $focusedClaimId = $request->integer('claim') ?: null;
+        $focusedClaim = $focusedClaimId !== null
+            ? Claim::query()
+                ->with(['post.category', 'recipient'])
+                ->whereHas('post', $ownedByDonor)
+                ->find($focusedClaimId)
+            : null;
+
+        if ($focusedClaim !== null) {
+            $activeFilter = null;
+        }
+
         // Model Claim tidak punya created_at (WithoutTimestamps), jadi latest() akan error.
         // Relasi ke makanan bernama post(), bukan foodPost().
         $claims = Claim::query()
             ->with(['post.category', 'recipient'])
             ->whereHas('post', $ownedByDonor)
+            ->when($focusedClaim !== null, fn ($query) => $query->whereKey($focusedClaim->id))
             ->when($activeFilter, fn ($query) => $query->whereIn('status', ClaimStatus::GROUPS[$activeFilter]))
             ->orderByRaw("CASE WHEN status IN ('pending', 'menunggu') THEN 0 ELSE 1 END")
             ->orderByDesc('tanggal_klaim')
             ->orderByDesc('id')
             ->paginate(10)
-            ->withQueryString();
+            ->appends(array_filter([
+                'status' => $activeFilter,
+            ], fn ($value) => $value !== null));
 
         $statusCounts = Claim::query()
             ->whereHas('post', $ownedByDonor)
@@ -43,7 +58,12 @@ class ClaimController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        return view('donor.claims.index', compact('claims', 'statusCounts', 'activeFilter'));
+        return view('donor.claims.index', [
+            'claims' => $claims,
+            'statusCounts' => $statusCounts,
+            'activeFilter' => $activeFilter,
+            'focusedClaimId' => $focusedClaim?->id,
+        ]);
     }
 
     /**
@@ -85,7 +105,6 @@ class ClaimController extends Controller
                     'judul' => 'Klaim Disetujui',
                     'pesan' => 'Klaim Anda untuk makanan "'.$foodPost->judul.'" telah disetujui oleh donor.',
                     'tipe' => NotificationType::Claim->value,
-                    'action_url' => route('recipient.claims.index', [], false),
                 ]);
             });
         } catch (\DomainException $e) {
@@ -118,7 +137,6 @@ class ClaimController extends Controller
                     'judul' => 'Klaim Ditolak',
                     'pesan' => 'Mohon maaf, klaim Anda untuk makanan "'.$lockedClaim->post->judul.'" ditolak oleh donor.',
                     'tipe' => NotificationType::Claim->value,
-                    'action_url' => route('recipient.claims.index', [], false),
                 ]);
             });
         } catch (\DomainException $e) {

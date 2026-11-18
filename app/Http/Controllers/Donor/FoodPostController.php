@@ -145,7 +145,6 @@ class FoodPostController extends Controller
                                     $claim->kode_verifikasi,
                                 ),
                                 'tipe' => NotificationType::FoodRequest->value,
-                                'action_url' => route('recipient.requests.index', ['status' => 'in_progress'], false),
                             ]);
                         }
 

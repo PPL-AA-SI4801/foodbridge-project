@@ -67,6 +67,18 @@
             </x-button>
         </div>
 
+        @if ($focusedClaimId)
+            <div class="mb-6 flex flex-col gap-3 rounded-2xl border border-primary/25 bg-accent/50 px-4 py-3 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between">
+                <p class="flex items-center gap-2">
+                    <x-icon name="clipboard-check" class="h-4 w-4 shrink-0 text-primary" />
+                    <span>Menampilkan klaim yang Anda buka dari notifikasi.</span>
+                </p>
+                <a href="{{ route('recipient.claims.index') }}" class="inline-flex w-fit items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold transition hover:bg-accent">
+                    Tampilkan semua klaim
+                </a>
+            </div>
+        @endif
+
         {{-- Kuota harian + ringkasan status --}}
         <div class="mb-6 grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
             <section class="rounded-2xl border border-border bg-card p-6" aria-labelledby="quota-title">
@@ -287,7 +299,14 @@
                             $rowNumber = ($claims->firstItem() ?? 1) + $loop->index;
                         @endphp
 
-                        <li class="grid gap-3 px-4 py-4 transition-colors hover:bg-muted/40 sm:px-6 lg:items-center lg:gap-4 {{ $columns }}">
+                        <li
+                            id="claim-{{ $claim->id }}"
+                            @class([
+                                'grid gap-3 px-4 py-4 transition-colors hover:bg-muted/40 sm:px-6 lg:items-center lg:gap-4',
+                                'bg-accent/30 ring-2 ring-inset ring-primary/25' => $claim->id === $focusedClaimId,
+                                $columns,
+                            ])
+                        >
                             {{-- No --}}
                             <div class="flex items-center justify-between gap-3 lg:block lg:text-center">
                                 <span class="text-xs text-muted-foreground lg:hidden">No</span>
@@ -518,5 +537,13 @@
                 @endif
             @endif
         </section>
+
+        @if ($focusedClaimId)
+            <div
+                x-data
+                x-init="$nextTick(() => $dispatch('open-modal', 'claim-detail-{{ $focusedClaimId }}'))"
+                aria-hidden="true"
+            ></div>
+        @endif
     </div>
 </x-app-layout>

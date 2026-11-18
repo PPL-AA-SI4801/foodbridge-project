@@ -251,7 +251,6 @@ class FoodPostController extends Controller
                 'judul' => 'Postingan Makanan Dihapus oleh Administrator',
                 'pesan' => sprintf('Postingan makanan "%s" milik usaha Anda telah dihapus oleh Administrator.', $judul),
                 'tipe' => NotificationType::FoodPost->value,
-                'action_url' => route('donor.food-posts.index', [], false),
             ]);
         }
 

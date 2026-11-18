@@ -96,6 +96,18 @@
             </div>
         </div>
 
+        @if ($focusedRequestId)
+            <div class="mb-6 flex flex-col gap-3 rounded-2xl border border-primary/25 bg-accent/50 px-4 py-3 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between">
+                <p class="flex items-center gap-2">
+                    <x-icon name="message-square" class="h-4 w-4 shrink-0 text-primary" />
+                    <span>Menampilkan permintaan kebutuhan yang Anda buka dari notifikasi.</span>
+                </p>
+                <a href="{{ route('donor.requests.index', ['view' => $viewMode]) }}" class="inline-flex w-fit items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold transition hover:bg-accent">
+                    Tampilkan semua permintaan
+                </a>
+            </div>
+        @endif
+
         {{-- Filter pencarian --}}
         <form method="GET" action="{{ route('donor.requests.index') }}" class="mb-6 rounded-2xl border border-border bg-card p-4 sm:p-5">
             <input type="hidden" name="view" value="{{ $viewMode }}" />
@@ -177,8 +189,13 @@
                     @endphp
 
                     <article
+                        id="request-{{ $req->id }}"
                         x-data="{ fulfilOpen: false }"
-                        class="flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-xs transition hover:border-primary/30"
+                        @class([
+                            'flex flex-col justify-between rounded-2xl border bg-card p-5 shadow-xs transition hover:border-primary/30',
+                            'border-primary ring-2 ring-primary/25' => $req->id === $focusedRequestId,
+                            'border-border' => $req->id !== $focusedRequestId,
+                        ])
                     >
                         <div>
                             <div class="flex flex-wrap items-center justify-between gap-2">

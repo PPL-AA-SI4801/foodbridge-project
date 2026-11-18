@@ -36,15 +36,33 @@ class FoodRequestController extends Controller
             ? $statusFilter
             : null;
 
+        $focusedRequestId = $request->integer('request') ?: null;
+        $focusedRequest = $focusedRequestId !== null
+            ? FoodRequest::query()
+                ->with(['category', 'donor', 'claim.post'])
+                ->where('recipient_id', $recipient->id)
+                ->find($focusedRequestId)
+            : null;
+
+        if ($focusedRequest !== null) {
+            $focusedRequestId = $focusedRequest->id;
+            $activeFilter = null;
+        } else {
+            $focusedRequestId = null;
+        }
+
         $requests = FoodRequest::query()
             ->with(['category', 'donor', 'claim.post'])
             ->where('recipient_id', $recipient->id)
+            ->when($focusedRequest !== null, fn ($query) => $query->whereKey($focusedRequest->id))
             ->when($activeFilter, fn ($query) => $query->where('status', $activeFilter))
             ->orderByRaw("CASE WHEN status = 'open' THEN 0 WHEN status = 'in_progress' THEN 1 ELSE 2 END")
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->paginate(10)
-            ->withQueryString();
+            ->appends(array_filter([
+                'status' => $activeFilter,
+            ], fn ($value) => $value !== null));
 
         $statusCounts = FoodRequest::query()
             ->where('recipient_id', $recipient->id)
@@ -69,6 +87,7 @@ class FoodRequestController extends Controller
             'remainingOpenQuota',
             'categories',
             'recipient',
+            'focusedRequestId',
         ));
     }
 
@@ -131,7 +150,6 @@ class FoodRequestController extends Controller
                         $foodRequest->batas_waktu->format('d/m/Y H:i'),
                     ),
                     'tipe' => NotificationType::FoodRequest->value,
-                    'action_url' => route('donor.requests.index', ['view' => 'open'], false),
                 ]);
             }
         });
@@ -179,7 +197,6 @@ class FoodRequestController extends Controller
                         $locked->judul,
                     ),
                     'tipe' => NotificationType::FoodRequest->value,
-                    'action_url' => route('donor.requests.index', ['view' => 'mine'], false),
                 ]);
             }
         });
