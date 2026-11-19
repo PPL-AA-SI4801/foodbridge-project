@@ -5,6 +5,7 @@ namespace Tests\Browser;
 use App\Enums\AccountStatus;
 use App\Enums\FoodPostStatus;
 use App\Enums\Role;
+use App\Enums\VerificationStatus;
 use App\Models\Claim;
 use App\Models\FoodCategory;
 use App\Models\FoodPost;
@@ -70,12 +71,17 @@ class ClaimManagementTest extends DuskTestCase
             ->select('@register-jenis-dokumen', 'nib')
             ->attach('dokumen', $fixture)
             ->press('@register-submit')
-            ->waitForText('Pendaftaran berhasil. Akun Anda sedang menunggu verifikasi administrator.')
+            ->waitForText('Status verifikasi akun')
             ->assertPathIs('/login');
 
-        // 2. Aktifkan akun di DB agar dapat masuk ke dashboard dan katalog
+        // 2. Verifikasi dan aktifkan akun di DB agar dapat masuk ke dashboard dan katalog
         $user = User::where('email', $email)->firstOrFail();
         $user->update(['status_akun' => AccountStatus::Aktif]);
+        $user->verificationDocuments()->where('status', VerificationStatus::Menunggu->value)->update([
+            'status' => VerificationStatus::Disetujui->value,
+            'catatan' => null,
+            'verified_at' => now(),
+        ]);
         $recipientProfile = $user->recipientProfile;
 
         // 3. Login Akun Baru via form UI
@@ -101,6 +107,13 @@ class ClaimManagementTest extends DuskTestCase
             'status_akun' => AccountStatus::Aktif,
         ]);
 
+        $user->verificationDocuments()->create([
+            'jenis_dokumen' => 'nib',
+            'file_path' => 'verification-documents/'.$user->id.'/legalitas.pdf',
+            'status' => VerificationStatus::Disetujui->value,
+            'verified_at' => now(),
+        ]);
+
         $profile = $user->donorProfile()->create([
             'nama_usaha' => $namaUsaha,
             'jenis_usaha' => 'Restoran',
@@ -123,6 +136,13 @@ class ClaimManagementTest extends DuskTestCase
             'password' => Hash::make('password'),
             'role' => Role::Penerima,
             'status_akun' => AccountStatus::Aktif,
+        ]);
+
+        $user->verificationDocuments()->create([
+            'jenis_dokumen' => 'nib',
+            'file_path' => 'verification-documents/'.$user->id.'/legalitas.pdf',
+            'status' => VerificationStatus::Disetujui->value,
+            'verified_at' => now(),
         ]);
 
         $profile = $user->recipientProfile()->create([
@@ -201,7 +221,8 @@ class ClaimManagementTest extends DuskTestCase
         $foodPost = $this->createFoodPost($donorProfile, $category, ['sisa_porsi' => 20, 'jumlah_porsi' => 20]);
 
         $this->browse(function (Browser $browser) use ($foodPost) {
-            [$recipientUser, $recipientProfile] = $this->registerAndLoginRecipient($browser);
+            [$recipientUser, $recipientProfile] = $this->createVerifiedRecipient();
+            $browser->loginAs($recipientUser);
 
             $this->claimViaUi($browser, $foodPost, 20);
             $browser->press('Ajukan Klaim')
@@ -226,7 +247,8 @@ class ClaimManagementTest extends DuskTestCase
         [$donorUser, $donorProfile] = $this->createVerifiedDonor();
 
         $this->browse(function (Browser $browser) use ($donorProfile, $category) {
-            [$recipientUser, $recipientProfile] = $this->registerAndLoginRecipient($browser);
+            [$recipientUser, $recipientProfile] = $this->createVerifiedRecipient();
+            $browser->loginAs($recipientUser);
 
             $tag = Str::random(5);
             for ($i = 0; $i < 2; $i++) {
@@ -264,7 +286,8 @@ class ClaimManagementTest extends DuskTestCase
         [$donorUser, $donorProfile] = $this->createVerifiedDonor();
 
         $this->browse(function (Browser $browser) use ($donorProfile, $category) {
-            [$recipientUser, $recipientProfile] = $this->registerAndLoginRecipient($browser);
+            [$recipientUser, $recipientProfile] = $this->createVerifiedRecipient();
+            $browser->loginAs($recipientUser);
 
             $tag = Str::random(5);
             for ($i = 0; $i < 3; $i++) {
@@ -300,7 +323,8 @@ class ClaimManagementTest extends DuskTestCase
         $foodPost = $this->createFoodPost($donorProfile, $category, ['sisa_porsi' => 10, 'jumlah_porsi' => 10]);
 
         $this->browse(function (Browser $browser) use ($foodPost) {
-            [$recipientUser, $recipientProfile] = $this->registerAndLoginRecipient($browser);
+            [$recipientUser, $recipientProfile] = $this->createVerifiedRecipient();
+            $browser->loginAs($recipientUser);
 
             $before = Claim::where('recipient_id', $recipientProfile->id)->count();
 
@@ -324,8 +348,20 @@ class ClaimManagementTest extends DuskTestCase
 
         $foodPost = $this->createFoodPost($donorProfile, $category, ['sisa_porsi' => 10, 'jumlah_porsi' => 10]);
 
+        $this->browse(function (Browser $browser) use ($recipientUser, $foodPost) {
+            $browser->loginAs($recipientUser);
+            $this->claimViaUi($browser, $foodPost, 1);
+
+            // Coba submit nilai input tidak valid (0) menggunakan JavaScript di browser UI
+            $browser->script('document.getElementById("jumlah_porsi_'.$foodPost->id.'").value = "0"; document.getElementById("claim-form-'.$foodPost->id.'").submit();');
+            $browser->pause(500)
+                ->assertPathIs('/penerima/katalog');
+        });
+
         $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
         $this->actingAs($recipientUser);
+
+        $beforeClaims = Claim::where('recipient_id', $recipientProfile->id)->count();
 
         foreach ([0, -2, 'abc'] as $value) {
             $response = $this->post(route('recipient.claims.store', $foodPost), [
@@ -338,6 +374,9 @@ class ClaimManagementTest extends DuskTestCase
             'jumlah_porsi' => '',
         ]);
         $response->assertSessionHasErrors('jumlah_porsi');
+
+        // Verifikasi database: tidak ada klaim yang masuk ke database untuk input tidak valid tersebut
+        $this->assertSame($beforeClaims, Claim::where('recipient_id', $recipientProfile->id)->count());
     }
 
     // ---------------------------------------------------------------------
@@ -349,9 +388,17 @@ class ClaimManagementTest extends DuskTestCase
         [$donorUser, $donorProfile] = $this->createVerifiedDonor();
         [$recipientUser, $recipientProfile] = $this->createVerifiedRecipient();
 
+        $expiredTitle = 'Kedaluwarsa ' . Str::random(6);
         $foodPost = $this->createFoodPost($donorProfile, $category, [
+            'judul' => $expiredTitle,
             'batas_konsumsi' => now()->subHour(),
         ]);
+
+        $this->browse(function (Browser $browser) use ($recipientUser, $foodPost) {
+            $browser->loginAs($recipientUser)
+                ->visit('/penerima/katalog')
+                ->assertDontSee($foodPost->judul);
+        });
 
         $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
         $this->actingAs($recipientUser);
@@ -379,7 +426,8 @@ class ClaimManagementTest extends DuskTestCase
         $foodPost = $this->createFoodPost($donorProfile, $category, ['judul' => $emptyTitle, 'sisa_porsi' => 0, 'jumlah_porsi' => 10]);
 
         $this->browse(function (Browser $browser) use ($foodPost) {
-            [$recipientUser, $recipientProfile] = $this->registerAndLoginRecipient($browser);
+            [$recipientUser, $recipientProfile] = $this->createVerifiedRecipient();
+            $browser->loginAs($recipientUser);
 
             $before = Claim::where('recipient_id', $recipientProfile->id)->count();
 
@@ -400,6 +448,12 @@ class ClaimManagementTest extends DuskTestCase
         ]);
         $response->assertSessionHasErrors([
             'jumlah_porsi' => 'Makanan sudah habis.',
+        ]);
+
+        // Verifikasi database: tidak ada record klaim yang tersimpan di database
+        $this->assertDatabaseMissing('claims', [
+            'post_id' => $foodPost->id,
+            'recipient_id' => $recipientProfile->id,
         ]);
     }
 
@@ -434,13 +488,14 @@ class ClaimManagementTest extends DuskTestCase
                 ->select('@register-jenis-dokumen', 'nib')
                 ->attach('dokumen', $fixture)
                 ->press('@register-submit')
-                ->waitForText('Pendaftaran berhasil. Akun Anda sedang menunggu verifikasi administrator.')
+                ->waitForText('Status verifikasi akun')
                 ->assertPathIs('/login');
 
             // 2. Coba login saat akun masih berstatus menunggu verifikasi
             $browser->type('@login-email', $email)
                 ->type('@login-password', $password)
                 ->press('@login-submit')
+                ->waitForText('Akun Anda sedang menunggu verifikasi administrator.')
                 ->assertPathIs('/login')
                 ->assertSee('menunggu verifikasi');
         });
@@ -455,6 +510,26 @@ class ClaimManagementTest extends DuskTestCase
         [$donorUser, $donorProfile] = $this->createVerifiedDonor();
         $foodPost = $this->createFoodPost($donorProfile, $category);
 
+        $adminUser = User::factory()->create([
+            'nama' => 'Admin Test',
+            'email' => $this->uniqueEmail('admin'),
+            'password' => Hash::make('password'),
+            'role' => Role::Administrator,
+            'status_akun' => AccountStatus::Aktif,
+        ]);
+
+        $this->browse(function (Browser $browser) use ($donorUser, $adminUser) {
+            // Aktor Donor mencoba akses halaman katalog penerima via browser UI -> 403 Forbidden
+            $browser->loginAs($donorUser)
+                ->visit('/penerima/katalog')
+                ->assertSee('403');
+
+            // Aktor Admin mencoba akses halaman katalog penerima via browser UI -> 403 Forbidden
+            $browser->loginAs($adminUser)
+                ->visit('/penerima/katalog')
+                ->assertSee('403');
+        });
+
         $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
 
         // 1. Aktor Donor mencoba akses endpoint klaim penerima -> 403 Forbidden
@@ -465,18 +540,16 @@ class ClaimManagementTest extends DuskTestCase
         $responseDonor->assertForbidden();
 
         // 2. Aktor Admin mencoba akses endpoint klaim penerima -> 403 Forbidden
-        $adminUser = User::factory()->create([
-            'nama' => 'Admin Test',
-            'email' => $this->uniqueEmail('admin'),
-            'password' => Hash::make('password'),
-            'role' => Role::Administrator,
-            'status_akun' => AccountStatus::Aktif,
-        ]);
         $this->actingAs($adminUser);
         $responseAdmin = $this->post(route('recipient.claims.store', $foodPost), [
             'jumlah_porsi' => 2,
         ]);
         $responseAdmin->assertForbidden();
+
+        // Verifikasi database: tidak ada record klaim yang tersimpan
+        $this->assertDatabaseMissing('claims', [
+            'post_id' => $foodPost->id,
+        ]);
     }
 
     // ---------------------------------------------------------------------
@@ -488,6 +561,13 @@ class ClaimManagementTest extends DuskTestCase
         [$donorUser, $donorProfile] = $this->createVerifiedDonor();
         $foodPost = $this->createFoodPost($donorProfile, $category);
 
+        $this->browse(function (Browser $browser) {
+            $browser->logout()
+                ->visit('/penerima/katalog')
+                ->waitForLocation('/login')
+                ->assertPathIs('/login');
+        });
+
         $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
 
         $response = $this->post(route('recipient.claims.store', $foodPost), [
@@ -495,6 +575,11 @@ class ClaimManagementTest extends DuskTestCase
         ]);
 
         $response->assertRedirect('/login');
+
+        // Verifikasi database: tidak ada record klaim baru yang dibuat
+        $this->assertDatabaseMissing('claims', [
+            'post_id' => $foodPost->id,
+        ]);
     }
 
     // ---------------------------------------------------------------------
@@ -507,7 +592,8 @@ class ClaimManagementTest extends DuskTestCase
         $foodPost = $this->createFoodPost($donorProfile, $category, ['sisa_porsi' => 20, 'jumlah_porsi' => 20]);
 
         $this->browse(function (Browser $browser) use ($foodPost) {
-            [$recipientUser, $recipientProfile] = $this->registerAndLoginRecipient($browser);
+            [$recipientUser, $recipientProfile] = $this->createVerifiedRecipient();
+            $browser->loginAs($recipientUser);
 
             Claim::create([
                 'post_id' => $foodPost->id,
@@ -536,19 +622,28 @@ class ClaimManagementTest extends DuskTestCase
         $category = FoodCategory::firstOrCreate(['nama_kategori' => 'Makanan Siap Saji']);
         [$donorUser, $donorProfile] = $this->createVerifiedDonor();
         [$recipientUser, $recipientProfile] = $this->createVerifiedRecipient();
-
         $foodPost = $this->createFoodPost($donorProfile, $category, ['sisa_porsi' => 20, 'jumlah_porsi' => 20]);
+
+        $this->browse(function (Browser $browser) use ($recipientUser) {
+            $browser->loginAs($recipientUser);
+            $startTime = microtime(true);
+            $browser->visit('/penerima/katalog');
+            $duration = microtime(true) - $startTime;
+
+            $browser->assertSee('Katalog Peta Pangan');
+            $this->assertLessThanOrEqual(2.0, $duration);
+        });
 
         $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
         $this->actingAs($recipientUser);
 
-        $startTime = microtime(true);
+        $startTimeApi = microtime(true);
         $response = $this->post(route('recipient.claims.store', $foodPost), [
             'jumlah_porsi' => 2,
         ]);
-        $duration = microtime(true) - $startTime;
+        $durationApi = microtime(true) - $startTimeApi;
 
         $response->assertRedirect();
-        $this->assertLessThanOrEqual(2.0, $duration);
+        $this->assertLessThanOrEqual(2.0, $durationApi);
     }
 }
