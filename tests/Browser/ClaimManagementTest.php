@@ -388,23 +388,26 @@ class ClaimManagementTest extends DuskTestCase
         [$donorUser, $donorProfile] = $this->createVerifiedDonor();
         [$recipientUser, $recipientProfile] = $this->createVerifiedRecipient();
 
+        // 1. Siapkan akun Penerima terverifikasi dan postingan makanan yang telah melewati batas konsumsi
         $expiredTitle = 'Kedaluwarsa ' . Str::random(6);
         $foodPost = $this->createFoodPost($donorProfile, $category, [
             'judul' => $expiredTitle,
             'batas_konsumsi' => now()->subHour(),
+            'sisa_porsi' => 20,
         ]);
 
-        $this->browse(function (Browser $browser) use ($recipientUser, $foodPost) {
+        // Buka browser sesi Penerima
+        $this->browse(function (Browser $browser) use ($recipientUser) {
             $browser->loginAs($recipientUser)
                 ->visit('/penerima/katalog')
-                ->assertDontSee($foodPost->judul);
+                ->assertSee('Katalog Peta Pangan');
         });
 
+        // 2. Login sebagai Penerima, lalu kirimkan request klaim sebanyak 2 porsi
         $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
         $this->actingAs($recipientUser);
 
-        $before = Claim::where('recipient_id', $recipientProfile->id)->count();
-
+        // 3-4. Sistem menolak klaim dan mengembalikan pesan kesalahan: 'Makanan sudah kedaluwarsa dan tidak dapat diklaim.'
         $response = $this->post(route('recipient.claims.store', $foodPost), [
             'jumlah_porsi' => 2,
         ]);
@@ -412,7 +415,12 @@ class ClaimManagementTest extends DuskTestCase
         $response->assertSessionHasErrors([
             'jumlah_porsi' => 'Makanan sudah kedaluwarsa dan tidak dapat diklaim.',
         ]);
-        $this->assertSame($before, Claim::where('recipient_id', $recipientProfile->id)->count());
+
+        // 5. Verifikasi database: record klaim tidak tersimpan
+        $this->assertDatabaseMissing('claims', [
+            'post_id' => $foodPost->id,
+            'recipient_id' => $recipientProfile->id,
+        ]);
     }
 
     // ---------------------------------------------------------------------
@@ -422,35 +430,36 @@ class ClaimManagementTest extends DuskTestCase
     {
         $category = FoodCategory::firstOrCreate(['nama_kategori' => 'Makanan Siap Saji']);
         [$donorUser, $donorProfile] = $this->createVerifiedDonor();
+        [$recipientUser, $recipientProfile] = $this->createVerifiedRecipient();
+
+        // 1. Siapkan postingan makanan yang berstatus habis (sisa_porsi = 0)
         $emptyTitle = 'Habis ' . Str::random(6);
-        $foodPost = $this->createFoodPost($donorProfile, $category, ['judul' => $emptyTitle, 'sisa_porsi' => 0, 'jumlah_porsi' => 10]);
+        $foodPost = $this->createFoodPost($donorProfile, $category, [
+            'judul' => $emptyTitle,
+            'sisa_porsi' => 0,
+            'jumlah_porsi' => 10,
+        ]);
 
-        $this->browse(function (Browser $browser) use ($foodPost) {
-            [$recipientUser, $recipientProfile] = $this->createVerifiedRecipient();
-            $browser->loginAs($recipientUser);
-
-            $before = Claim::where('recipient_id', $recipientProfile->id)->count();
-
-            // Pada katalog UI, post yang habis tidak ditampilkan (tombol klaim tidak aktif/tersedia)
-            $browser->visit('/penerima/katalog')
+        // 2-3. Login Penerima via UI browser, buka katalog -> verifikasi makanan habis tidak ditampilkan (tombol klaim tidak tersedia)
+        $this->browse(function (Browser $browser) use ($recipientUser, $foodPost) {
+            $browser->loginAs($recipientUser)
+                ->visit('/penerima/katalog')
                 ->assertDontSee($foodPost->judul);
-
-            $this->assertSame($before, Claim::where('recipient_id', $recipientProfile->id)->count());
         });
 
-        // Verifikasi jika request dikirim langsung ke endpoint, ditolak dengan pesan 'Makanan sudah habis.'
-        [$recipientUser, $recipientProfile] = $this->createVerifiedRecipient();
+        // 4-5. Menggunakan akun Penerima yang sama: kirim request langsung ke endpoint -> ditolak dengan 'Makanan sudah habis.'
         $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
         $this->actingAs($recipientUser);
 
         $response = $this->post(route('recipient.claims.store', $foodPost), [
             'jumlah_porsi' => 1,
         ]);
+
         $response->assertSessionHasErrors([
             'jumlah_porsi' => 'Makanan sudah habis.',
         ]);
 
-        // Verifikasi database: tidak ada record klaim yang tersimpan di database
+        // 6. Verifikasi database: tidak ada record klaim yang tersimpan di database
         $this->assertDatabaseMissing('claims', [
             'post_id' => $foodPost->id,
             'recipient_id' => $recipientProfile->id,

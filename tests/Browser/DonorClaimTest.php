@@ -488,30 +488,46 @@ class DonorClaimTest extends DuskTestCase
         [$donorUser, $donorProfile] = $this->createDonor();
         [$recipientUser, $recipientProfile] = $this->createRecipient();
 
+        // Kondisi awal: Postingan 10 porsi, 2 klaim pending masing-masing 6 porsi
         $foodPost = $this->createFoodPost($donorProfile, $category, ['sisa_porsi' => 10, 'jumlah_porsi' => 10]);
         $claim1 = $this->createClaim($foodPost, $recipientProfile, 6, 'pending');
         $claim2 = $this->createClaim($foodPost, $recipientProfile, 6, 'pending');
 
-        $this->browse(function (Browser $browser) use ($donorUser, $foodPost) {
+        $this->browse(function (Browser $browser) use ($donorUser, $foodPost, $claim1, $claim2) {
             $browser->loginAs($donorUser)
                 ->visit('/donor/claims')
                 ->assertSee('Kelola Klaim Masuk')
                 ->assertSee($foodPost->judul);
+
+            // 1. Aksi Setujui pada klaim #1 melalui UI browser
+            $browser->press('@approve-claim-'.$claim1->id)
+                ->waitForText('Klaim berhasil disetujui dan sisa porsi telah diperbarui.')
+                ->assertSee('Klaim berhasil disetujui dan sisa porsi telah diperbarui.');
+
+            $claim1->refresh();
+            $this->assertSame('approved', $claim1->status);
+            $this->assertSame(4, (int) FoodPost::find($foodPost->id)->sisa_porsi);
+
+            // 2. Klaim #2 (6 porsi) sekarang melebihi sisa porsi yang tersedia (4 porsi)
+            $browser->assertSee('Melebihi sisa porsi');
+
+            // Coba eksekusi Setujui pada klaim #2 -> Gagal karena sisa porsi tidak cukup
+            $browser->press('@approve-claim-'.$claim2->id)
+                ->waitForText('Sisa porsi makanan tidak mencukupi untuk klaim ini.')
+                ->assertSee('Sisa porsi makanan tidak mencukupi untuk klaim ini.');
+
+            $this->assertSame(4, (int) FoodPost::find($foodPost->id)->sisa_porsi);
+
+            // 3. Aksi Tolak pada klaim #2 melalui UI browser
+            $browser->script('window.confirm = () => true;');
+            $browser->press('@reject-claim-'.$claim2->id)
+                ->waitForText('Klaim berhasil ditolak.')
+                ->assertSee('Klaim berhasil ditolak.');
+
+            // Verifikasi status akhir di database: klaim 2 rejected, sisa porsi tetap 4 (tidak pernah negatif)
+            $claim2->refresh();
+            $this->assertSame('rejected', $claim2->status);
+            $this->assertSame(4, (int) FoodPost::find($foodPost->id)->sisa_porsi);
         });
-
-        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
-        $this->actingAs($donorUser);
-
-        $first = $this->patch(route('donor.claims.approve', $claim1));
-        $first->assertRedirect();
-        $this->assertSame(4, (int) FoodPost::find($foodPost->id)->sisa_porsi);
-
-        $second = $this->patch(route('donor.claims.approve', $claim2));
-        $second->assertRedirect();
-        $second->assertSessionHas('error');
-
-        $this->assertSame(4, (int) FoodPost::find($foodPost->id)->sisa_porsi);
-        $claim2->refresh();
-        $this->assertSame('pending', $claim2->status);
     }
 }
