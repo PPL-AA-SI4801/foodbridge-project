@@ -74,7 +74,7 @@ class LoginRequest extends FormRequest
         $this->session()->regenerateToken();
 
         throw ValidationException::withMessages([
-            'account_status' => $user->status_akun->refusalMessage(),
+            'account_status' => $user->refusalMessage(),
         ])->redirectTo(route('login'));
     }
 

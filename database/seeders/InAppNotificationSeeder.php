@@ -20,6 +20,8 @@ class InAppNotificationSeeder extends Seeder
         $admin = User::where('email', 'admin@foodbridge.test')->first();
         $donor = User::where('email', 'donor@foodbridge.test')->first();
         $recipient = User::where('email', 'penerima@foodbridge.test')->first();
+        $blockedDonor = User::where('email', 'donor-blocked@foodbridge.test')->first();
+        $blockedRecipient = User::where('email', 'penerima-blocked@foodbridge.test')->first();
 
         $notifications = [];
 
@@ -84,6 +86,26 @@ class InAppNotificationSeeder extends Seeder
                 'judul' => 'Permintaan Makanan Anda Direspons Donatur',
                 'pesan' => 'Donatur Toko Donor Demo memenuhi permintaan "Kebutuhan Beras Mendesak".',
                 'tipe' => NotificationType::FoodRequest->value,
+                'is_read' => false,
+            ];
+        }
+
+        if ($blockedDonor) {
+            $notifications[] = [
+                'user_id' => $blockedDonor->id,
+                'judul' => 'Akun Anda Diblokir',
+                'pesan' => 'Akun Anda telah diblokir oleh administrator. Alasan: Terbukti menyalahgunakan data penerima.',
+                'tipe' => NotificationType::Account->value,
+                'is_read' => false,
+            ];
+        }
+
+        if ($blockedRecipient) {
+            $notifications[] = [
+                'user_id' => $blockedRecipient->id,
+                'judul' => 'Akun Anda Diblokir',
+                'pesan' => 'Akun Anda telah diblokir oleh administrator. Alasan: Terbukti membuat laporan palsu berulang kali.',
+                'tipe' => NotificationType::Account->value,
                 'is_read' => false,
             ];
         }
