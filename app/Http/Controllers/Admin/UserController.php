@@ -7,6 +7,7 @@ use App\Enums\NotificationType;
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AdminUserRequest;
+use App\Http\Requests\Admin\BlockUserRequest;
 use App\Models\InAppNotification;
 use App\Models\User;
 use App\Services\Admin\UserManagementService;
@@ -123,11 +124,16 @@ class UserController extends Controller
     }
 
     /**
-     * Block an active Donor or Penerima account.
+     * Block an active Donor or Penerima account with a required reason.
+     *
+     * The reason is stored in the in-app notification message so the existing
+     * notifications table acts as the audit trail (no schema change).
      */
-    public function block(User $user): RedirectResponse
+    public function block(BlockUserRequest $request, User $user): RedirectResponse
     {
-        $result = DB::transaction(function () use ($user): string {
+        $alasan = $request->validated('alasan');
+
+        $result = DB::transaction(function () use ($user, $alasan): string {
             $user->refresh();
 
             if (! $user->hasRole(Role::Donor, Role::Penerima)) {
@@ -147,7 +153,7 @@ class UserController extends Controller
             InAppNotification::create([
                 'user_id' => $user->id,
                 'judul' => 'Akun Anda Diblokir',
-                'pesan' => 'Akun Anda telah diblokir oleh administrator. Anda tidak dapat mengakses FoodBridge.',
+                'pesan' => sprintf('Akun Anda telah diblokir oleh administrator. Alasan: %s', $alasan),
                 'tipe' => NotificationType::Account->value,
             ]);
 

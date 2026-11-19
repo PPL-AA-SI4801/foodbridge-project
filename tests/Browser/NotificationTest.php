@@ -22,11 +22,6 @@ class NotificationTest extends DuskTestCase
     use DatabaseTruncation;
 
     /**
-     * Jeda antar langkah agar penguji sempat membaca layar.
-     */
-    private const REVIEW_PAUSE = 1500;
-
-    /**
      * TS-1: Penerima mengajukan klaim → Donor mendapat notifikasi dan membukanya.
      */
     public function test_recipient_claim_through_catalog_notifies_donor_who_opens_it(): void
@@ -135,33 +130,22 @@ class NotificationTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($admin, $applicant, &$notification) {
             // Admin masuk lewat form login lalu menyetujui pendaftaran.
             $browser->visit('/login')
-                ->pause(self::REVIEW_PAUSE)
                 ->type('@login-email', $admin->email)
-                ->pause(self::REVIEW_PAUSE)
                 ->type('@login-password', 'password')
-                ->pause(self::REVIEW_PAUSE)
                 ->press('@login-submit')
                 ->waitForLocation('/dashboard/admin')
-                ->pause(self::REVIEW_PAUSE)
                 ->visit(route('admin.verifications.show', $applicant))
-                ->pause(self::REVIEW_PAUSE)
                 ->press('@verification-approve')
                 ->waitForText('Pendaftaran berhasil disetujui. Akun sekarang aktif.')
-                ->pause(self::REVIEW_PAUSE)
                 // Keluar, lalu masuk sebagai pendaftar yang baru aktif.
                 ->click('@logout')
                 ->waitForLocation('/login')
                 ->visit('/login')
-                ->pause(self::REVIEW_PAUSE)
                 ->type('@login-email', $applicant->email)
-                ->pause(self::REVIEW_PAUSE)
                 ->type('@login-password', 'password')
-                ->pause(self::REVIEW_PAUSE)
                 ->press('@login-submit')
                 ->waitForLocation('/dashboard/donor')
-                ->pause(self::REVIEW_PAUSE)
-                ->visit('/notifikasi')
-                ->pause(self::REVIEW_PAUSE);
+                ->visit('/notifikasi');
 
             $notification = InAppNotification::query()
                 ->where('user_id', $applicant->id)
@@ -175,10 +159,8 @@ class NotificationTest extends DuskTestCase
             $browser->driver->executeScript(
                 "document.querySelector('[dusk=\"open-notification-{$notification->id}\"]').click()"
             );
-            $browser->pause(self::REVIEW_PAUSE);
             $browser->waitForLocation('/dashboard/donor')
-                ->assertPathIs('/dashboard/donor')
-                ->pause(self::REVIEW_PAUSE);
+                ->assertPathIs('/dashboard/donor');
         });
 
         $this->assertTrue($notification->fresh()->is_read);

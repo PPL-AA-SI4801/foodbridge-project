@@ -100,12 +100,12 @@ class UserManagementTest extends TestCase
         $recipient = $this->activeUser(Role::Penerima);
 
         $this->actingAs($admin)
-            ->post(route('admin.users.block', $donor))
+            ->post(route('admin.users.block', $donor), ['alasan' => 'Terbukti menyalahgunakan data penerima.'])
             ->assertRedirect(route('admin.users.index'))
             ->assertSessionHas('status', 'Akun berhasil diblokir.');
 
         $this->actingAs($admin)
-            ->post(route('admin.users.block', $recipient))
+            ->post(route('admin.users.block', $recipient), ['alasan' => 'Terbukti menyalahgunakan data penerima.'])
             ->assertRedirect(route('admin.users.index'))
             ->assertSessionHas('status', 'Akun berhasil diblokir.');
 
@@ -119,7 +119,7 @@ class UserManagementTest extends TestCase
         $donor = $this->activeUser(Role::Donor);
 
         $this->actingAs($admin)
-            ->post(route('admin.users.block', $donor))
+            ->post(route('admin.users.block', $donor), ['alasan' => 'Terbukti menyalahgunakan data penerima.'])
             ->assertRedirect(route('admin.users.index'));
 
         $notification = InAppNotification::query()
@@ -129,7 +129,21 @@ class UserManagementTest extends TestCase
         $this->assertSame('Akun Anda Diblokir', $notification->judul);
         $this->assertSame('akun', $notification->tipe);
         $this->assertStringContainsString('telah diblokir oleh administrator', $notification->pesan);
+        $this->assertStringContainsString('Terbukti menyalahgunakan data penerima.', $notification->pesan);
         $this->assertFalse($notification->is_read);
+    }
+
+    public function test_blocking_an_account_requires_a_reason(): void
+    {
+        $admin = $this->activeUser(Role::Administrator);
+        $donor = $this->activeUser(Role::Donor);
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.block', $donor), ['alasan' => 'pendek'])
+            ->assertSessionHasErrors('alasan');
+
+        $this->assertSame(AccountStatus::Aktif, $donor->fresh()->status_akun);
+        $this->assertDatabaseMissing('notifications', ['user_id' => $donor->id]);
     }
 
     public function test_blocking_an_account_deletes_its_active_sessions(): void
@@ -147,7 +161,7 @@ class UserManagementTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->post(route('admin.users.block', $donor))
+            ->post(route('admin.users.block', $donor), ['alasan' => 'Terbukti menyalahgunakan data penerima.'])
             ->assertRedirect(route('admin.users.index'));
 
         $this->assertDatabaseMissing('sessions', ['id' => 'session-'.$donor->id]);
@@ -159,13 +173,13 @@ class UserManagementTest extends TestCase
         $donor = $this->activeUser(Role::Donor);
 
         $this->actingAs($admin)
-            ->post(route('admin.users.block', $donor));
+            ->post(route('admin.users.block', $donor), ['alasan' => 'Terbukti menyalahgunakan data penerima.']);
 
         $this->actingAs($donor->refresh())
             ->get(route('dashboard.donor'))
             ->assertRedirect(route('login'))
             ->assertSessionHasErrors([
-                'account_status' => 'Akun Anda telah diblokir.',
+                'account_status' => 'Akun Anda telah diblokir oleh administrator. Alasan: Terbukti menyalahgunakan data penerima.',
             ]);
     }
 
@@ -176,7 +190,7 @@ class UserManagementTest extends TestCase
         $pending->update(['status_akun' => AccountStatus::Menunggu]);
 
         $this->actingAs($admin)
-            ->post(route('admin.users.block', $pending))
+            ->post(route('admin.users.block', $pending), ['alasan' => 'Terbukti menyalahgunakan data penerima.'])
             ->assertRedirect(route('admin.users.index'))
             ->assertSessionHas('error', 'Hanya akun aktif yang dapat diblokir.');
 
@@ -190,7 +204,7 @@ class UserManagementTest extends TestCase
         $blocked->update(['status_akun' => AccountStatus::Diblokir]);
 
         $this->actingAs($admin)
-            ->post(route('admin.users.block', $blocked))
+            ->post(route('admin.users.block', $blocked), ['alasan' => 'Terbukti menyalahgunakan data penerima.'])
             ->assertRedirect(route('admin.users.index'))
             ->assertSessionHas('error', 'Akun ini sudah diblokir.');
 
@@ -203,7 +217,7 @@ class UserManagementTest extends TestCase
         $otherAdmin = $this->activeUser(Role::Administrator);
 
         $this->actingAs($admin)
-            ->post(route('admin.users.block', $otherAdmin))
+            ->post(route('admin.users.block', $otherAdmin), ['alasan' => 'Terbukti menyalahgunakan data penerima.'])
             ->assertNotFound();
 
         $this->assertSame(AccountStatus::Aktif, $otherAdmin->fresh()->status_akun);
