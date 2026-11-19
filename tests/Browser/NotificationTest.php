@@ -204,6 +204,119 @@ class NotificationTest extends DuskTestCase
     }
 
     /**
+     * TS-5: Notifikasi request dibuka donor dan penerima → ke daftar masing-masing.
+     */
+    public function test_request_notifications_open_role_request_lists(): void
+    {
+        [$donorUser] = $this->donorWithProfile();
+        [$recipientUser] = $this->recipientWithProfile();
+
+        $donorNotif = $this->notificationFor($donorUser, [
+            'judul' => 'Permintaan Baru',
+            'tipe' => NotificationType::FoodRequest->value,
+        ]);
+        $recipientNotif = $this->notificationFor($recipientUser, [
+            'judul' => 'Permintaan Baru',
+            'tipe' => NotificationType::FoodRequest->value,
+        ]);
+
+        $this->browse(function (Browser $browser) use ($donorUser, $donorNotif, $recipientUser, $recipientNotif) {
+            $browser->loginAs($donorUser)
+                ->visit('/notifikasi/'.$donorNotif->id)
+                ->assertPathIs('/donor/requests')
+                ->pause(self::REVIEW_PAUSE)
+                ->loginAs($recipientUser)
+                ->visit('/notifikasi/'.$recipientNotif->id)
+                ->assertPathIs('/recipient/requests')
+                ->pause(self::REVIEW_PAUSE);
+        });
+
+        $this->assertTrue($donorNotif->fresh()->is_read);
+        $this->assertTrue($recipientNotif->fresh()->is_read);
+    }
+
+    /**
+     * TS-6: Notifikasi post dibuka donor → ke daftar food-posts donor.
+     */
+    public function test_post_notification_opens_donor_food_posts(): void
+    {
+        [$donorUser] = $this->donorWithProfile();
+
+        $notification = $this->notificationFor($donorUser, [
+            'judul' => 'Postingan Baru',
+            'tipe' => NotificationType::FoodPost->value,
+        ]);
+
+        $this->browse(function (Browser $browser) use ($donorUser, $notification) {
+            $browser->loginAs($donorUser)
+                ->visit('/notifikasi/'.$notification->id)
+                ->assertPathIs('/donor/food-posts')
+                ->pause(self::REVIEW_PAUSE);
+        });
+
+        $this->assertTrue($notification->fresh()->is_read);
+    }
+
+    /**
+     * TS-7: Tandai satu dibaca, tandai semua, lalu cek filter unread.
+     */
+    public function test_mark_one_mark_all_and_unread_filter(): void
+    {
+        [$donorUser] = $this->donorWithProfile();
+        [$otherUser] = $this->recipientWithProfile();
+
+        $first = $this->notificationFor($donorUser, ['judul' => 'Notif Satu']);
+        $second = $this->notificationFor($donorUser, ['judul' => 'Notif Dua']);
+        $this->notificationFor($donorUser, ['judul' => 'Notif Sudah Baca', 'is_read' => true]);
+        $otherNotif = $this->notificationFor($otherUser, ['judul' => 'Notif Orang Lain']);
+
+        $this->browse(function (Browser $browser) use ($donorUser, $first) {
+            $browser->loginAs($donorUser)
+                ->visit('/notifikasi')
+                ->assertAttribute('@notification-bell', 'data-unread-count', '2')
+                ->click("@mark-read-{$first->id}")
+                ->pause(self::REVIEW_PAUSE)
+                ->assertAttribute('@notification-bell', 'data-unread-count', '1')
+                ->press('@mark-all-read')
+                ->pause(self::REVIEW_PAUSE)
+                ->assertAttribute('@notification-bell', 'data-unread-count', '0')
+                ->visit('/notifikasi?filter=unread')
+                ->assertSee('Tidak ada notifikasi yang belum dibaca')
+                ->pause(self::REVIEW_PAUSE);
+        });
+
+        $this->assertTrue($first->fresh()->is_read);
+        $this->assertTrue($second->fresh()->is_read);
+        $this->assertFalse($otherNotif->fresh()->is_read);
+    }
+
+    /**
+     * TS-8 (negatif): User A tidak bisa menandai baca notifikasi milik user B.
+     */
+    public function test_user_cannot_mark_another_users_notification_as_read(): void
+    {
+        [$userA] = $this->donorWithProfile();
+        [$userB] = $this->recipientWithProfile();
+
+        $notificationB = $this->notificationFor($userB, ['judul' => 'Notifikasi rahasia']);
+
+        $this->browse(function (Browser $browser) use ($userA, $notificationB) {
+            $browser->loginAs($userA)->visit('/notifikasi');
+
+            $status = $browser->driver->executeAsyncScript(
+                'var done = arguments[arguments.length - 1];'
+                .'var token = document.querySelector(\'meta[name="csrf-token"]\').getAttribute("content");'
+                .'fetch("/notifikasi/'.$notificationB->id.'/baca", {method: "PATCH", headers: {"X-CSRF-TOKEN": token, "Accept": "application/json"}})'
+                .'.then(function (r) { done(r.status); }).catch(function () { done(0); });'
+            );
+
+            $this->assertSame(403, $status);
+        });
+
+        $this->assertFalse($notificationB->fresh()->is_read);
+    }
+
+    /**
      * Akun dummy sesuai database seeder (password: password).
      * Dibuat ulang bila belum ada agar test jalan di DB Dusk yang kosong.
      */
