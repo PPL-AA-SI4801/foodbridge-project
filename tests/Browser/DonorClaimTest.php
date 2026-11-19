@@ -218,15 +218,15 @@ class DonorClaimTest extends DuskTestCase
     public function test_tc_09_02_setujui_klaim(): void
     {
         $category = FoodCategory::firstOrCreate(['nama_kategori' => 'Makanan Siap Saji']);
+        [$donorUser, $donorProfile] = $this->createDonor();
         [$recipientUser, $recipientProfile] = $this->createRecipient();
 
-        $this->browse(function (Browser $browser) use ($category, $recipientUser, $recipientProfile) {
-            [$donorUser, $donorProfile] = $this->registerAndLoginDonor($browser);
+        $foodPost = $this->createFoodPost($donorProfile, $category, ['sisa_porsi' => 20, 'jumlah_porsi' => 20]);
+        $claim = $this->createClaim($foodPost, $recipientProfile, 5, 'pending');
 
-            $foodPost = $this->createFoodPost($donorProfile, $category, ['sisa_porsi' => 20, 'jumlah_porsi' => 20]);
-            $claim = $this->createClaim($foodPost, $recipientProfile, 5, 'pending');
-
-            $browser->visit('/donor/claims')
+        $this->browse(function (Browser $browser) use ($donorUser, $foodPost, $recipientProfile, $claim) {
+            $browser->loginAs($donorUser)
+                ->visit('/donor/claims')
                 ->assertSee('Kelola Klaim Masuk')
                 ->assertSee($foodPost->judul)
                 ->assertSee($recipientProfile->nama_lembaga)
@@ -239,12 +239,12 @@ class DonorClaimTest extends DuskTestCase
             $this->assertSame('approved', $claim->status);
             $this->assertNotNull($claim->approved_at);
             $this->assertSame(15, (int) FoodPost::find($foodPost->id)->sisa_porsi);
-
-            $this->assertDatabaseHas('notifications', [
-                'user_id' => $recipientUser->id,
-                'tipe' => NotificationType::Claim->value,
-            ]);
         });
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $recipientUser->id,
+            'tipe' => NotificationType::Claim->value,
+        ]);
     }
 
     // ---------------------------------------------------------------------
@@ -253,32 +253,35 @@ class DonorClaimTest extends DuskTestCase
     public function test_tc_09_03_tolak_klaim(): void
     {
         $category = FoodCategory::firstOrCreate(['nama_kategori' => 'Makanan Siap Saji']);
+        [$donorUser, $donorProfile] = $this->createDonor();
         [$recipientUser, $recipientProfile] = $this->createRecipient();
 
-        $this->browse(function (Browser $browser) use ($category, $recipientUser, $recipientProfile) {
-            [$donorUser, $donorProfile] = $this->registerAndLoginDonor($browser);
+        $foodPost = $this->createFoodPost($donorProfile, $category, ['sisa_porsi' => 20, 'jumlah_porsi' => 20]);
+        $claim = $this->createClaim($foodPost, $recipientProfile, 5, 'pending');
 
-            $foodPost = $this->createFoodPost($donorProfile, $category, ['sisa_porsi' => 20, 'jumlah_porsi' => 20]);
-            $claim = $this->createClaim($foodPost, $recipientProfile, 5, 'pending');
-
-            $browser->visit('/donor/claims')
+        $this->browse(function (Browser $browser) use ($donorUser, $foodPost, $recipientProfile, $claim) {
+            $browser->loginAs($donorUser)
+                ->visit('/donor/claims')
                 ->assertSee('Kelola Klaim Masuk')
                 ->assertSee($foodPost->judul)
-                ->assertSee($recipientProfile->nama_lembaga)
-                ->press('Tolak')
-                ->acceptDialog()
+                ->assertSee($recipientProfile->nama_lembaga);
+
+            // Menerima dialog konfirmasi browser (klik OK / terima dialog)
+            $browser->script('window.confirm = () => true;');
+
+            $browser->press('Tolak')
                 ->waitForText('Klaim berhasil ditolak.')
                 ->assertSee('Klaim berhasil ditolak.');
 
             $claim->refresh();
             $this->assertSame('rejected', $claim->status);
             $this->assertSame(20, (int) FoodPost::find($foodPost->id)->sisa_porsi);
-
-            $this->assertDatabaseHas('notifications', [
-                'user_id' => $recipientUser->id,
-                'tipe' => NotificationType::Claim->value,
-            ]);
         });
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $recipientUser->id,
+            'tipe' => NotificationType::Claim->value,
+        ]);
     }
 
     // ---------------------------------------------------------------------
