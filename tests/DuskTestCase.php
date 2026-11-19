@@ -69,14 +69,6 @@ abstract class DuskTestCase extends BaseTestCase
     }
 
     /**
-     * Force Dusk to always run Chrome with a visible GUI window.
-     */
-    protected function hasHeadlessDisabled(): bool
-    {
-        return true;
-    }
-
-    /**
      * Keep the browser window at the configured presentation size.
      */
     protected function shouldStartMaximized(): bool
