@@ -48,6 +48,28 @@ class User extends Authenticatable
     }
 
     /**
+     * Message shown when the account may not sign in.
+     *
+     * For blocked accounts this returns the latest blocking notification so the
+     * administrator's reason stays visible even though the account can no
+     * longer open the in-app notification list.
+     */
+    public function refusalMessage(): ?string
+    {
+        if ($this->status_akun !== AccountStatus::Diblokir) {
+            return $this->status_akun?->refusalMessage();
+        }
+
+        $reason = InAppNotification::query()
+            ->where('user_id', $this->id)
+            ->where('judul', 'Akun Anda Diblokir')
+            ->orderByDesc('id')
+            ->value('pesan');
+
+        return is_string($reason) && $reason !== '' ? $reason : $this->status_akun->refusalMessage();
+    }
+
+    /**
      * Determine whether the administrator has requested document completeness.
      */
     public function hasDocumentCompletenessRequest(): bool

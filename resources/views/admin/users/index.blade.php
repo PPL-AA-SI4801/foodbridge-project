@@ -10,6 +10,12 @@
 <x-app-layout padded title="Manajemen Pengguna" :pending-verifications="$pendingVerifications">
     <x-flash />
 
+    @if ($errors->has('alasan'))
+        <div role="alert" dusk="block-validation-error" class="mb-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
+            {{ $errors->first('alasan') }}
+        </div>
+    @endif
+
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
             <h1 class="text-2xl font-semibold">Manajemen Pengguna</h1>
@@ -167,16 +173,39 @@
                                         @endif
 
                                         @if ($user->hasRole(\App\Enums\Role::Donor, \App\Enums\Role::Penerima) && $user->status_akun === \App\Enums\AccountStatus::Aktif)
-                                            <form
-                                                method="POST"
-                                                action="{{ route('admin.users.block', $user) }}"
-                                                onsubmit="return confirm('Blokir akun {{ $user->nama }}? Akun ini tidak akan bisa masuk lagi.');"
-                                            >
-                                                @csrf
-                                                <button type="submit" dusk="block-user-{{ $user->id }}" class="font-medium text-destructive hover:text-destructive/80">
+                                            <details class="relative">
+                                                <summary class="cursor-pointer list-none font-medium text-destructive hover:text-destructive/80" dusk="block-toggle-{{ $user->id }}">
                                                     Blokir
-                                                </button>
-                                            </form>
+                                                </summary>
+
+                                                <form
+                                                    method="POST"
+                                                    action="{{ route('admin.users.block', $user) }}"
+                                                    class="absolute right-0 z-10 mt-2 w-72 rounded-lg border border-border bg-card p-3 shadow-lg"
+                                                >
+                                                    @csrf
+
+                                                    <label for="block-reason-{{ $user->id }}" class="text-xs font-medium text-foreground">
+                                                        Alasan pemblokiran (wajib)
+                                                    </label>
+                                                    <textarea
+                                                        id="block-reason-{{ $user->id }}"
+                                                        name="alasan"
+                                                        rows="2"
+                                                        maxlength="200"
+                                                        placeholder="Contoh: terbukti menyalahgunakan data penerima..."
+                                                        dusk="block-reason-{{ $user->id }}"
+                                                        class="mt-1.5 block w-full rounded-md border border-input bg-white px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                    ></textarea>
+                                                    @error('alasan')
+                                                        <p class="mt-1 text-xs font-medium text-destructive">{{ $message }}</p>
+                                                    @enderror
+
+                                                    <button type="submit" dusk="block-user-{{ $user->id }}" class="mt-2 inline-flex w-full items-center justify-center rounded-md bg-destructive px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-destructive/90">
+                                                        Blokir akun ini
+                                                    </button>
+                                                </form>
+                                            </details>
                                         @endif
 
                                         @if ($user->status_akun === \App\Enums\AccountStatus::Diblokir)
