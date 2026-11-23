@@ -13,11 +13,20 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 #[WithoutTimestamps]
 class Claim extends Model
 {
-    public const METHOD_MANDIRI = 'mandiri';
-    public const METHOD_KURIR = 'kurir';
+    public const METHOD_AMBIL_SENDIRI = 'ambil_sendiri';
+
+    public const METHOD_KURIR_ONLINE = 'kurir_online';
+
+    // Alias konstanta untuk kompatibilitas
+    public const METHOD_MANDIRI = self::METHOD_AMBIL_SENDIRI;
+
+    public const METHOD_KURIR = self::METHOD_KURIR_ONLINE;
+
     public const PICKUP_METHODS = [
-        self::METHOD_MANDIRI,
-        self::METHOD_KURIR,
+        self::METHOD_AMBIL_SENDIRI,
+        self::METHOD_KURIR_ONLINE,
+        'mandiri',
+        'kurir',
     ];
 
     /**
@@ -45,6 +54,7 @@ class Claim extends Model
 
         return $foodPost?->batas_konsumsi !== null && $foodPost->batas_konsumsi->isPast();
     }
+
     /**
      * Get the attributes that should be cast.
      *

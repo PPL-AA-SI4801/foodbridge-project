@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\Storage;
 class CourierDetail extends Model
 {
     public const PLATFORM_GOJEK = 'Gojek';
+
     public const PLATFORM_GRAB = 'Grab';
+
     public const PLATFORMS = [
         self::PLATFORM_GOJEK,
         self::PLATFORM_GRAB,

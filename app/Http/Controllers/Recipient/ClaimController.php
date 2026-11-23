@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Recipient;
 
 use App\Enums\NotificationType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Recipient\ChoosePickupMethodRequest;
 use App\Models\Claim;
 use App\Models\FoodPost;
 use App\Models\InAppNotification;
+use App\Services\ClaimPickupService;
 use App\Services\RecipientClaimService;
 use App\Support\ClaimStatus;
 use Illuminate\Http\Request;
@@ -108,5 +110,28 @@ class ClaimController extends Controller
         });
 
         return redirect()->route('recipient.claims.index')->with('success', 'Klaim berhasil diajukan dan tersimpan dengan status pending.');
+    }
+
+    /**
+     * Simpan pilihan metode pengambilan (Ambil Sendiri atau Kurir Online).
+     */
+    public function storePickupMethod(
+        ChoosePickupMethodRequest $request,
+        Claim $claim,
+        ClaimPickupService $pickupService
+    ) {
+        try {
+            $pickupService->choosePickupMethod(
+                $claim,
+                $request->validated(),
+                $request->file('foto_bukti'),
+                $request->user()
+            );
+        } catch (\DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('recipient.claims.index', ['claim' => $claim->id])
+            ->with('success', 'Metode pengambilan berhasil disimpan.');
     }
 }

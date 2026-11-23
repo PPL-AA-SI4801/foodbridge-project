@@ -45,15 +45,19 @@ class ClaimSeeder extends Seeder
                 'completed_at' => null,
             ]);
 
-            $this->upsertClaim($posts->get('Tempe Goreng Tersedia'), $demoRecipient, [
+            $tempeClaim = $this->upsertClaim($posts->get('Tempe Goreng Tersedia'), $demoRecipient, [
                 'jumlah_porsi' => 1,
                 'status' => 'approved',
-                'metode_pengambilan' => 'ambil_sendiri',
-                'kode_verifikasi' => 'APRV01',
+                'metode_pengambilan' => null,
+                'kode_verifikasi' => null,
                 'tanggal_klaim' => $today,
                 'approved_at' => now(),
                 'completed_at' => null,
             ]);
+
+            if ($tempeClaim) {
+                CourierDetail::where('claim_id', $tempeClaim->id)->delete();
+            }
 
             $this->upsertClaim($posts->get('Roti Gandum Tersedia'), $demoRecipient, [
                 'jumlah_porsi' => 1,
@@ -162,6 +166,7 @@ class ClaimSeeder extends Seeder
         ];
 
         $demoCourierClaim = null;
+        $demoCourierClaim2 = null;
 
         foreach ($historyClaims as $history) {
             $post = $posts->get($history['judul']);
@@ -183,18 +188,36 @@ class ClaimSeeder extends Seeder
             if ($history['judul'] === 'Nasi Kotak Riwayat 02') {
                 $demoCourierClaim = $claim;
             }
+
+            if ($history['judul'] === 'Nasi Kotak Riwayat 08') {
+                $demoCourierClaim2 = $claim;
+            }
         }
 
         if ($demoCourierClaim) {
             CourierDetail::updateOrCreate(
                 ['claim_id' => $demoCourierClaim->id],
                 [
-                    'platform' => 'GrabExpress',
+                    'platform' => 'Grab',
                     'nama_pengemudi' => 'Rizky Pratama',
                     'no_kendaraan' => 'B 9087 XY',
                     'kode_verifikasi_kurir' => 'GRAB88',
                     'foto_bukti' => 'seed/placeholder.webp',
                     'created_at' => now()->subDays(9),
+                ]
+            );
+        }
+
+        if ($demoCourierClaim2) {
+            CourierDetail::updateOrCreate(
+                ['claim_id' => $demoCourierClaim2->id],
+                [
+                    'platform' => 'Gojek',
+                    'nama_pengemudi' => 'Budi Santoso',
+                    'no_kendaraan' => 'D 1234 ABC',
+                    'kode_verifikasi_kurir' => 'GJ-48213',
+                    'foto_bukti' => 'seed/placeholder.webp',
+                    'created_at' => now()->subDays(3),
                 ]
             );
         }
@@ -345,12 +368,30 @@ class ClaimSeeder extends Seeder
             CourierDetail::updateOrCreate(
                 ['claim_id' => $onlineClaim->id],
                 [
-                    'platform' => 'GoSend',
+                    'platform' => 'Gojek',
                     'nama_pengemudi' => 'Kurir Demo',
                     'no_kendaraan' => 'B 1234 CD',
                     'kode_verifikasi_kurir' => 'KURIR01',
                     'foto_bukti' => 'seed/placeholder.webp',
                     'created_at' => now(),
+                ]
+            );
+        }
+
+        $rotiClaim = Claim::where('metode_pengambilan', 'kurir_online')
+            ->whereHas('post', fn ($q) => $q->where('judul', 'Roti Gandum Tersedia'))
+            ->first();
+
+        if ($rotiClaim) {
+            CourierDetail::updateOrCreate(
+                ['claim_id' => $rotiClaim->id],
+                [
+                    'platform' => 'Gojek',
+                    'nama_pengemudi' => 'Pamungkas',
+                    'no_kendaraan' => 'D 8753 VI',
+                    'kode_verifikasi_kurir' => 'GH-732751',
+                    'foto_bukti' => 'seed/placeholder.webp',
+                    'created_at' => now()->subDay(),
                 ]
             );
         }

@@ -48,29 +48,46 @@ class ClaimPickupService
                     throw new DomainException('Makanan sudah melewati batas konsumsi.');
                 }
 
-                if ($metode === Claim::METHOD_KURIR) {
+                $isKurir = in_array($metode, [Claim::METHOD_KURIR_ONLINE, 'kurir'], true);
+
+                if ($isKurir) {
                     if (! $fotoBukti) {
                         throw new DomainException('Tangkapan layar pesanan kurir wajib diunggah.');
                     }
 
                     $uploadedPath = $fotoBukti->store('courier_proofs', 'public');
 
-                    CourierDetail::create([
-                        'claim_id' => $lockedClaim->id,
-                        'platform' => $data['platform'],
-                        'nama_pengemudi' => $data['nama_pengemudi'],
-                        'no_kendaraan' => $data['no_kendaraan'],
-                        'kode_verifikasi_kurir' => $data['kode_verifikasi_kurir'],
-                        'foto_bukti' => $uploadedPath,
-                        'created_at' => now(),
-                    ]);
+                    $existingCourier = CourierDetail::where('claim_id', $lockedClaim->id)->first();
+                    if ($existingCourier?->foto_bukti && Storage::disk('public')->exists($existingCourier->foto_bukti)) {
+                        Storage::disk('public')->delete($existingCourier->foto_bukti);
+                    }
+
+                    CourierDetail::updateOrCreate(
+                        ['claim_id' => $lockedClaim->id],
+                        [
+                            'platform' => $data['platform'],
+                            'nama_pengemudi' => $data['nama_pengemudi'],
+                            'no_kendaraan' => $data['no_kendaraan'],
+                            'kode_verifikasi_kurir' => $data['kode_verifikasi_kurir'],
+                            'foto_bukti' => $uploadedPath,
+                            'created_at' => now(),
+                        ]
+                    );
+                } else {
+                    $existingCourier = CourierDetail::where('claim_id', $lockedClaim->id)->first();
+                    if ($existingCourier) {
+                        if ($existingCourier->foto_bukti && Storage::disk('public')->exists($existingCourier->foto_bukti)) {
+                            Storage::disk('public')->delete($existingCourier->foto_bukti);
+                        }
+                        $existingCourier->delete();
+                    }
                 }
 
                 $lockedClaim->metode_pengambilan = $metode;
                 $lockedClaim->save();
 
                 $foodTitle = $lockedClaim->post?->judul ?? 'makanan';
-                $pesan = $metode === Claim::METHOD_KURIR
+                $pesan = $isKurir
                     ? 'Penerima telah memilih metode Kurir Online ('.$data['platform'].') untuk makanan "'.$foodTitle.'".'
                     : 'Penerima telah memilih metode Ambil Sendiri untuk makanan "'.$foodTitle.'".';
 

@@ -11,7 +11,6 @@ use App\Models\CourierDetail;
 use App\Models\DonorProfile;
 use App\Models\FoodCategory;
 use App\Models\FoodPost;
-use App\Models\InAppNotification;
 use App\Models\RecipientProfile;
 use App\Models\User;
 use App\Services\ClaimPickupService;
@@ -34,7 +33,7 @@ class ClaimPickupServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new ClaimPickupService();
+        $this->service = new ClaimPickupService;
         Storage::fake('public');
     }
 
@@ -212,7 +211,7 @@ class ClaimPickupServiceTest extends TestCase
         $donor = User::factory()->create(['role' => Role::Donor, 'status_akun' => 'aktif']);
         $admin = User::factory()->create(['role' => Role::Administrator, 'status_akun' => 'aktif']);
 
-        $request = new ChoosePickupMethodRequest();
+        $request = new ChoosePickupMethodRequest;
 
         $request->setUserResolver(fn () => $donor);
         $this->assertFalse($request->authorize());
@@ -226,7 +225,7 @@ class ClaimPickupServiceTest extends TestCase
 
     public function test_request_validation_for_kurir_missing_fields_and_invalid_photo(): void
     {
-        $request = new ChoosePickupMethodRequest();
+        $request = new ChoosePickupMethodRequest;
 
         // 1. Invalid method 'ojek'
         $validator = Validator::make(
@@ -269,7 +268,7 @@ class ClaimPickupServiceTest extends TestCase
             $request->attributes()
         );
         $this->assertTrue($validator->fails());
-        $this->assertSame('Foto harus berformat JPG atau PNG.', $validator->errors()->first('foto_bukti'));
+        $this->assertSame('Foto harus berformat JPG, JPEG, PNG, atau WEBP.', $validator->errors()->first('foto_bukti'));
 
         // 4. Photo size exceeds 2 MB (3 MB)
         $fakeLargeImg = UploadedFile::fake()->create('bukti.png', 3072, 'image/png');
@@ -288,6 +287,167 @@ class ClaimPickupServiceTest extends TestCase
         );
         $this->assertTrue($validator->fails());
         $this->assertSame('Ukuran foto maksimal 2 MB.', $validator->errors()->first('foto_bukti'));
+    }
+
+    public function test_http_penerima_can_select_mandiri_method_via_post(): void
+    {
+        [$recipient] = $this->recipientProfile();
+        $donor = $this->donorProfile();
+        $category = $this->foodCategory();
+        $post = $this->foodPost($donor, $category);
+        $claim = $this->claim($recipient, $post, ['status' => 'approved']);
+
+        $response = $this->actingAs($recipient->user)->post(
+            route('recipient.claims.pickup-method.store', $claim),
+            ['metode_pengambilan' => 'ambil_sendiri']
+        );
+
+        $response->assertRedirect(route('recipient.claims.index', ['claim' => $claim->id]))
+            ->assertSessionHas('success', 'Metode pengambilan berhasil disimpan.');
+
+        $this->assertSame('ambil_sendiri', $claim->fresh()->metode_pengambilan);
+    }
+
+    public function test_http_penerima_can_select_kurir_method_via_post(): void
+    {
+        [$recipient] = $this->recipientProfile();
+        $donor = $this->donorProfile();
+        $category = $this->foodCategory();
+        $post = $this->foodPost($donor, $category);
+        $claim = $this->claim($recipient, $post, ['status' => 'approved']);
+
+        $photo = UploadedFile::fake()->create('pesanan.jpg', 800, 'image/jpeg');
+
+        $response = $this->actingAs($recipient->user)->post(
+            route('recipient.claims.pickup-method.store', $claim),
+            [
+                'metode_pengambilan' => 'kurir_online',
+                'platform' => 'Gojek',
+                'nama_pengemudi' => 'Budi Santoso',
+                'no_kendaraan' => 'D 1234 ABC',
+                'kode_verifikasi_kurir' => 'GJ-48213',
+                'foto_bukti' => $photo,
+            ]
+        );
+
+        $response->assertRedirect(route('recipient.claims.index', ['claim' => $claim->id]))
+            ->assertSessionHas('success', 'Metode pengambilan berhasil disimpan.');
+
+        $this->assertSame('kurir_online', $claim->fresh()->metode_pengambilan);
+        $this->assertDatabaseHas('courier_details', [
+            'claim_id' => $claim->id,
+            'platform' => 'Gojek',
+            'nama_pengemudi' => 'Budi Santoso',
+        ]);
+    }
+
+    public function test_http_penerima_validation_errors_redirect_back_with_errors(): void
+    {
+        [$recipient] = $this->recipientProfile();
+        $donor = $this->donorProfile();
+        $category = $this->foodCategory();
+        $post = $this->foodPost($donor, $category);
+        $claim = $this->claim($recipient, $post, ['status' => 'approved']);
+
+        $response = $this->actingAs($recipient->user)->post(
+            route('recipient.claims.pickup-method.store', $claim),
+            [
+                'claim_id' => $claim->id,
+                'metode_pengambilan' => 'kurir_online',
+            ]
+        );
+
+        $response->assertSessionHasErrors([
+            'platform',
+            'nama_pengemudi',
+            'no_kendaraan',
+            'kode_verifikasi_kurir',
+            'foto_bukti',
+        ]);
+    }
+
+    public function test_http_donor_sees_courier_details_and_photo_on_claims_page(): void
+    {
+        [$recipient] = $this->recipientProfile();
+        $donor = $this->donorProfile();
+        $category = $this->foodCategory();
+        $post = $this->foodPost($donor, $category);
+        $claim = $this->claim($recipient, $post, [
+            'status' => 'approved',
+            'metode_pengambilan' => 'kurir_online',
+        ]);
+
+        CourierDetail::create([
+            'claim_id' => $claim->id,
+            'platform' => 'Grab',
+            'nama_pengemudi' => 'Ahmad Kurir',
+            'no_kendaraan' => 'B 9988 XYZ',
+            'kode_verifikasi_kurir' => 'GB-999',
+            'foto_bukti' => 'seed/placeholder.webp',
+            'created_at' => now(),
+        ]);
+
+        $claimAmbilSendiri = $this->claim($recipient, $post, [
+            'status' => 'approved',
+            'metode_pengambilan' => 'ambil_sendiri',
+        ]);
+
+        $response = $this->actingAs($donor->user)->get(route('donor.claims.index'));
+
+        $response->assertOk()
+            ->assertSee('Kurir Online')
+            ->assertSee('Ahmad Kurir')
+            ->assertSee('B 9988 XYZ')
+            ->assertSee('GB-999')
+            ->assertSee('Pengambilan: Ambil Sendiri');
+    }
+
+    public function test_http_unauthenticated_user_cannot_access_endpoint(): void
+    {
+        [$recipient] = $this->recipientProfile();
+        $donor = $this->donorProfile();
+        $category = $this->foodCategory();
+        $post = $this->foodPost($donor, $category);
+        $claim = $this->claim($recipient, $post, ['status' => 'approved']);
+
+        $response = $this->post(route('recipient.claims.pickup-method.store', $claim), [
+            'metode_pengambilan' => 'mandiri',
+        ]);
+
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_http_non_recipient_cannot_access_endpoint(): void
+    {
+        [$recipient] = $this->recipientProfile();
+        $donor = $this->donorProfile();
+        $category = $this->foodCategory();
+        $post = $this->foodPost($donor, $category);
+        $claim = $this->claim($recipient, $post, ['status' => 'approved']);
+
+        $response = $this->actingAs($donor->user)->post(
+            route('recipient.claims.pickup-method.store', $claim),
+            ['metode_pengambilan' => 'mandiri']
+        );
+
+        $response->assertForbidden();
+    }
+
+    public function test_http_recipient_cannot_select_method_for_another_recipients_claim(): void
+    {
+        [$recipient] = $this->recipientProfile();
+        [$otherRecipient] = $this->recipientProfile();
+        $donor = $this->donorProfile();
+        $category = $this->foodCategory();
+        $post = $this->foodPost($donor, $category);
+        $claim = $this->claim($recipient, $post, ['status' => 'approved']);
+
+        $response = $this->actingAs($otherRecipient->user)->post(
+            route('recipient.claims.pickup-method.store', $claim),
+            ['metode_pengambilan' => 'mandiri']
+        );
+
+        $response->assertForbidden();
     }
 
     /**

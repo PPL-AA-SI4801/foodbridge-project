@@ -26,18 +26,20 @@ class ChoosePickupMethodRequest extends FormRequest
      */
     public function rules(): array
     {
+        $isKurirRule = 'required_if:metode_pengambilan,'.Claim::METHOD_KURIR_ONLINE.',kurir';
+
         return [
             'metode_pengambilan' => ['required', 'string', Rule::in(Claim::PICKUP_METHODS)],
-            'platform' => ['required_if:metode_pengambilan,'.Claim::METHOD_KURIR, 'nullable', 'string', Rule::in(CourierDetail::PLATFORMS)],
-            'nama_pengemudi' => ['required_if:metode_pengambilan,'.Claim::METHOD_KURIR, 'nullable', 'string', 'max:255'],
-            'no_kendaraan' => ['required_if:metode_pengambilan,'.Claim::METHOD_KURIR, 'nullable', 'string', 'max:20'],
-            'kode_verifikasi_kurir' => ['required_if:metode_pengambilan,'.Claim::METHOD_KURIR, 'nullable', 'string', 'max:255'],
+            'platform' => [$isKurirRule, 'nullable', 'string', Rule::in(CourierDetail::PLATFORMS)],
+            'nama_pengemudi' => [$isKurirRule, 'nullable', 'string', 'max:255'],
+            'no_kendaraan' => [$isKurirRule, 'nullable', 'string', 'max:20'],
+            'kode_verifikasi_kurir' => [$isKurirRule, 'nullable', 'string', 'max:255'],
             'foto_bukti' => [
-                'required_if:metode_pengambilan,'.Claim::METHOD_KURIR,
+                $isKurirRule,
                 'nullable',
                 'file',
                 'image',
-                'mimes:jpeg,jpg,png',
+                'mimes:jpeg,jpg,png,webp',
                 'max:2048',
             ],
         ];
@@ -74,8 +76,8 @@ class ChoosePickupMethodRequest extends FormRequest
             'in' => ':attribute yang dipilih tidak valid.',
             'foto_bukti.required' => 'Tangkapan layar pesanan wajib diunggah.',
             'foto_bukti.file' => 'Tangkapan layar pesanan harus berupa berkas yang valid.',
-            'foto_bukti.image' => 'Foto harus berformat JPG atau PNG.',
-            'foto_bukti.mimes' => 'Foto harus berformat JPG atau PNG.',
+            'foto_bukti.image' => 'Foto harus berformat JPG, JPEG, PNG, atau WEBP.',
+            'foto_bukti.mimes' => 'Foto harus berformat JPG, JPEG, PNG, atau WEBP.',
             'foto_bukti.max' => 'Ukuran foto maksimal 2 MB.',
         ];
     }
