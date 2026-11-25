@@ -48,9 +48,12 @@ abstract class DuskTestCase extends BaseTestCase
             '--disable-smooth-scrolling',
             '--no-sandbox',
             '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--disable-software-rasterizer',
+            '--dns-prefetch-disable',
+            '--disable-features=Translate,OptimizationHints,MediaRouter',
         ])->unless($this->hasHeadlessDisabled(), function (Collection $items) {
             return $items->merge([
-                '--disable-gpu',
                 '--headless=new',
             ]);
         })->all());
@@ -60,11 +63,13 @@ abstract class DuskTestCase extends BaseTestCase
             $options->setBinary($chromeBinary);
         }
 
+        $capabilities = DesiredCapabilities::chrome()
+            ->setCapability(ChromeOptions::CAPABILITY, $options)
+            ->setCapability('pageLoadStrategy', 'eager');
+
         return RemoteWebDriver::create(
             $_ENV['DUSK_DRIVER_URL'] ?? env('DUSK_DRIVER_URL') ?? 'http://localhost:9515',
-            DesiredCapabilities::chrome()->setCapability(
-                ChromeOptions::CAPABILITY, $options
-            )
+            $capabilities
         );
     }
 

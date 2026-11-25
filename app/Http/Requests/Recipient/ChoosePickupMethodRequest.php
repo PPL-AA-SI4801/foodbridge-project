@@ -71,14 +71,18 @@ class ChoosePickupMethodRequest extends FormRequest
     {
         return [
             'required' => ':attribute wajib diisi.',
+            'required_if' => ':attribute wajib diisi.',
             'string' => ':attribute harus berupa teks.',
             'max' => ':attribute tidak boleh lebih dari :max.',
             'in' => ':attribute yang dipilih tidak valid.',
             'foto_bukti.required' => 'Tangkapan layar pesanan wajib diunggah.',
+            'foto_bukti.required_if' => 'Tangkapan layar pesanan wajib diunggah.',
             'foto_bukti.file' => 'Tangkapan layar pesanan harus berupa berkas yang valid.',
             'foto_bukti.image' => 'Foto harus berformat JPG, JPEG, PNG, atau WEBP.',
             'foto_bukti.mimes' => 'Foto harus berformat JPG, JPEG, PNG, atau WEBP.',
             'foto_bukti.max' => 'Ukuran foto maksimal 2 MB.',
+            'foto_bukti.max.file' => 'Ukuran foto maksimal 2 MB.',
+            'foto_bukti.uploaded' => 'Ukuran foto maksimal 2 MB.',
         ];
     }
 }
