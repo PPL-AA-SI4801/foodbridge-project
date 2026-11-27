@@ -1,10 +1,6 @@
 ## Summary
 <!-- What does this PR do, and why? 1-3 sentences. -->
 
-## Related Issue
-<!-- Jira PBI key so the PR links to the board, e.g. FB-12 -->
-Closes: PBI-
-
 ## PR State
 <!-- Declare the current state. -->
 - [ ] Still in progress (draft)
@@ -14,7 +10,6 @@ Closes: PBI-
 ## Merge Criteria (must all be checked to merge)
 - [ ] Idempotent, hand-written data seeder present for touched features
 - [ ] Laravel Dusk (or affected browser) tests written and passing
-- [ ] Commit messages use the Jira key format (e.g. `PBI-12: ...`)
 - [ ] `php artisan test` passes locally
 - [ ] No debug code or commented-out code
 
@@ -52,7 +47,6 @@ Closes: PBI-
 - [ ] No debug code (`dd()`, `console.log`) or commented-out code
 - [ ] Tested on desktop and mobile view
 - [ ] Tests pass locally (`php artisan test` / `php artisan dusk`)
-- [ ] Jira status updated
 
 ## Notes for Reviewer
 <!-- Anything risky, unfinished, or worth a closer look. Delete if N/A. -->
