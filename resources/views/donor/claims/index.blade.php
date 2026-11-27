@@ -325,7 +325,7 @@
                                             <span class="block">
                                                 @if (in_array($claim->metode_pengambilan, ['kurir_online', 'kurir'], true))
                                                     Kurir Online: {{ $claim->courierDetail?->nama_pengemudi ?? 'Pengemudi terdaftar' }}
-                                                @elseif (in_array($claim->metode_pengambilan, ['ambil_sendiri', 'mandiri'], true))
+                                                @elseif (in_array($claim->metode_pengambilan, ['ambil_sendiri'], true))
                                                     Pengambilan: Ambil Sendiri
                                                 @else
                                                     Menunggu metode pengambilan.
@@ -351,7 +351,7 @@
                                                 <span class="block">
                                                     @if (in_array($claim->metode_pengambilan, ['kurir_online', 'kurir'], true))
                                                         Kurir Online: {{ $claim->courierDetail?->nama_pengemudi ?? 'Pengemudi terdaftar' }}
-                                                    @elseif (in_array($claim->metode_pengambilan, ['ambil_sendiri', 'mandiri'], true))
+                                                    @elseif (in_array($claim->metode_pengambilan, ['ambil_sendiri'], true))
                                                         Pengambilan: Ambil Sendiri
                                                     @endif
                                                 </span>
@@ -426,7 +426,7 @@
                                             <dd class="mt-1 text-sm font-medium text-foreground">
                                                 @if (in_array($claim->metode_pengambilan, ['kurir_online', 'kurir']))
                                                     Kurir Online
-                                                @elseif (in_array($claim->metode_pengambilan, ['ambil_sendiri', 'mandiri']))
+                                                @elseif (in_array($claim->metode_pengambilan, ['ambil_sendiri']))
                                                     Ambil Sendiri
                                                 @else
                                                     Belum dipilih
@@ -474,7 +474,7 @@
                                                 </div>
                                             @endif
                                         </div>
-                                    @elseif (in_array($claim->metode_pengambilan, ['ambil_sendiri', 'mandiri']))
+                                    @elseif (in_array($claim->metode_pengambilan, ['ambil_sendiri']))
                                         <div class="mt-5 rounded-xl border border-border bg-background px-4 py-3 text-sm text-muted-foreground">
                                             <p class="flex items-center gap-2">
                                                 <x-icon name="check" class="h-4 w-4 text-primary" />
