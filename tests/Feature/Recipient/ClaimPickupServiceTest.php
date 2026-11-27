@@ -47,15 +47,15 @@ class ClaimPickupServiceTest extends TestCase
 
         $result = $this->service->choosePickupMethod(
             $claim,
-            ['metode_pengambilan' => Claim::METHOD_MANDIRI],
+            ['metode_pengambilan' => Claim::METHOD_AMBIL_SENDIRI],
             null,
             $recipient->user
         );
 
-        $this->assertSame(Claim::METHOD_MANDIRI, $result->fresh()->metode_pengambilan);
+        $this->assertSame(Claim::METHOD_AMBIL_SENDIRI, $result->fresh()->metode_pengambilan);
         $this->assertDatabaseHas('claims', [
             'id' => $claim->id,
-            'metode_pengambilan' => Claim::METHOD_MANDIRI,
+            'metode_pengambilan' => Claim::METHOD_AMBIL_SENDIRI,
         ]);
         $this->assertDatabaseMissing('courier_details', [
             'claim_id' => $claim->id,
@@ -120,7 +120,7 @@ class ClaimPickupServiceTest extends TestCase
 
         $this->service->choosePickupMethod(
             $claim,
-            ['metode_pengambilan' => Claim::METHOD_MANDIRI],
+            ['metode_pengambilan' => Claim::METHOD_AMBIL_SENDIRI],
             null,
             $recipient->user
         );
@@ -134,7 +134,7 @@ class ClaimPickupServiceTest extends TestCase
         $post = $this->foodPost($donor, $category);
         $claim = $this->claim($recipient, $post, [
             'status' => 'approved',
-            'metode_pengambilan' => Claim::METHOD_MANDIRI,
+            'metode_pengambilan' => Claim::METHOD_AMBIL_SENDIRI,
         ]);
 
         $this->expectException(DomainException::class);
@@ -180,7 +180,7 @@ class ClaimPickupServiceTest extends TestCase
 
         $this->service->choosePickupMethod(
             $claim,
-            ['metode_pengambilan' => Claim::METHOD_MANDIRI],
+            ['metode_pengambilan' => Claim::METHOD_AMBIL_SENDIRI],
             null,
             $otherRecipient->user
         );
@@ -199,7 +199,7 @@ class ClaimPickupServiceTest extends TestCase
 
         $this->service->choosePickupMethod(
             $claim,
-            ['metode_pengambilan' => Claim::METHOD_MANDIRI],
+            ['metode_pengambilan' => Claim::METHOD_AMBIL_SENDIRI],
             null,
             $recipient->user
         );
@@ -411,7 +411,7 @@ class ClaimPickupServiceTest extends TestCase
         $claim = $this->claim($recipient, $post, ['status' => 'approved']);
 
         $response = $this->post(route('recipient.claims.pickup-method.store', $claim), [
-            'metode_pengambilan' => 'mandiri',
+            'metode_pengambilan' => 'ambil_sendiri',
         ]);
 
         $response->assertRedirect(route('login'));
@@ -427,7 +427,7 @@ class ClaimPickupServiceTest extends TestCase
 
         $response = $this->actingAs($donor->user)->post(
             route('recipient.claims.pickup-method.store', $claim),
-            ['metode_pengambilan' => 'mandiri']
+            ['metode_pengambilan' => 'ambil_sendiri']
         );
 
         $response->assertForbidden();
@@ -444,7 +444,7 @@ class ClaimPickupServiceTest extends TestCase
 
         $response = $this->actingAs($otherRecipient->user)->post(
             route('recipient.claims.pickup-method.store', $claim),
-            ['metode_pengambilan' => 'mandiri']
+            ['metode_pengambilan' => 'ambil_sendiri']
         );
 
         $response->assertForbidden();
