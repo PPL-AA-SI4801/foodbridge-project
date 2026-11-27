@@ -48,7 +48,7 @@ Boost replaces these bootstrap instructions with guidelines tailored to the appl
 
 ## PR Merge Rules (for agents)
 
-Before opening or merging a PR, ensure the merge criteria in `CONTRIBUTING.md` are met:
+Before opening or merging a PR, ensure the merge criteria in `.github/CONTRIBUTING.md` are met:
 idempotent hand-written data seeder present, Laravel Dusk/browser tests written and passing,
 Jira-keyed commit messages, `php artisan test` green, and no debug code.
 Declare the PR state (still in progress / ready for review / ready to merge) in the PR template.
