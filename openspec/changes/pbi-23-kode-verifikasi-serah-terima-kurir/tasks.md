@@ -19,11 +19,11 @@
 
 ## 4. Feature test TC-23-01 s/d TC-23-10
 
-- [ ] 4.1 Tulis `tests/Feature/Donor/CourierHandoverTest.php` (RefreshDatabase, sqlite) mencakup TC-23-01 normal, TC-23-02 badge waktu, TC-23-03 kosong, TC-23-04 format, TC-23-05 ukuran, TC-23-06 idempoten, TC-23-07 403 donor lain, TC-23-08 status bukan approved, TC-23-09 metode/data tidak layak, TC-23-10 rollback simulasi error; verifikasi dengan `php artisan test --filter=CourierHandoverTest` hijau.
-- [ ] 4.2 Jalankan `php artisan test` penuh dan verifikasi tidak menyentuh MySQL (tetap sqlite `:memory:`) dan tidak merusak test PBI-12.
+- [x] 4.1 Tulis `tests/Feature/Donor/CourierHandoverTest.php` (RefreshDatabase, sqlite) mencakup TC-23-01 normal, TC-23-02 badge waktu, TC-23-03 kosong, TC-23-04 format, TC-23-05 ukuran, TC-23-06 idempoten, TC-23-07 403 donor lain, TC-23-08 status bukan approved, TC-23-09 metode/data tidak layak, TC-23-10 rollback simulasi error; verifikasi dengan `php artisan test --filter=CourierHandoverTest` hijau.
+- [x] 4.2 Jalankan `php artisan test` penuh dan verifikasi tidak menyentuh MySQL (tetap sqlite `:memory:`) dan tidak merusak test PBI-12.
 
 ## 5. Dusk test + verifikasi standar TEST_RULE
 
-- [ ] 5.1 Tulis `tests/Browser/CourierHandoverTest.php` tanpa trait reset DB, fixture unik `courier-<time>-<rand>@example.com`, pola login via form + `attach('foto_serah_terima', fixture)`, mencakup TC-23-01 s/d TC-23-07 via UI; verifikasi `grep -rn "DatabaseMigrations\|DatabaseTruncation\|RefreshDatabase" tests/Browser/` menghasilkan OK.
+- [x] 5.1 Tulis `tests/Browser/CourierHandoverTest.php` tanpa trait reset DB, fixture unik `courier-<time>-<rand>@example.com`, pola login via form + `attach('foto_serah_terima', fixture)`, mencakup TC-23-01 s/d TC-23-07 via UI; verifikasi `grep -rn "DatabaseMigrations\|DatabaseTruncation\|RefreshDatabase" tests/Browser/` menghasilkan OK.
 - [ ] 5.2 Verifikasi skema identik: `php artisan migrate --env=dusk.local`, `php artisan migrate:status --env=dusk.local` vs `php artisan migrate:status` sama (18 migration); serve `php artisan serve --env=dusk.local`, run `php artisan dusk --filter=CourierHandoverTest` hijau 2x berturut-turut tanpa reset; inspeksi `foodbridge_dusk` via phpMyAdmin/`SELECT` memastikan baris + `foto_serah_terima` tercatat dan `foodbridge` tidak bertambah.
 - [ ] 5.3 Bersihkan file upload Dusk eksplisit (`Storage::disk('public')->delete()`) dan verifikasi tidak ada file yatim di `storage/app/public/courier_handovers` setelah run.

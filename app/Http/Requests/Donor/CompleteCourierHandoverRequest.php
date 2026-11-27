@@ -37,6 +37,8 @@ class CompleteCourierHandoverRequest extends FormRequest
             'foto_serah_terima.image' => 'Foto harus berformat JPG, JPEG, PNG, atau WEBP.',
             'foto_serah_terima.mimes' => 'Foto harus berformat JPG, JPEG, PNG, atau WEBP.',
             'foto_serah_terima.max' => 'Ukuran foto maksimal 2 MB.',
+            'foto_serah_terima.max.file' => 'Ukuran foto maksimal 2 MB.',
+            'foto_serah_terima.uploaded' => 'Ukuran foto maksimal 2 MB.',
         ];
     }
 
