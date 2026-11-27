@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['claim_id', 'platform', 'nama_pengemudi', 'no_kendaraan', 'kode_verifikasi_kurir', 'foto_bukti'])]
+#[Fillable(['claim_id', 'platform', 'nama_pengemudi', 'no_kendaraan', 'kode_verifikasi_kurir', 'foto_bukti', 'foto_serah_terima'])]
 class CourierDetail extends Model
 {
     public const PLATFORM_GOJEK = 'Gojek';
@@ -32,6 +32,13 @@ class CourierDetail extends Model
     {
         return Attribute::make(
             get: fn (): ?string => $this->foto_bukti ? Storage::disk('public')->url($this->foto_bukti) : null,
+        );
+    }
+
+    protected function fotoSerahTerimaUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): ?string => $this->foto_serah_terima ? Storage::disk('public')->url($this->foto_serah_terima) : null,
         );
     }
 

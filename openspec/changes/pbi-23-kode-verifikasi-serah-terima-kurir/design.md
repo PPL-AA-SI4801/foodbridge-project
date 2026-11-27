@@ -26,7 +26,7 @@ Batasan: `courier_details.claim_id` unik; `foto_serah_terima` belum ada (butuh m
    Rasional: 1 klaim最多 1 kurir (unique claim_id); foto hanya ada setelah selesai. Alternatif tabel `handover_proofs` ditolak karena menambah join tanpa kebutuhan.
 2. **Service baru `completeCourier()` di `ClaimHandoverService` (bukan reuse `complete()`).**
    Rasional: prasyarat dan input berbeda (kurir_online + courier_details + UploadedFile vs ambil_sendiri + kode). Satu transaksi `lockForUpdate` cek status approved → cek metode kurir_online → cek courier_details ada → store file → update + notifikasi. Alternatif controller gemuk ditolak agar Feature test bisa panggil service langsung seperti PBI-12.
-3. **FormRequest baru `CompleteCourierHandoverRequest` + route `PATCH donor/claims/{claim}/complete-courier`.**
+3. **FormRequest baru `CompleteCourierHandoverRequest` + route `PATCH donor/claims/{claim}/complete-courier` (nama `donor.claims.complete_courier`).**
    Rasional: route terpisah mencegah tabrakan validasi kode PBI-12; pesan error spesifik foto. Alternatif satu route dengan branching ditolak karena mempersulit pesan dan Dusk selector.
 4. **Blade: blok kurir di modal Donor berisi data driver + form upload + tombol; blok selesai berisi badge "Diserahkan pada ..." + thumbnail foto (hanya Donor).**
    Rasional: konsisten dengan blok PBI-12 di file yang sama; dusk attributes `courier-handover-form-{id}`, `foto-serah-terima-{id}`, `complete-courier-{id}`. Penerima hanya tambah badge waktu, tanpa foto.

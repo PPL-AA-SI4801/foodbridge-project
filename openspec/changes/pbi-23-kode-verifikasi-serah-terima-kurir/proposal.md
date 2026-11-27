@@ -24,6 +24,6 @@ Klaim `kurir_online` yang sudah approved dan datanya dilaporkan (PBI-11) belum p
 
 ## Impact
 
-- Kode: migrasi `foto_serah_terima` nullable di `courier_details`; `CourierDetail` fillable + accessor URL; service handover kurir baru/metode baru di `ClaimHandoverService`; `CompleteCourierHandoverRequest`; `Donor\ClaimController@completeCourier`; route `donor.claims.complete-courier`; Blade `donor/claims/index` (upload + badge + foto), `recipient/claims/index` (badge waktu), notifikasi `Makanan Telah Diserahkan` ke Klaim Saya.
+- Kode: migrasi `foto_serah_terima` nullable di `courier_details`; `CourierDetail` fillable + accessor URL; service handover kurir baru/metode baru di `ClaimHandoverService`; `CompleteCourierHandoverRequest`; `Donor\ClaimController@completeCourier`; route `donor.claims.complete_courier` (URL `complete-courier`); Blade `donor/claims/index` (upload + badge + foto), `recipient/claims/index` (badge waktu), notifikasi `Makanan Telah Diserahkan` ke Klaim Saya.
 - Test: Feature `CourierHandoverTest` (TC-23-01 s/d TC-23-10) + Dusk `CourierHandoverTest` mengikuti `docs/TEST_RULE.md` (DB `foodbridge_dusk`, tanpa reset trait, data unik per-run).
 - Tidak ada breaking change API publik; kolom baru nullable sehingga data lama tetap valid.
