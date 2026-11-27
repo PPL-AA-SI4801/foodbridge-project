@@ -37,26 +37,90 @@ class AccountVerificationTest extends DuskTestCase
 
     /**
      * TC-3-01: Administrator can view pending registrations.
+     *
+     * Real user flow: donor + penerima register via /register (UI + upload
+     * dokumen), then admin opens /admin/verifications and sees both.
      */
     public function test_administrator_can_view_pending_registrations(): void
     {
         $admin = $this->createAdmin();
+        $fixture = base_path('tests/Browser/fixtures/legalitas.pdf');
+        $donorEmail = $this->uniqueEmail('donor-pending');
         $namaDonor = $this->uniqueName('Resto Donor Satu');
+        $recipientEmail = $this->uniqueEmail('penerima-pending');
         $namaPenerima = $this->uniqueName('Panti Penerima Satu');
-        $donor = $this->createPendingDonor($this->uniqueEmail('donor-pending'), $namaDonor);
-        $recipient = $this->createPendingRecipient($this->uniqueEmail('penerima-pending'), $namaPenerima);
 
-        $this->browse(function (Browser $browser) use ($admin, $donor, $recipient, $namaDonor, $namaPenerima) {
+        $this->browse(function (Browser $browser) use ($admin, $fixture, $donorEmail, $namaDonor, $recipientEmail, $namaPenerima) {
+            // 1. Donor registers via UI.
+            $browser->visit('/register')
+                ->assertSee('Buat akun')
+                ->type('@register-nama', 'Donor Pending Satu')
+                ->type('@register-email', $donorEmail)
+                ->type('@register-no-hp', '081234567890')
+                ->type('@register-password', 'Password123!')
+                ->type('@register-password-confirmation', 'Password123!')
+                ->press('@register-next')
+                ->pause(500)
+                ->assertVisible('@register-nama-usaha')
+                ->type('@register-nama-usaha', $namaDonor)
+                ->type('@register-jenis-usaha', 'Restoran')
+                ->type('@register-alamat', 'Jl. Donor No. 1')
+                ->select('@register-jenis-dokumen', 'nib')
+                ->attach('dokumen', $fixture)
+                ->press('@register-submit')
+                ->waitForText('Pendaftaran berhasil. Lengkapi dokumen Anda agar proses verifikasi bisa dilanjutkan.')
+                ->assertPathIs('/login')
+                ->assertSee('Status verifikasi akun');
+
+            // Kartu status persisten (commit verification card): refresh tetap tampil.
+            $browser->refresh()
+                ->assertPathIs('/login')
+                ->assertSee('Status verifikasi akun');
+
+            // 2. Penerima registers via UI.
+            $browser->visit('/register')
+                ->assertSee('Buat akun');
+            $browser->script("document.querySelector('input[name=\"role\"][value=\"penerima\"]').click();");
+            $browser->type('@register-nama', 'Penerima Pending Satu')
+                ->type('@register-email', $recipientEmail)
+                ->type('@register-no-hp', '081234567891')
+                ->type('@register-password', 'Password123!')
+                ->type('@register-password-confirmation', 'Password123!')
+                ->press('@register-next')
+                ->pause(500)
+                ->assertVisible('@register-nama-lembaga')
+                ->type('@register-nama-lembaga', $namaPenerima)
+                ->type('@register-jenis-lembaga', 'Panti Asuhan')
+                ->type('@register-alamat', 'Jl. Penerima No. 2')
+                ->select('@register-jenis-dokumen', 'nib')
+                ->attach('dokumen', $fixture)
+                ->press('@register-submit')
+                ->waitForText('Pendaftaran berhasil. Lengkapi dokumen Anda agar proses verifikasi bisa dilanjutkan.')
+                ->assertPathIs('/login')
+                ->assertSee('Status verifikasi akun');
+
+            // 3. Admin sees both pending registrations.
+            // Catatan: loginAs tidak menghapus session pending_verification_email,
+            // tapi kartu hanya tampil di /login (guest), jadi antrean admin aman.
             $browser->loginAs($admin)
                 ->visit('/admin/verifications')
                 ->assertSee('Verifikasi Akun')
                 ->assertSee($namaDonor)
                 ->assertSee($namaPenerima)
-                ->assertSee($donor->email)
-                ->assertSee($recipient->email)
+                ->assertSee($donorEmail)
+                ->assertSee($recipientEmail)
                 ->assertSee('Donor')
                 ->assertSee('Penerima');
         });
+
+        $this->assertDatabaseHas('users', [
+            'email' => $donorEmail,
+            'status_akun' => 'menunggu',
+        ]);
+        $this->assertDatabaseHas('users', [
+            'email' => $recipientEmail,
+            'status_akun' => 'menunggu',
+        ]);
     }
 
     /**
@@ -160,6 +224,14 @@ class AccountVerificationTest extends DuskTestCase
 
     /**
      * TC-3-04b: Administrator can request document completeness and the applicant can re-upload.
+     *
+     * Alur yang diuji: authenticated flow (/lengkapi-dokumen via
+     * DocumentCompletenessController). Donor dibuat via factory sehingga
+     * tidak ada session pending_verification_email — kartu guest di /login
+     * (VerificationStatusController::store) tidak muncul, login via form
+     * tetap terautentikasi lalu EnsureAccountIsActive mengarahkan ke
+     * /lengkapi-dokumen. Guest flow (upload inline di kartu login) hanya
+     * aktif bila session pending_verification_email masih ada (habis register via UI).
      */
     public function test_administrator_can_request_document_completeness_and_applicant_can_reupload(): void
     {
