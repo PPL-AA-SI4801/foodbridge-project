@@ -46,7 +46,7 @@ class ClaimController extends Controller
         // yang belum punya kode (PBI-11 menyimpan metode tanpa kode).
         foreach ($claims as $claim) {
             if ($claim->isApproved()
-                && in_array($claim->metode_pengambilan, [Claim::METHOD_AMBIL_SENDIRI, Claim::METHOD_MANDIRI], true)
+                && in_array($claim->metode_pengambilan, [Claim::METHOD_AMBIL_SENDIRI], true)
                 && empty($claim->kode_verifikasi)) {
                 $claim->kode_verifikasi = $handover->ensureCode($claim);
             }
