@@ -7,7 +7,7 @@ Use a Jira-keyed prefix, e.g. `feature/PBI-12-claim-quota`, `fix/PBI-34-login-re
 
 ## Commit messages
 
-Use the standardized Jira-keyed format:
+PBI work uses the standardized Jira-keyed format:
 
 ```
 PBI-12: short imperative summary
@@ -15,8 +15,12 @@ PBI-12: short imperative summary
 Optional body explaining why, not what.
 ```
 
-Every commit that lands tests or feature work MUST carry the Jira key. Do not use
-generic messages such as `update`, `fix`, or `wip`.
+Every commit that lands PBI tests or feature work MUST carry the Jira key. Do not use
+generic messages such as `update`, `fix`, or `wip` for PBI work.
+
+Exception — non-PBI work (bug fix outside any PBI, chore, cleanup, performance)
+uses a universal prefix instead of a Jira key, e.g. `chore: ...`, `hotfix: ...`,
+`perf: ...`. No Jira update is required for these.
 
 ## Pull request merge criteria
 
