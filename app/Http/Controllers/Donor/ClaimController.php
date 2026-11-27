@@ -3,14 +3,19 @@
 namespace App\Http\Controllers\Donor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Donor\CompleteClaimRequest;
 use App\Models\Claim;
+use App\Services\ClaimHandoverService;
 use App\Services\ClaimWorkflowService;
 use App\Support\ClaimStatus;
 use Illuminate\Http\Request;
 
 class ClaimController extends Controller
 {
-    public function __construct(private readonly ClaimWorkflowService $claimWorkflow) {}
+    public function __construct(
+        private readonly ClaimWorkflowService $claimWorkflow,
+        private readonly ClaimHandoverService $handover,
+    ) {}
 
     /**
      * Menampilkan daftar klaim masuk pada postingan makanan milik donor yang sedang login.
@@ -96,6 +101,20 @@ class ClaimController extends Controller
         }
 
         return redirect()->back()->with('success', 'Klaim berhasil ditolak.');
+    }
+
+    /**
+     * Selesaikan serah terima mandiri PBI-12: validasi kode lalu tandai completed.
+     */
+    public function complete(CompleteClaimRequest $request, Claim $claim)
+    {
+        try {
+            $this->handover->complete($claim, $request->validated()['kode_verifikasi'], $request->user());
+        } catch (\DomainException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Makanan sudah diserahkan. Klaim selesai.');
     }
 
     /**

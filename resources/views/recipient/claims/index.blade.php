@@ -560,10 +560,11 @@
                                     </div>
                                 @endif
 
-                                @if ($claim->kode_verifikasi)
+                                {{-- PBI-12: kode hanya tampil saat Disetujui + Ambil Sendiri, tidak setelah Selesai --}}
+                                @if ($claim->kode_verifikasi && $statusKey === 'disetujui' && in_array($claim->metode_pengambilan, ['ambil_sendiri', 'mandiri'], true))
                                     <div class="mt-4 rounded-xl border border-border bg-card px-4 py-3">
                                         <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Kode verifikasi</p>
-                                        <p class="mt-1 font-mono text-lg font-semibold tracking-[0.2em] text-foreground">{{ $claim->kode_verifikasi }}</p>
+                                        <p class="mt-1 font-mono text-lg font-semibold tracking-[0.2em] text-foreground" dusk="verification-code-{{ $claim->id }}">{{ $claim->kode_verifikasi }}</p>
                                     </div>
                                 @endif
 

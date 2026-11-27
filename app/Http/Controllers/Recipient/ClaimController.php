@@ -8,6 +8,7 @@ use App\Http\Requests\Recipient\ChoosePickupMethodRequest;
 use App\Models\Claim;
 use App\Models\FoodPost;
 use App\Models\InAppNotification;
+use App\Services\ClaimHandoverService;
 use App\Services\ClaimPickupService;
 use App\Services\RecipientClaimService;
 use App\Support\ClaimStatus;
@@ -18,7 +19,7 @@ use Illuminate\View\View;
 
 class ClaimController extends Controller
 {
-    public function index(Request $request, RecipientClaimService $claimService): View
+    public function index(Request $request, RecipientClaimService $claimService, ClaimHandoverService $handover): View
     {
         $recipient = $request->user()->recipientProfile()->firstOrFail();
 
@@ -40,6 +41,17 @@ class ClaimController extends Controller
         ];
 
         $claims = $claimService->paginateForRecipient($recipient->id, $filters, $focusedClaim?->id);
+
+        // Fallback PBI-12: terbitkan kode untuk klaim approved ambil-sendiri
+        // yang belum punya kode (PBI-11 menyimpan metode tanpa kode).
+        foreach ($claims as $claim) {
+            if ($claim->isApproved()
+                && in_array($claim->metode_pengambilan, [Claim::METHOD_AMBIL_SENDIRI, Claim::METHOD_MANDIRI], true)
+                && empty($claim->kode_verifikasi)) {
+                $claim->kode_verifikasi = $handover->ensureCode($claim);
+            }
+        }
+
         $focusedClaimId = $focusedClaim?->id;
         $quota = $claimService->quotaSummary($recipient->id);
         $statusCounts = $claimService->statusCounts($recipient->id);
