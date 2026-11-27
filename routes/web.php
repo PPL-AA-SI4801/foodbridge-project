@@ -124,6 +124,7 @@ Route::middleware('auth')->group(function () {
         Route::patch('/claims/{claim}/approve', [DonorClaimController::class, 'approve'])->name('claims.approve');
         Route::patch('/claims/{claim}/reject', [DonorClaimController::class, 'reject'])->name('claims.reject');
         Route::patch('/claims/{claim}/complete', [DonorClaimController::class, 'complete'])->name('claims.complete');
+        Route::patch('/claims/{claim}/complete-courier', [DonorClaimController::class, 'completeCourier'])->name('claims.complete_courier');
 
         Route::get('/requests', [DonorRequestBoardController::class, 'index'])->name('requests.index');
         Route::post('/requests/{foodRequest}/fulfil', [DonorRequestBoardController::class, 'fulfil'])->name('requests.fulfil');

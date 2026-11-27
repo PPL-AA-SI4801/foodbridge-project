@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Donor;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Donor\CompleteClaimRequest;
+use App\Http\Requests\Donor\CompleteCourierHandoverRequest;
 use App\Models\Claim;
 use App\Services\ClaimHandoverService;
 use App\Services\ClaimWorkflowService;
@@ -110,6 +111,20 @@ class ClaimController extends Controller
     {
         try {
             $this->handover->complete($claim, $request->validated()['kode_verifikasi'], $request->user());
+        } catch (\DomainException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Makanan sudah diserahkan. Klaim selesai.');
+    }
+
+    /**
+     * Selesaikan serah terima kurir PBI-23: validasi foto lalu tandai completed.
+     */
+    public function completeCourier(CompleteCourierHandoverRequest $request, Claim $claim)
+    {
+        try {
+            $this->handover->completeCourier($claim, $request->file('foto_serah_terima'), $request->user());
         } catch (\DomainException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
