@@ -295,11 +295,15 @@ class CourierHandoverTest extends DuskTestCase
 
     private function deleteHandoverPhoto(int $claimId): void
     {
-        $path = Claim::find($claimId)?->courierDetail?->foto_serah_terima;
+        $courier = Claim::find($claimId)?->courierDetail;
+        $path = $courier?->foto_serah_terima;
 
         if (is_string($path) && $path !== '') {
             Storage::disk('public')->delete($path);
         }
+
+        // Kosongkan referensi agar fixture tidak menunjuk ke berkas yang sudah dihapus.
+        $courier?->forceFill(['foto_serah_terima' => null])->save();
     }
 
     /**
