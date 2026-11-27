@@ -14,7 +14,9 @@ use App\Models\RecipientProfile;
 use App\Models\User;
 use App\Services\ClaimHandoverService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\TestCase;
 
 #[RequiresPhpExtension('pdo_sqlite')]
@@ -216,6 +218,28 @@ class ClaimHandoverTest extends TestCase
         $this->assertDatabaseMissing('notifications', [
             'judul' => 'Makanan Telah Diserahkan',
         ]);
+    }
+
+    public function test_tc12_05_orphan_claim_returns_not_found_instead_of_server_error(): void
+    {
+        [$recipient] = $this->recipientProfile();
+        [$donor, $donorUser] = $this->donorProfile();
+        $post = $this->foodPost($donor, $this->foodCategory());
+        $claim = $this->claim($recipient, $post, [
+            'status' => 'approved',
+            'metode_pengambilan' => Claim::METHOD_AMBIL_SENDIRI,
+            'kode_verifikasi' => '482913',
+            'approved_at' => now(),
+        ]);
+
+        // PRAGMA foreign_keys=OFF diabaikan SQLite di dalam transaksi,
+        // jadi pakai constraint yang ditunda (test di-rollback).
+        DB::unprepared('PRAGMA defer_foreign_keys=ON');
+        $post->delete();
+
+        $this->expectException(NotFoundHttpException::class);
+
+        $this->handover->complete($claim->fresh(), '482913', $donorUser);
     }
 
     /**

@@ -27,7 +27,7 @@ class ClaimHandoverService
     public function ensureCode(Claim $claim): ?string
     {
         if (! $claim->isApproved()
-            || ! in_array($claim->metode_pengambilan, [Claim::METHOD_AMBIL_SENDIRI, Claim::METHOD_MANDIRI], true)
+            || ! in_array($claim->metode_pengambilan, [Claim::METHOD_AMBIL_SENDIRI], true)
             || ! empty($claim->kode_verifikasi)) {
             return $claim->kode_verifikasi ?: null;
         }
@@ -55,18 +55,21 @@ class ClaimHandoverService
      */
     public function complete(Claim $claim, ?string $kode, User $actor): Claim
     {
+        $post = $claim->post;
+        abort_if($post === null, 404);
+
         $donorId = $actor->donorProfile?->id;
 
-        abort_unless($donorId !== null && (int) $claim->post->donor_id === (int) $donorId, 403);
+        abort_unless($donorId !== null && (int) $post->donor_id === (int) $donorId, 403);
 
         return DB::transaction(function () use ($claim, $kode): Claim {
-            $locked = Claim::lockForUpdate()->with('post')->findOrFail($claim->id);
+            $locked = Claim::lockForUpdate()->with(['post', 'recipient'])->findOrFail($claim->id);
 
             if (! in_array($locked->status, ClaimStatus::GROUPS['disetujui'], true)) {
                 throw new DomainException('Hanya klaim yang disetujui yang dapat diselesaikan.');
             }
 
-            if (! in_array($locked->metode_pengambilan, [Claim::METHOD_AMBIL_SENDIRI, Claim::METHOD_MANDIRI], true)) {
+            if (! in_array($locked->metode_pengambilan, [Claim::METHOD_AMBIL_SENDIRI], true)) {
                 throw new DomainException('Penyelesaian dengan kode hanya untuk metode Ambil Sendiri.');
             }
 
@@ -76,14 +79,17 @@ class ClaimHandoverService
                 throw new DomainException('Kode verifikasi tidak sesuai.');
             }
 
+            $recipientUserId = $locked->recipient?->user_id;
+            abort_if($recipientUserId === null, 404);
+
             $locked->status = 'completed';
             $locked->completed_at = now();
             $locked->save();
 
             InAppNotification::create([
-                'user_id' => $locked->recipient->user_id,
+                'user_id' => $recipientUserId,
                 'judul' => 'Makanan Telah Diserahkan',
-                'pesan' => 'Makanan "'.$locked->post->judul.'" telah diserahkan. Terima kasih telah menggunakan FoodBridge.',
+                'pesan' => 'Makanan "'.($locked->post?->judul ?? 'makanan').'" telah diserahkan. Terima kasih telah menggunakan FoodBridge.',
                 'tipe' => NotificationType::Claim->value,
             ]);
 
