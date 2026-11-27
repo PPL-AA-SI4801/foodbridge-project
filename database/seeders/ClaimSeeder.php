@@ -267,6 +267,8 @@ class ClaimSeeder extends Seeder
                 'jumlah_porsi' => 2,
                 'status' => 'approved',
                 'metode_pengambilan' => 'ambil_sendiri',
+                // Disengaja null: menguji fallback ensureCode() PBI-12.
+                'kode_verifikasi' => null,
                 'tanggal_klaim' => $today,
             ],
             [
@@ -275,6 +277,7 @@ class ClaimSeeder extends Seeder
                 'jumlah_porsi' => 1,
                 'status' => 'completed',
                 'metode_pengambilan' => 'ambil_sendiri',
+                'kode_verifikasi' => '482903',
                 'tanggal_klaim' => $today->copy()->subDays(3),
             ],
             [
@@ -315,6 +318,7 @@ class ClaimSeeder extends Seeder
                 'jumlah_porsi' => 1,
                 'status' => 'completed',
                 'metode_pengambilan' => 'ambil_sendiri',
+                'kode_verifikasi' => '482904',
                 'tanggal_klaim' => $today->copy()->subDays(6),
             ],
         ];
@@ -328,7 +332,7 @@ class ClaimSeeder extends Seeder
                 'jumlah_porsi' => $extraClaim['jumlah_porsi'],
                 'status' => $extraClaim['status'],
                 'metode_pengambilan' => $extraClaim['metode_pengambilan'],
-                'kode_verifikasi' => null,
+                'kode_verifikasi' => $extraClaim['kode_verifikasi'] ?? null,
                 'tanggal_klaim' => $extraClaim['tanggal_klaim'],
                 'approved_at' => in_array($extraClaim['status'], ['approved', 'completed'], true) ? now() : null,
                 'completed_at' => $extraClaim['status'] === 'completed' ? now() : null,
