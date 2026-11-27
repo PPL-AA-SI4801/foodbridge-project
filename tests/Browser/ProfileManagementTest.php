@@ -35,14 +35,23 @@ class ProfileManagementTest extends DuskTestCase
 
     /**
      * TC-4-01: Donor can view their own profile.
+     * Flow: login via /login form, then open /profile.
      */
     public function test_donor_can_view_own_profile(): void
     {
         $namaUsaha = $this->uniqueName('Resto Donor Satu');
-        $donor = $this->createDonor($this->uniqueEmail('donor-lihat'), $namaUsaha, -6.9175, 107.6191, 'Jl. Merdeka No. 1, Bandung');
+        $email = $this->uniqueEmail('donor-lihat');
+        $this->createDonor($email, $namaUsaha, -6.9175, 107.6191, 'Jl. Merdeka No. 1, Bandung');
 
-        $this->browse(function (Browser $browser) use ($donor, $namaUsaha) {
-            $browser->loginAs($donor)
+        $this->browse(function (Browser $browser) use ($email, $namaUsaha) {
+            $browser->logout()
+                ->visit('/login')
+                ->waitFor('@login-email')
+                ->type('@login-email', $email)
+                ->type('@login-password', 'password')
+                ->press('@login-submit')
+                ->waitForText('Donor Hub')
+                ->assertPathIs('/dashboard/donor')
                 ->visit('/profile')
                 ->assertSee('Profil Saya')
                 ->assertSee($namaUsaha)
@@ -54,6 +63,7 @@ class ProfileManagementTest extends DuskTestCase
 
     /**
      * TC-4-02: Donor can update profile and location via hidden lat/lng inputs.
+     * Flow: login via /login form, then update /profile.
      */
     public function test_donor_can_update_profile_and_location(): void
     {
@@ -62,7 +72,14 @@ class ProfileManagementTest extends DuskTestCase
         $this->createDonor($email, $this->uniqueName('Resto Lama'), -6.9, 107.6, 'Jl. Lama No. 1');
 
         $this->browse(function (Browser $browser) use ($email, $namaBaru) {
-            $browser->loginAs(User::where('email', $email)->firstOrFail())
+            $browser->logout()
+                ->visit('/login')
+                ->waitFor('@login-email')
+                ->type('@login-email', $email)
+                ->type('@login-password', 'password')
+                ->press('@login-submit')
+                ->waitForText('Donor Hub')
+                ->assertPathIs('/dashboard/donor')
                 ->visit('/profile')
                 ->assertSee('Profil Saya')
                 ->clear('nama_usaha')
@@ -88,6 +105,7 @@ class ProfileManagementTest extends DuskTestCase
 
     /**
      * TC-4-03: Recipient can update profile and location.
+     * Flow: login via /login form, then update /profile.
      */
     public function test_recipient_can_update_profile_and_location(): void
     {
@@ -96,7 +114,14 @@ class ProfileManagementTest extends DuskTestCase
         $this->createRecipient($email, $namaLembaga);
 
         $this->browse(function (Browser $browser) use ($email, $namaLembaga) {
-            $browser->loginAs(User::where('email', $email)->firstOrFail())
+            $browser->logout()
+                ->visit('/login')
+                ->waitFor('@login-email')
+                ->type('@login-email', $email)
+                ->type('@login-password', 'password')
+                ->press('@login-submit')
+                ->waitForText('Penerima')
+                ->assertPathIs('/dashboard/penerima')
                 ->visit('/profile')
                 ->assertSee('Profil Saya')
                 ->assertSee($namaLembaga)
@@ -116,6 +141,7 @@ class ProfileManagementTest extends DuskTestCase
 
     /**
      * TC-4-04: Invalid profile input is rejected and data stays unchanged.
+     * Flow: login via /login form, then submit invalid /profile.
      */
     public function test_profile_update_is_rejected_for_invalid_input(): void
     {
@@ -124,7 +150,14 @@ class ProfileManagementTest extends DuskTestCase
         $this->createDonor($email, $namaValid, -6.9, 107.6, 'Jl. Valid No. 1');
 
         $this->browse(function (Browser $browser) use ($email) {
-            $browser->loginAs(User::where('email', $email)->firstOrFail())
+            $browser->logout()
+                ->visit('/login')
+                ->waitFor('@login-email')
+                ->type('@login-email', $email)
+                ->type('@login-password', 'password')
+                ->press('@login-submit')
+                ->waitForText('Donor Hub')
+                ->assertPathIs('/dashboard/donor')
                 ->visit('/profile')
                 ->clear('nama_usaha');
             $browser->script("document.querySelector('[dusk=profile-form]').setAttribute('novalidate','novalidate'); document.querySelectorAll('[required]').forEach(function (el) { el.removeAttribute('required'); }); document.getElementById('lat').value='95'; document.getElementById('lng').value='200';");
@@ -148,17 +181,25 @@ class ProfileManagementTest extends DuskTestCase
      * TC-4-05: A donor cannot update another donor's profile via injected user_id.
      *
      * ProfileController uses Auth::user() only, so an injected user_id field
-     * must be ignored.
+     * must be ignored. Flow: donor A login via /login form.
      */
     public function test_user_cannot_update_another_users_profile(): void
     {
         $namaAwalB = $this->uniqueName('Resto B Asli');
         $namaDiubah = $this->uniqueName('Diubah Donor A');
-        $donorA = $this->createDonor($this->uniqueEmail('donor-a'), $this->uniqueName('Resto A Asli'), -6.9, 107.6, 'Jl. A No. 1');
+        $emailA = $this->uniqueEmail('donor-a');
+        $donorA = $this->createDonor($emailA, $this->uniqueName('Resto A Asli'), -6.9, 107.6, 'Jl. A No. 1');
         $donorB = $this->createDonor($this->uniqueEmail('donor-b'), $namaAwalB, -6.91, 107.61, 'Jl. B No. 2');
 
-        $this->browse(function (Browser $browser) use ($donorA, $donorB, $namaDiubah) {
-            $browser->loginAs($donorA)
+        $this->browse(function (Browser $browser) use ($emailA, $donorB, $namaDiubah) {
+            $browser->logout()
+                ->visit('/login')
+                ->waitFor('@login-email')
+                ->type('@login-email', $emailA)
+                ->type('@login-password', 'password')
+                ->press('@login-submit')
+                ->waitForText('Donor Hub')
+                ->assertPathIs('/dashboard/donor')
                 ->visit('/profile');
             $browser->script("var i=document.createElement('input'); i.type='hidden'; i.name='user_id'; i.value='".$donorB->id."'; document.querySelector('[dusk=profile-form]').appendChild(i);");
             $browser->clear('nama_usaha')
@@ -180,18 +221,26 @@ class ProfileManagementTest extends DuskTestCase
     /**
      * TC-4-06: Inactive account cannot access the profile page.
      *
-     * ASSUMPTION DIFFERENCE: real behavior is logout + redirect to /login
-     * with the status message (EnsureAccountIsActive), not HTTP 403.
+     * Flow: pending account tries login via /login form (rejected with
+     * status message), then /profile stays on /login as guest.
      */
     public function test_inactive_account_cannot_access_profile(): void
     {
-        $pending = $this->createDonor($this->uniqueEmail('pending-profil'), $this->uniqueName('Resto Pending'), -6.9, 107.6, 'Jl. Pending No. 1', 'menunggu');
+        $email = $this->uniqueEmail('pending-profil');
+        $this->createDonor($email, $this->uniqueName('Resto Pending'), -6.9, 107.6, 'Jl. Pending No. 1', 'menunggu');
 
-        $this->browse(function (Browser $browser) use ($pending) {
-            $browser->loginAs($pending)
-                ->visit('/profile')
+        $this->browse(function (Browser $browser) use ($email) {
+            $browser->logout()
+                ->visit('/login')
+                ->waitFor('@login-email')
+                ->type('@login-email', $email)
+                ->type('@login-password', 'password')
+                ->press('@login-submit')
+                ->pause(500)
                 ->assertPathIs('/login')
-                ->assertSee('menunggu verifikasi');
+                ->assertSee('menunggu verifikasi')
+                ->visit('/profile')
+                ->assertPathIs('/login');
         });
     }
 
