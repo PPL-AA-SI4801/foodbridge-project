@@ -464,9 +464,17 @@ class PickupMethodTest extends DuskTestCase
         $post = $this->createFoodPost($donorProfile, $category, ['judul' => 'Bolu Ukuran Dusk '.Str::random(4)]);
         $claim = $this->createClaim($post, $recipientProfile);
 
-        $fixtureLarge = base_path('tests/Browser/fixtures/large_image.png');
+        // Oversize fixture dibuat saat runtime: PNG valid kecil + padding
+        // hingga > 2 MB. Header PNG tetap utuh sehingga lolos validasi
+        // image/mimes dan gagal tepat di aturan max (2 MB).
+        $fixtureLarge = sys_get_temp_dir().'/dusk-large-'.Str::random(8).'.png';
+        file_put_contents(
+            $fixtureLarge,
+            file_get_contents(base_path('tests/Browser/fixtures/courier_proof.png')).random_bytes(2_600_000)
+        );
 
-        $this->browse(function (Browser $browser) use ($recipientUser, $claim, $fixtureLarge) {
+        try {
+            $this->browse(function (Browser $browser) use ($recipientUser, $claim, $fixtureLarge) {
             // 1. Buka modal klaim disetujui pada akun Penerima 1, pilih "Kurir Online", dan isi seluruh data pengemudi
             $browser->loginAs($recipientUser)
                 ->visit('/recipient/claims')
@@ -486,7 +494,10 @@ class PickupMethodTest extends DuskTestCase
                 // 4. Sistem menolak berkas; modal tetap terbuka menampilkan pesan kesalahan validasi
                 ->waitFor('@pickup-method-errors-'.$claim->id)
                 ->assertSee('Ukuran foto maksimal 2 MB.');
-        });
+            });
+        } finally {
+            @unlink($fixtureLarge);
+        }
 
         // 5. Verifikasi database: data metode pengambilan tetap kosong
         $this->assertDatabaseHas('claims', [
