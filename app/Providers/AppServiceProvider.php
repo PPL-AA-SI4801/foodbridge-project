@@ -19,6 +19,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        if (config('database.connections.mysql.database') === 'foodbridge_dusk' || $this->app->environment('testing')) {
+            \Illuminate\Support\Facades\Vite::useHotFile(storage_path('framework/dusk-nonexistent-hot'));
+        }
     }
 }

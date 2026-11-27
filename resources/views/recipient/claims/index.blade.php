@@ -8,8 +8,8 @@
         $method = strtolower($method);
 
         return str_contains($method, 'kurir') || str_contains($method, 'courier')
-            ? 'Kurir'
-            : 'Mandiri';
+            ? 'Kurir Online'
+            : 'Ambil Sendiri';
     };
     $donorCity = function ($donor): ?string {
         $address = trim((string) ($donor?->alamat ?? ''));
@@ -44,6 +44,20 @@
             <div class="mb-6 flex items-start gap-3 rounded-md border border-[#FCA5A5] bg-[#FEE2E2] px-4 py-3 text-sm font-medium text-[#B91C1C]" role="alert">
                 <x-icon name="info" class="mt-0.5 h-4 w-4 shrink-0" />
                 <p>{{ session('error') }}</p>
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="mb-6 flex items-start gap-3 rounded-md border border-[#FCA5A5] bg-[#FEE2E2] px-4 py-3 text-sm font-medium text-[#B91C1C]" role="alert" dusk="recipient-claims-validation-errors">
+                <x-icon name="info" class="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                    <p class="font-semibold">Validasi Formulir Gagal:</p>
+                    <ul class="mt-1 list-disc list-inside space-y-0.5 text-xs">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
         @endif
 
@@ -382,21 +396,37 @@
 
                             {{-- Aksi --}}
                             <div class="border-t border-border pt-3 lg:border-t-0 lg:pt-0 lg:text-right">
-                                <button
-                                    type="button"
-                                    x-data
-                                    x-on:click="$dispatch('open-modal', 'claim-detail-{{ $claim->id }}')"
-                                    dusk="claim-detail-{{ $claim->id }}"
-                                    class="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3.5 text-xs font-semibold text-foreground transition hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 lg:w-auto"
-                                >
-                                    <x-icon name="eye" class="h-3.5 w-3.5" />
-                                    Detail
-                                </button>
+                                @if ($statusKey === 'disetujui' && ! $claim->hasPickupMethod())
+                                    <button
+                                        type="button"
+                                        x-data
+                                        x-on:click="$dispatch('open-modal', 'claim-detail-{{ $claim->id }}')"
+                                        dusk="claim-detail-{{ $claim->id }}"
+                                        class="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 lg:w-auto"
+                                    >
+                                        <x-icon name="truck" class="h-3.5 w-3.5" />
+                                        Pilih Metode
+                                    </button>
+                                @else
+                                    <button
+                                        type="button"
+                                        x-data
+                                        x-on:click="$dispatch('open-modal', 'claim-detail-{{ $claim->id }}')"
+                                        dusk="claim-detail-{{ $claim->id }}"
+                                        class="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3.5 text-xs font-semibold text-foreground transition hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 lg:w-auto"
+                                    >
+                                        <x-icon name="eye" class="h-3.5 w-3.5" />
+                                        Detail
+                                    </button>
+                                @endif
                             </div>
 
-                            {{-- Modal detail klaim --}}
-                        <x-modal name="claim-detail-{{ $claim->id }}" maxWidth="lg">
-                            <div class="p-6" dusk="claim-detail-modal-{{ $claim->id }}">
+                        {{-- Modal detail klaim --}}
+                        @php
+                            $hasModalError = $errors->any() && (old('claim_id') == $claim->id);
+                        @endphp
+                        <x-modal name="claim-detail-{{ $claim->id }}" :show="$hasModalError" maxWidth="lg">
+                            <div class="p-6 bg-card" dusk="claim-detail-modal-{{ $claim->id }}">
                                 <div class="flex items-start justify-between gap-4">
                                     <div class="min-w-0">
                                         <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Detail Klaim</p>
@@ -473,6 +503,63 @@
                                     @endif
                                 </div>
 
+                                @php
+                                    $pickupAddress = $post?->alamat ?: ($post?->donor?->alamat ?: null);
+                                    $courierNote = $post?->catatan_kurir;
+                                    $donorPhone = $post?->donor?->user?->no_hp;
+                                @endphp
+
+                                @if ($pickupAddress)
+                                    <div class="mt-4 rounded-xl border border-primary/25 bg-accent/40 p-4" dusk="pickup-location-card-{{ $claim->id }}">
+                                        <div class="flex items-start gap-3">
+                                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                                <x-icon name="map-pin" class="h-4 w-4" />
+                                            </span>
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                                    <p class="text-xs font-semibold uppercase tracking-wider text-primary">
+                                                        Lokasi / Alamat Pengambilan
+                                                    </p>
+                                                    <a
+                                                        href="https://www.google.com/maps/search/?api=1&query={{ urlencode($pickupAddress) }}"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        class="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                                                    >
+                                                        <span>Buka di Google Maps</span>
+                                                        <x-icon name="navigation" class="h-3 w-3" />
+                                                    </a>
+                                                </div>
+                                                <p class="mt-1 text-sm font-semibold text-foreground">
+                                                    {{ $post?->donor?->nama_usaha ?? 'Titik Penjemputan Donor' }}
+                                                </p>
+                                                <p class="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                                                    {{ $pickupAddress }}
+                                                </p>
+
+                                                @if ($donorPhone)
+                                                    <div class="mt-2.5 flex items-center gap-2 text-xs">
+                                                        <span class="flex items-center gap-1 font-medium text-foreground">
+                                                            <x-icon name="phone" class="h-3.5 w-3.5 text-primary" />
+                                                            <span>Kontak Donor:</span>
+                                                        </span>
+                                                        <a href="tel:{{ $donorPhone }}" class="font-mono font-semibold text-primary hover:underline">
+                                                            {{ $donorPhone }}
+                                                        </a>
+                                                    </div>
+                                                @endif
+
+                                                @if ($courierNote)
+                                                    <div class="mt-2.5 rounded-lg border border-border bg-card px-3 py-2 text-xs">
+                                                        <span class="font-medium text-foreground">Catatan pengambilan:</span>
+                                                        <span class="text-muted-foreground">{{ $courierNote }}</span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+
                                 @if ($claim->kode_verifikasi)
                                     <div class="mt-4 rounded-xl border border-border bg-card px-4 py-3">
                                         <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Kode verifikasi</p>
@@ -480,27 +567,264 @@
                                     </div>
                                 @endif
 
-                                @if ($claim->courierDetail)
-                                    <div class="mt-4 rounded-xl border border-border bg-card px-4 py-3">
-                                        <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Detail kurir</p>
-                                        <dl class="mt-2 grid gap-2 text-sm sm:grid-cols-2">
-                                            <div class="flex justify-between gap-3 sm:block">
-                                                <dt class="text-muted-foreground">Platform</dt>
-                                                <dd class="font-medium text-foreground">{{ $claim->courierDetail->platform }}</dd>
+                                @if ($claim->hasPickupMethod())
+                                    @if ($claim->courierDetail && in_array($claim->metode_pengambilan, ['kurir_online', 'kurir'], true))
+                                        <div class="mt-4 rounded-xl border border-border bg-card px-4 py-3" dusk="recipient-courier-details-{{ $claim->id }}">
+                                            <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Detail kurir</p>
+                                            <dl class="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                                                <div class="flex justify-between gap-3 sm:block">
+                                                    <dt class="text-muted-foreground">Platform</dt>
+                                                    <dd class="font-medium text-foreground">{{ $claim->courierDetail->platform }}</dd>
+                                                </div>
+                                                <div class="flex justify-between gap-3 sm:block">
+                                                    <dt class="text-muted-foreground">Nama pengemudi</dt>
+                                                    <dd class="font-medium text-foreground">{{ $claim->courierDetail->nama_pengemudi }}</dd>
+                                                </div>
+                                                <div class="flex justify-between gap-3 sm:block">
+                                                    <dt class="text-muted-foreground">No. kendaraan</dt>
+                                                    <dd class="font-medium text-foreground">{{ $claim->courierDetail->no_kendaraan }}</dd>
+                                                </div>
+                                                <div class="flex justify-between gap-3 sm:block">
+                                                    <dt class="text-muted-foreground">Kode kurir</dt>
+                                                    <dd class="font-mono font-medium text-foreground">{{ $claim->courierDetail->kode_verifikasi_kurir }}</dd>
+                                                </div>
+                                            </dl>
+
+                                            @if ($claim->courierDetail->foto_bukti)
+                                                <div class="mt-3 border-t border-border/60 pt-2.5">
+                                                    <p class="text-xs text-muted-foreground">Tangkapan layar pesanan:</p>
+                                                    <a href="{{ asset('storage/'.$claim->courierDetail->foto_bukti) }}" target="_blank" rel="noopener noreferrer" class="mt-1 inline-block overflow-hidden rounded-lg border border-border hover:opacity-90 transition">
+                                                        <img src="{{ asset('storage/'.$claim->courierDetail->foto_bukti) }}" alt="Tangkapan layar pesanan" class="h-28 w-auto object-cover" />
+                                                    </a>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @elseif (in_array($claim->metode_pengambilan, ['ambil_sendiri', 'mandiri'], true))
+                                        <div class="mt-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-foreground">
+                                            <p class="flex items-center gap-2 font-medium text-primary">
+                                                <x-icon name="check" class="h-4 w-4" />
+                                                <span>Metode: Ambil Sendiri</span>
+                                            </p>
+                                            <p class="mt-1 text-[11px] text-muted-foreground">
+                                                Anda telah memilih untuk mengambil makanan secara langsung ke lokasi donor.
+                                            </p>
+                                        </div>
+                                    @endif
+                                @elseif ($statusKey === 'disetujui')
+                                    <div class="mt-5 rounded-2xl border border-primary/30 bg-primary/[0.03] p-4 sm:p-5" dusk="pickup-method-section-{{ $claim->id }}">
+                                        <div class="flex items-center gap-2.5">
+                                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                                                <x-icon name="truck" class="h-4 w-4" />
+                                            </span>
+                                            <div>
+                                                <h4 class="text-sm font-semibold text-foreground">Pilih Metode Pengambilan</h4>
+                                                <p class="text-xs text-muted-foreground">Metode yang dipilih tidak dapat diubah lagi setelah disimpan.</p>
                                             </div>
-                                            <div class="flex justify-between gap-3 sm:block">
-                                                <dt class="text-muted-foreground">Nama pengemudi</dt>
-                                                <dd class="font-medium text-foreground">{{ $claim->courierDetail->nama_pengemudi }}</dd>
+                                        </div>
+
+                                        <form
+                                            method="POST"
+                                            action="{{ route('recipient.claims.pickup-method.store', $claim) }}"
+                                            enctype="multipart/form-data"
+                                            class="mt-4 space-y-4"
+                                            x-data="{ method: '{{ old('claim_id') == $claim->id ? old('metode_pengambilan', 'ambil_sendiri') : 'ambil_sendiri' }}' }"
+                                        >
+                                            @csrf
+                                            <input type="hidden" name="claim_id" value="{{ $claim->id }}">
+
+                                            @if ($hasModalError)
+                                                <div class="rounded-xl border border-[#FCA5A5] bg-[#FEE2E2] p-3.5 text-xs text-[#B91C1C]" dusk="pickup-method-errors-{{ $claim->id }}">
+                                                    <div class="flex items-center gap-1.5 font-semibold">
+                                                        <x-icon name="info" class="h-4 w-4 shrink-0" />
+                                                        <span>Gagal menyimpan data pengemudi:</span>
+                                                    </div>
+                                                    <ul class="mt-1.5 list-disc list-inside space-y-0.5 text-[11px]">
+                                                        @foreach ($errors->all() as $error)
+                                                            <li>{{ $error }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                            @endif
+
+                                            {{-- Pilihan Metode (Radio / Card) --}}
+                                            <div class="grid gap-3 sm:grid-cols-2">
+                                                <label
+                                                    class="relative flex cursor-pointer flex-col rounded-xl border p-3.5 transition"
+                                                    :class="method === 'ambil_sendiri' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border bg-card hover:border-primary/30'"
+                                                >
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="text-xs font-semibold text-foreground">Ambil Sendiri</span>
+                                                        <input
+                                                            type="radio"
+                                                            name="metode_pengambilan"
+                                                            value="ambil_sendiri"
+                                                            x-model="method"
+                                                            dusk="method-mandiri-{{ $claim->id }}"
+                                                            class="text-primary focus:ring-primary"
+                                                        >
+                                                    </div>
+                                                    <p class="mt-1 text-[11px] text-muted-foreground">
+                                                        Datang langsung ke lokasi donor untuk mengambil makanan.
+                                                    </p>
+                                                </label>
+
+                                                <label
+                                                    class="relative flex cursor-pointer flex-col rounded-xl border p-3.5 transition"
+                                                    :class="method === 'kurir_online' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border bg-card hover:border-primary/30'"
+                                                >
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="text-xs font-semibold text-foreground">Kurir Online</span>
+                                                        <input
+                                                            type="radio"
+                                                            name="metode_pengambilan"
+                                                            value="kurir_online"
+                                                            x-model="method"
+                                                            dusk="method-kurir-{{ $claim->id }}"
+                                                            class="text-primary focus:ring-primary"
+                                                        >
+                                                    </div>
+                                                    <p class="mt-1 text-[11px] text-muted-foreground">
+                                                        Pesan Gojek/Grab mandiri dan laporkan data pengemudi.
+                                                    </p>
+                                                </label>
                                             </div>
-                                            <div class="flex justify-between gap-3 sm:block">
-                                                <dt class="text-muted-foreground">No. kendaraan</dt>
-                                                <dd class="font-medium text-foreground">{{ $claim->courierDetail->no_kendaraan }}</dd>
+
+                                            {{-- Formulir Data Pengemudi (Hanya jika kurir dipilih) --}}
+                                            <div
+                                                x-show="method === 'kurir_online'"
+                                                x-cloak
+                                                class="space-y-3.5 rounded-xl border border-border bg-card p-4 transition-all"
+                                                dusk="courier-fields-{{ $claim->id }}"
+                                            >
+                                                <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                                    Data Pengemudi Kurir
+                                                </p>
+
+                                                @if ($pickupAddress)
+                                                    <div class="rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-foreground">
+                                                        <p class="font-medium text-primary flex items-center gap-1.5">
+                                                            <x-icon name="info" class="h-3.5 w-3.5" />
+                                                            <span>Petunjuk Penjemputan Kurir</span>
+                                                        </p>
+                                                        <p class="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                                                            Gunakan alamat <strong class="text-foreground">{{ $pickupAddress }}</strong> ({{ $post?->donor?->nama_usaha ?? 'lokasi donor' }}) sebagai titik penjemputan saat Anda memesan Gojek/Grab.
+                                                            @if ($donorPhone)
+                                                                Berikan kontak donor (<strong class="text-foreground">{{ $donorPhone }}</strong>) ke catatan driver jika kurir memerlukan koordinasi saat tiba di lokasi.
+                                                            @endif
+                                                        </p>
+                                                    </div>
+                                                @endif
+
+                                                {{-- Platform --}}
+                                                <div>
+                                                    <label for="platform-{{ $claim->id }}" class="block text-xs font-medium text-foreground">
+                                                        Platform Kurir <span class="text-secondary">*</span>
+                                                    </label>
+                                                    <select
+                                                        name="platform"
+                                                        id="platform-{{ $claim->id }}"
+                                                        dusk="courier-platform-{{ $claim->id }}"
+                                                        class="mt-1 block h-9 w-full rounded-md border @if($hasModalError && $errors->has('platform')) border-[#EF4444] ring-1 ring-[#EF4444] @else border-input @endif bg-background px-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                    >
+                                                        <option value="Gojek" {{ old('claim_id') == $claim->id && old('platform') === 'Gojek' ? 'selected' : '' }}>Gojek</option>
+                                                        <option value="Grab" {{ old('claim_id') == $claim->id && old('platform') === 'Grab' ? 'selected' : '' }}>Grab</option>
+                                                    </select>
+                                                    @if ($hasModalError && $errors->has('platform'))
+                                                        <p class="mt-1 text-xs text-[#DC2626]">{{ $errors->first('platform') }}</p>
+                                                    @endif
+                                                </div>
+
+                                                {{-- Nama & Nomor Kendaraan --}}
+                                                <div class="grid gap-3 sm:grid-cols-2">
+                                                    <div>
+                                                        <label for="nama_pengemudi-{{ $claim->id }}" class="block text-xs font-medium text-foreground">
+                                                            Nama Pengemudi <span class="text-secondary">*</span>
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            name="nama_pengemudi"
+                                                            id="nama_pengemudi-{{ $claim->id }}"
+                                                            dusk="courier-nama-{{ $claim->id }}"
+                                                            value="{{ old('claim_id') == $claim->id ? old('nama_pengemudi') : '' }}"
+                                                            placeholder="Contoh: Budi Santoso"
+                                                            class="mt-1 block h-9 w-full rounded-md border @if($hasModalError && $errors->has('nama_pengemudi')) border-[#EF4444] ring-1 ring-[#EF4444] @else border-input @endif bg-background px-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                        >
+                                                        @if ($hasModalError && $errors->has('nama_pengemudi'))
+                                                            <p class="mt-1 text-xs text-[#DC2626]">{{ $errors->first('nama_pengemudi') }}</p>
+                                                        @endif
+                                                    </div>
+
+                                                    <div>
+                                                        <label for="no_kendaraan-{{ $claim->id }}" class="block text-xs font-medium text-foreground">
+                                                            Nomor Kendaraan <span class="text-secondary">*</span>
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            name="no_kendaraan"
+                                                            id="no_kendaraan-{{ $claim->id }}"
+                                                            dusk="courier-plat-{{ $claim->id }}"
+                                                            value="{{ old('claim_id') == $claim->id ? old('no_kendaraan') : '' }}"
+                                                            placeholder="Contoh: D 1234 ABC"
+                                                            class="mt-1 block h-9 w-full rounded-md border @if($hasModalError && $errors->has('no_kendaraan')) border-[#EF4444] ring-1 ring-[#EF4444] @else border-input @endif bg-background px-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                        >
+                                                        @if ($hasModalError && $errors->has('no_kendaraan'))
+                                                            <p class="mt-1 text-xs text-[#DC2626]">{{ $errors->first('no_kendaraan') }}</p>
+                                                        @endif
+                                                    </div>
+                                                </div>
+
+                                                {{-- Kode Verifikasi Kurir --}}
+                                                <div>
+                                                    <label for="kode_verifikasi_kurir-{{ $claim->id }}" class="block text-xs font-medium text-foreground">
+                                                        Kode Verifikasi Aplikasi Kurir <span class="text-secondary">*</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        name="kode_verifikasi_kurir"
+                                                        id="kode_verifikasi_kurir-{{ $claim->id }}"
+                                                        dusk="courier-kode-{{ $claim->id }}"
+                                                        value="{{ old('claim_id') == $claim->id ? old('kode_verifikasi_kurir') : '' }}"
+                                                        placeholder="Contoh: GJ-48213"
+                                                        class="mt-1 block h-9 w-full rounded-md border @if($hasModalError && $errors->has('kode_verifikasi_kurir')) border-[#EF4444] ring-1 ring-[#EF4444] @else border-input @endif bg-background px-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                    >
+                                                    <p class="mt-0.5 text-[11px] text-muted-foreground">Kode yang tertera pada aplikasi pesanan kurir.</p>
+                                                    @if ($hasModalError && $errors->has('kode_verifikasi_kurir'))
+                                                        <p class="mt-1 text-xs text-[#DC2626]">{{ $errors->first('kode_verifikasi_kurir') }}</p>
+                                                    @endif
+                                                </div>
+
+                                                {{-- Tangkapan Layar Pesanan --}}
+                                                <div>
+                                                    <label for="foto_bukti-{{ $claim->id }}" class="block text-xs font-medium text-foreground">
+                                                        Tangkapan Layar Pesanan <span class="text-secondary">*</span>
+                                                    </label>
+                                                    <input
+                                                        type="file"
+                                                        name="foto_bukti"
+                                                        id="foto_bukti-{{ $claim->id }}"
+                                                        accept="image/png,image/jpeg,image/jpg,image/webp"
+                                                        dusk="courier-foto-{{ $claim->id }}"
+                                                        class="mt-1 block w-full text-xs text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-primary hover:file:bg-accent/80 @if($hasModalError && $errors->has('foto_bukti')) rounded-md border border-[#EF4444] p-1 @endif"
+                                                    >
+                                                    <p class="mt-0.5 text-[11px] text-muted-foreground">Format JPG, JPEG, PNG, atau WEBP, ukuran maksimal 2 MB.</p>
+                                                    @if ($hasModalError && $errors->has('foto_bukti'))
+                                                        <p class="mt-1 text-xs text-[#DC2626]">{{ $errors->first('foto_bukti') }}</p>
+                                                    @endif
+                                                </div>
                                             </div>
-                                            <div class="flex justify-between gap-3 sm:block">
-                                                <dt class="text-muted-foreground">Kode kurir</dt>
-                                                <dd class="font-mono font-medium text-foreground">{{ $claim->courierDetail->kode_verifikasi_kurir }}</dd>
+
+                                            {{-- Tombol Simpan --}}
+                                            <div class="pt-2">
+                                                <button
+                                                    type="submit"
+                                                    dusk="submit-pickup-method-{{ $claim->id }}"
+                                                    class="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                                >
+                                                    <x-icon name="check" class="h-3.5 w-3.5" />
+                                                    Simpan Metode Pengambilan
+                                                </button>
                                             </div>
-                                        </dl>
+                                        </form>
                                     </div>
                                 @endif
 

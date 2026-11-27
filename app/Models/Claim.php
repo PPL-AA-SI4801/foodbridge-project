@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ClaimStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,48 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 #[WithoutTimestamps]
 class Claim extends Model
 {
+    public const METHOD_AMBIL_SENDIRI = 'ambil_sendiri';
+
+    public const METHOD_KURIR_ONLINE = 'kurir_online';
+
+    // Alias konstanta untuk kompatibilitas
+    public const METHOD_MANDIRI = self::METHOD_AMBIL_SENDIRI;
+
+    public const METHOD_KURIR = self::METHOD_KURIR_ONLINE;
+
+    public const PICKUP_METHODS = [
+        self::METHOD_AMBIL_SENDIRI,
+        self::METHOD_KURIR_ONLINE,
+        'mandiri',
+        'kurir',
+    ];
+
+    /**
+     * Determine whether a pickup method has already been chosen for this claim.
+     */
+    public function hasPickupMethod(): bool
+    {
+        return ! empty($this->metode_pengambilan);
+    }
+
+    /**
+     * Determine whether the claim has been approved.
+     */
+    public function isApproved(): bool
+    {
+        return in_array($this->status, ClaimStatus::GROUPS['disetujui'], true);
+    }
+
+    /**
+     * Determine whether the related food post has passed its consumption limit.
+     */
+    public function isFoodExpired(): bool
+    {
+        $foodPost = $this->post;
+
+        return $foodPost?->batas_konsumsi !== null && $foodPost->batas_konsumsi->isPast();
+    }
+
     /**
      * Get the attributes that should be cast.
      *

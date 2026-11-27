@@ -28,7 +28,7 @@ class ClaimController extends Controller
         $focusedClaimId = $request->integer('claim') ?: null;
         $focusedClaim = $focusedClaimId !== null
             ? Claim::query()
-                ->with(['post.category', 'recipient'])
+                ->with(['post.category', 'recipient.user', 'courierDetail'])
                 ->whereHas('post', $ownedByDonor)
                 ->find($focusedClaimId)
             : null;
@@ -40,7 +40,7 @@ class ClaimController extends Controller
         // Model Claim tidak punya created_at (WithoutTimestamps), jadi latest() akan error.
         // Relasi ke makanan bernama post(), bukan foodPost().
         $claims = Claim::query()
-            ->with(['post.category', 'recipient'])
+            ->with(['post.category', 'recipient.user', 'courierDetail'])
             ->whereHas('post', $ownedByDonor)
             ->when($focusedClaim !== null, fn ($query) => $query->whereKey($focusedClaim->id))
             ->when($activeFilter, fn ($query) => $query->whereIn('status', ClaimStatus::GROUPS[$activeFilter]))

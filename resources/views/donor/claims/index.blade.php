@@ -319,20 +319,183 @@
                                         </form>
                                     </div>
                                 @elseif ($statusKey === 'disetujui')
-                                    <p class="text-xs leading-5 text-muted-foreground lg:text-right">
-                                        Disetujui{{ $claim->approved_at ? ' pada '.$claim->approved_at->format('d/m/Y H:i') : '' }}.
-                                        <span class="block">Menunggu pengambilan.</span>
-                                    </p>
+                                    <div class="flex flex-col gap-2 lg:items-end">
+                                        <p class="text-xs leading-5 text-muted-foreground lg:text-right">
+                                            Disetujui{{ $claim->approved_at ? ' pada '.$claim->approved_at->format('d/m/Y H:i') : '' }}.
+                                            <span class="block">
+                                                @if (in_array($claim->metode_pengambilan, ['kurir_online', 'kurir'], true))
+                                                    Kurir Online: {{ $claim->courierDetail?->nama_pengemudi ?? 'Pengemudi terdaftar' }}
+                                                @elseif (in_array($claim->metode_pengambilan, ['ambil_sendiri', 'mandiri'], true))
+                                                    Pengambilan: Ambil Sendiri
+                                                @else
+                                                    Menunggu metode pengambilan.
+                                                @endif
+                                            </span>
+                                        </p>
+                                        <button
+                                            type="button"
+                                            x-data
+                                            x-on:click="$dispatch('open-modal', 'donor-claim-detail-{{ $claim->id }}')"
+                                            dusk="donor-claim-detail-{{ $claim->id }}"
+                                            class="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-foreground transition hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        >
+                                            <x-icon name="eye" class="h-3.5 w-3.5" />
+                                            Detail
+                                        </button>
+                                    </div>
                                 @elseif ($statusKey === 'selesai')
-                                    <p class="text-xs leading-5 text-muted-foreground lg:text-right">
-                                        Diserahkan{{ $claim->completed_at ? ' pada '.$claim->completed_at->format('d/m/Y H:i') : '' }}.
-                                    </p>
+                                    <div class="flex flex-col gap-2 lg:items-end">
+                                        <p class="text-xs leading-5 text-muted-foreground lg:text-right">
+                                            Diserahkan{{ $claim->completed_at ? ' pada '.$claim->completed_at->format('d/m/Y H:i') : '' }}.
+                                            @if ($claim->metode_pengambilan)
+                                                <span class="block">
+                                                    @if (in_array($claim->metode_pengambilan, ['kurir_online', 'kurir'], true))
+                                                        Kurir Online: {{ $claim->courierDetail?->nama_pengemudi ?? 'Pengemudi terdaftar' }}
+                                                    @elseif (in_array($claim->metode_pengambilan, ['ambil_sendiri', 'mandiri'], true))
+                                                        Pengambilan: Ambil Sendiri
+                                                    @endif
+                                                </span>
+                                            @endif
+                                        </p>
+                                        <button
+                                            type="button"
+                                            x-data
+                                            x-on:click="$dispatch('open-modal', 'donor-claim-detail-{{ $claim->id }}')"
+                                            dusk="donor-claim-detail-{{ $claim->id }}"
+                                            class="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-foreground transition hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        >
+                                            <x-icon name="eye" class="h-3.5 w-3.5" />
+                                            Detail
+                                        </button>
+                                    </div>
                                 @elseif ($statusKey === 'ditolak')
-                                    <p class="text-xs leading-5 text-muted-foreground lg:text-right">Klaim ditolak.</p>
+                                    <div class="flex flex-col gap-2 lg:items-end">
+                                        <p class="text-xs leading-5 text-muted-foreground lg:text-right">Klaim ditolak.</p>
+                                        <button
+                                            type="button"
+                                            x-data
+                                            x-on:click="$dispatch('open-modal', 'donor-claim-detail-{{ $claim->id }}')"
+                                            dusk="donor-claim-detail-{{ $claim->id }}"
+                                            class="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-foreground transition hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        >
+                                            <x-icon name="eye" class="h-3.5 w-3.5" />
+                                            Detail
+                                        </button>
+                                    </div>
                                 @else
                                     <p class="text-xs text-muted-foreground lg:text-right">-</p>
                                 @endif
                             </div>
+
+                            {{-- Modal Detail Klaim Donor (PBI-11: TC-11-03) --}}
+                            <x-modal name="donor-claim-detail-{{ $claim->id }}" maxWidth="lg">
+                                <div class="p-6 bg-card" dusk="donor-claim-detail-modal-{{ $claim->id }}">
+                                    <div class="flex items-start justify-between gap-4">
+                                        <div class="min-w-0">
+                                            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Rincian Klaim</p>
+                                            <h3 class="mt-1.5 truncate text-lg font-semibold text-foreground">
+                                                {{ $post?->judul ?? 'Postingan tidak tersedia' }}
+                                            </h3>
+                                            <p class="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
+                                                <span>Penerima:</span>
+                                                <strong class="font-medium text-foreground">{{ $recipient?->nama_lembaga ?? 'Lembaga Penerima' }}</strong>
+                                                @if ($recipient?->user?->no_hp)
+                                                    <span class="text-muted-foreground/60">•</span>
+                                                    <a href="tel:{{ $recipient->user->no_hp }}" class="inline-flex items-center gap-1 font-mono text-xs font-semibold text-primary hover:underline">
+                                                        <x-icon name="phone" class="h-3 w-3" />
+                                                        <span>{{ $recipient->user->no_hp }}</span>
+                                                    </a>
+                                                @endif
+                                            </p>
+                                        </div>
+
+                                        <x-status-badge :status="$statusKey" class="shrink-0" />
+                                    </div>
+
+                                    <dl class="mt-5 grid gap-4 sm:grid-cols-2">
+                                        <div>
+                                            <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Jumlah porsi</dt>
+                                            <dd class="mt-1 text-sm font-medium text-foreground">{{ $claim->jumlah_porsi }} porsi</dd>
+                                        </div>
+                                        <div>
+                                            <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Tanggal klaim</dt>
+                                            <dd class="mt-1 text-sm font-medium text-foreground">{{ $claim->tanggal_klaim->format('d/m/Y') }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Metode pengambilan</dt>
+                                            <dd class="mt-1 text-sm font-medium text-foreground">
+                                                @if (in_array($claim->metode_pengambilan, ['kurir_online', 'kurir']))
+                                                    Kurir Online
+                                                @elseif (in_array($claim->metode_pengambilan, ['ambil_sendiri', 'mandiri']))
+                                                    Ambil Sendiri
+                                                @else
+                                                    Belum dipilih
+                                                @endif
+                                            </dd>
+                                        </div>
+                                        <div>
+                                            <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status klaim</dt>
+                                            <dd class="mt-1"><x-status-badge :status="$statusKey" /></dd>
+                                        </div>
+                                    </dl>
+
+                                    @if ($claim->courierDetail && in_array($claim->metode_pengambilan, ['kurir_online', 'kurir']))
+                                        <div class="mt-5 rounded-xl border border-border bg-card p-4" dusk="donor-courier-details-{{ $claim->id }}">
+                                            <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                                Data Pengemudi Kurir
+                                            </p>
+                                            <dl class="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+                                                <div>
+                                                    <dt class="text-xs text-muted-foreground">Platform</dt>
+                                                    <dd class="font-medium text-foreground">{{ $claim->courierDetail->platform }}</dd>
+                                                </div>
+                                                <div>
+                                                    <dt class="text-xs text-muted-foreground">Nama pengemudi</dt>
+                                                    <dd class="font-medium text-foreground">{{ $claim->courierDetail->nama_pengemudi }}</dd>
+                                                </div>
+                                                <div>
+                                                    <dt class="text-xs text-muted-foreground">Nomor kendaraan</dt>
+                                                    <dd class="font-medium text-foreground">{{ $claim->courierDetail->no_kendaraan }}</dd>
+                                                </div>
+                                                <div>
+                                                    <dt class="text-xs text-muted-foreground">Kode verifikasi kurir</dt>
+                                                    <dd class="font-mono font-medium text-foreground">{{ $claim->courierDetail->kode_verifikasi_kurir }}</dd>
+                                                </div>
+                                            </dl>
+
+                                            @if ($claim->courierDetail->foto_bukti)
+                                                <div class="mt-3 border-t border-border/60 pt-2.5">
+                                                    <dt class="text-xs text-muted-foreground">Tangkapan layar pesanan kurir:</dt>
+                                                    <dd class="mt-1.5">
+                                                        <a href="{{ asset('storage/'.$claim->courierDetail->foto_bukti) }}" target="_blank" rel="noopener noreferrer" class="inline-block overflow-hidden rounded-lg border border-border hover:opacity-90 transition">
+                                                            <img src="{{ asset('storage/'.$claim->courierDetail->foto_bukti) }}" alt="Tangkapan layar pesanan" class="max-h-48 w-auto object-cover" />
+                                                        </a>
+                                                    </dd>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @elseif (in_array($claim->metode_pengambilan, ['ambil_sendiri', 'mandiri']))
+                                        <div class="mt-5 rounded-xl border border-border bg-background px-4 py-3 text-sm text-muted-foreground">
+                                            <p class="flex items-center gap-2">
+                                                <x-icon name="check" class="h-4 w-4 text-primary" />
+                                                <span>Penerima memilih untuk mengambil makanan secara mandiri ke lokasi Anda.</span>
+                                            </p>
+                                        </div>
+                                    @endif
+
+                                    <div class="mt-6 flex justify-end">
+                                        <x-button
+                                            type="button"
+                                            size="sm"
+                                            class="btn-secondary"
+                                            x-data
+                                            x-on:click="$dispatch('close-modal', 'donor-claim-detail-{{ $claim->id }}')"
+                                        >
+                                            {{ __('Tutup') }}
+                                        </x-button>
+                                    </div>
+                                </div>
+                            </x-modal>
                         </li>
                     @endforeach
                 </ul>

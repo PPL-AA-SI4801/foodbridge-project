@@ -37,7 +37,7 @@ class RecipientClaimService
 
         return Claim::query()
             ->where('recipient_id', $recipientId)
-            ->with(['post.donor', 'post.category', 'courierDetail'])
+            ->with(['post.donor.user', 'post.category', 'courierDetail'])
             ->when($focusedClaimId !== null, fn (Builder $query) => $query->whereKey($focusedClaimId))
             ->when($search !== '', function (Builder $query) use ($search): void {
                 $term = '%'.$search.'%';

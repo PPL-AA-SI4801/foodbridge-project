@@ -110,6 +110,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['auth', 'verified', 'role:penerima'])->prefix('recipient')->name('recipient.')->group(function () {
         Route::get('/claims', [RecipientClaimController::class, 'index'])->name('claims.index');
         Route::post('/food-posts/{foodPost}/claims', [RecipientClaimController::class, 'store'])->name('claims.store');
+        Route::post('/claims/{claim}/metode-pengambilan', [RecipientClaimController::class, 'storePickupMethod'])->name('claims.pickup-method.store');
 
         Route::get('/requests', [RecipientFoodRequestController::class, 'index'])->name('requests.index');
         Route::post('/requests', [RecipientFoodRequestController::class, 'store'])->name('requests.store');
