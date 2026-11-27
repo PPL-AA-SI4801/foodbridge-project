@@ -22,38 +22,20 @@ abstract class DuskTestCase extends BaseTestCase
         }
     }
 
-    protected function newBrowser($driver)
-    {
-        return new SlowBrowser($driver);
-    }
-
-    /**
-     * Determine if headless mode is disabled.
-     */
-    protected function hasHeadlessDisabled(): bool
-    {
-        return parent::hasHeadlessDisabled()
-            || filter_var(env('DUSK_HEADLESS_DISABLED', false), FILTER_VALIDATE_BOOLEAN)
-            || filter_var(env('DUSK_HEADLESS_DISABLE', false), FILTER_VALIDATE_BOOLEAN);
-    }
-
     /**
      * Create the RemoteWebDriver instance.
      */
     protected function driver(): RemoteWebDriver
     {
         $options = (new ChromeOptions)->addArguments(collect([
-            '--window-size=1365,900',
+            $this->shouldStartMaximized() ? '--start-maximized' : '--window-size=1920,1080',
             '--disable-search-engine-choice-screen',
             '--disable-smooth-scrolling',
             '--no-sandbox',
             '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--disable-software-rasterizer',
-            '--dns-prefetch-disable',
-            '--disable-features=Translate,OptimizationHints,MediaRouter',
         ])->unless($this->hasHeadlessDisabled(), function (Collection $items) {
             return $items->merge([
+                '--disable-gpu',
                 '--headless=new',
             ]);
         })->all());
@@ -63,21 +45,11 @@ abstract class DuskTestCase extends BaseTestCase
             $options->setBinary($chromeBinary);
         }
 
-        $capabilities = DesiredCapabilities::chrome()
-            ->setCapability(ChromeOptions::CAPABILITY, $options)
-            ->setCapability('pageLoadStrategy', 'eager');
-
         return RemoteWebDriver::create(
             $_ENV['DUSK_DRIVER_URL'] ?? env('DUSK_DRIVER_URL') ?? 'http://localhost:9515',
-            $capabilities
+            DesiredCapabilities::chrome()->setCapability(
+                ChromeOptions::CAPABILITY, $options
+            )
         );
-    }
-
-    /**
-     * Keep the browser window at the configured presentation size.
-     */
-    protected function shouldStartMaximized(): bool
-    {
-        return false;
     }
 }
